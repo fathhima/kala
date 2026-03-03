@@ -1,0 +1,207 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Instructors paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+list:
+  get:
+    tags: [Instructors]
+    summary: List approved instructors
+    description: Searchable and filterable list of approved instructors for student discovery.
+    security: []
+    parameters:
+      - name: skill
+        in: query
+        schema:
+          type: string
+        description: Filter by skill slug (e.g. mehendi)
+      - name: minPrice
+        in: query
+        schema:
+          type: number
+        description: Minimum session price
+      - name: maxPrice
+        in: query
+        schema:
+          type: number
+        description: Maximum session price
+      - name: minRating
+        in: query
+        schema:
+          type: number
+        description: Minimum average rating
+      - name: topRated
+        in: query
+        schema:
+          type: boolean
+        description: Filter only top-rated instructors
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      '200':
+        description: Paginated list of instructors
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/InstructorSummary'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginatedMeta'
+
+profile:
+  post:
+    tags: [Instructors]
+    summary: Create instructor profile
+    description: Requires INSTRUCTOR role. Submitted for admin approval.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/CreateInstructorProfileRequest'
+    responses:
+      '201':
+        description: Instructor profile created (pending approval)
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/InstructorProfile'
+      '409':
+        description: Profile already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+  patch:
+    tags: [Instructors]
+    summary: Update own instructor profile
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/UpdateInstructorProfileRequest'
+    responses:
+      '200':
+        description: Updated instructor profile
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/InstructorProfile'
+
+byId:
+  get:
+    tags: [Instructors]
+    summary: Get instructor profile by ID
+    security: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Instructor profile
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/InstructorProfile'
+      '404':
+        description: Instructor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+portfolio:
+  post:
+    tags: [Instructors]
+    summary: Add a portfolio item
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/AddPortfolioItemRequest'
+    responses:
+      '201':
+        description: Portfolio item added
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/PortfolioItem'
+
+portfolioItem:
+  delete:
+    tags: [Instructors]
+    summary: Remove a portfolio item
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Portfolio item deleted
+      '404':
+        description: Item not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+skills:
+  post:
+    tags: [Instructors]
+    summary: Add a skill to instructor profile
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [skillId]
+            properties:
+              skillId:
+                type: string
+                format: uuid
+    responses:
+      '201':
+        description: Skill added
+      '409':
+        description: Skill already added
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+skillItem:
+  delete:
+    tags: [Instructors]
+    summary: Remove a skill from instructor profile
+    parameters:
+      - name: skillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Skill removed

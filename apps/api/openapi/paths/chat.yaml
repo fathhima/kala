@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Chat paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+messages:
+  get:
+    tags: [Chat]
+    summary: Get chat history for a booking
+    description: >
+      Returns persisted chat messages for the booking.
+      Real-time messaging is handled via Socket.IO (not REST).
+      Only the student and instructor of the booking can access this.
+    parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: before
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Cursor-based pagination — return messages before this timestamp
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 50
+    responses:
+      '200':
+        description: Chat messages (newest last)
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas.yaml#/ChatMessage'
+      '403':
+        description: Not a participant of this booking
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+  post:
+    tags: [Chat]
+    summary: Send a chat message (REST fallback)
+    description: >
+      REST fallback for sending a message. Prefer Socket.IO emit for real-time.
+      Only allowed for CONFIRMED bookings.
+    parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/SendMessageRequest'
+    responses:
+      '201':
+        description: Message sent
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ChatMessage'
+      '403':
+        description: Not a participant or booking not confirmed
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'

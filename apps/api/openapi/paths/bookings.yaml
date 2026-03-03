@@ -1,0 +1,164 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Bookings paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+bookings:
+  post:
+    tags: [Bookings]
+    summary: Initiate a booking
+    description: >
+      Student only. Creates a booking in INITIATED status and temporarily
+      reserves the slot (reservedUntil = now + 10 minutes).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/CreateBookingRequest'
+    responses:
+      '201':
+        description: Booking initiated
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Booking'
+      '400':
+        description: Slot not available
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+      '409':
+        description: Student already has an active booking for this slot
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+myBookings:
+  get:
+    tags: [Bookings]
+    summary: List current student's bookings
+    parameters:
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas.yaml#/BookingStatus'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      '200':
+        description: Student booking history
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Booking'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginatedMeta'
+
+instructorBookings:
+  get:
+    tags: [Bookings]
+    summary: List current instructor's bookings
+    parameters:
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas.yaml#/BookingStatus'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      '200':
+        description: Instructor session list
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Booking'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginatedMeta'
+
+bookingById:
+  get:
+    tags: [Bookings]
+    summary: Get booking details
+    description: Accessible by the student or instructor involved.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Booking detail
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Booking'
+      '403':
+        description: Not your booking
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+      '404':
+        description: Booking not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+cancel:
+  patch:
+    tags: [Bookings]
+    summary: Cancel a booking
+    description: >
+      Student or instructor can cancel. Triggers refund logic if payment was
+      already completed.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Booking cancelled
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Booking'
+      '400':
+        description: Booking cannot be cancelled in its current status
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'

@@ -1,0 +1,15 @@
+{
+  "name": "kala",
+  "version": "1.0.0",
+  "description": "Kala monorepo containing web (React) and api (NestJS) applications for a live creative learning marketplace.",
+  "scripts": {
+    "dev:api": "pnpm --filter api dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev": "pnpm -r --parallel dev"
+  },
+  "author": "Fathima",
+  "license": "ISC",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

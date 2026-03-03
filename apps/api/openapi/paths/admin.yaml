@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Admin paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+pending:
+  get:
+    tags: [Admin]
+    summary: List instructors pending approval
+    description: Admin only. Returns all instructor profiles with isApproved = false.
+    responses:
+      '200':
+        description: List of pending instructor profiles
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas.yaml#/InstructorProfile'
+      '403':
+        description: Forbidden — admin role required
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+approve:
+  patch:
+    tags: [Admin]
+    summary: Approve an instructor
+    description: Admin only. Sets isApproved = true, making the instructor visible in search.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstructorProfile ID
+    responses:
+      '200':
+        description: Instructor approved
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/InstructorProfile'
+      '404':
+        description: Instructor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'
+
+reject:
+  patch:
+    tags: [Admin]
+    summary: Reject an instructor application
+    description: Admin only. The profile remains but stays unapproved.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstructorProfile ID
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+    responses:
+      '200':
+        description: Instructor rejected
+      '404':
+        description: Instructor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/ErrorResponse'

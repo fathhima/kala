@@ -1,0 +1,2479 @@
+﻿openapi: 3.0.3
+
+info:
+  title: Kala API
+  version: 1.0.0
+  description: >
+    Kala is a live creative learning marketplace that connects students with
+    verified instructors for one-on-one skill-based sessions in arts and crafts
+    (mehendi, painting, calligraphy, resin art, clay modelling, and more).
+  license:
+    name: Proprietary
+    url: https://kala.app/terms
+
+servers:
+  - url: https://dev-api.kala.app
+    description: Development
+  - url: https://api.kala.app
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Registration, login, OTP verification and logout
+  - name: Users
+    description: Current user profile management
+  - name: Skills
+    description: Creative skills catalog
+  - name: Instructors
+    description: Instructor profiles, portfolio, skills and availability
+  - name: Slots
+    description: Instructor availability slots
+  - name: Bookings
+    description: Session booking lifecycle
+  - name: Payments
+    description: Payment sessions and webhook verification
+  - name: Reviews
+    description: Post-session ratings and reviews
+  - name: Chat
+    description: Per-booking persistent chat
+  - name: VideoCall
+    description: Live video session token provisioning and session control
+  - name: Admin
+    description: Platform administration — users, instructor approvals, stats
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATHS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+paths:
+
+  # ── Auth ───────────────────────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: Creates a new account and sends an OTP to the provided email.
+      operationId: auth_register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: Aisha Khan
+              email: aisha@example.com
+              password: secret123
+              roles: [STUDENT]
+      responses:
+        '201':
+          description: Registered — OTP sent to email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/verify-otp:
+    post:
+      tags: [Auth]
+      summary: Verify OTP and activate account
+      description: Verifies the emailed OTP and returns JWT tokens on success.
+      operationId: auth_verifyOtp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+      responses:
+        '200':
+          description: OTP verified — tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email and password
+      operationId: auth_login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated — tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # /auth/refresh:
+  #   post:
+  #     tags: [Auth]
+  #     summary: Refresh access token
+  #     operationId: auth_refresh
+  #     security: []
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/RefreshRequest'
+  #     responses:
+  #       '200':
+  #         description: New tokens issued
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/AuthResponse'
+  #       '401':
+  #         $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out and invalidate refresh token
+      operationId: auth_logout
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset OTP
+      operationId: auth_forgotPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password with OTP
+      operationId: auth_resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ── Users ──────────────────────────────────────────────────────────────────
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      operationId: users_getMe
+      responses:
+        '200':
+          description: Current user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Users]
+      summary: Update current user profile
+      operationId: users_updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/change-password:
+    post:
+      tags: [Users]
+      summary: Change password
+      operationId: users_changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Skills ─────────────────────────────────────────────────────────────────
+
+  /skills:
+    get:
+      tags: [Skills]
+      summary: List all skills
+      operationId: skills_list
+      security: []
+      responses:
+        '200':
+          description: Array of skills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [Skills]
+      summary: Create a skill (admin only)
+      operationId: skills_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSkillRequest'
+      responses:
+        '201':
+          description: Skill created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /skills/{id}:
+    get:
+      tags: [Skills]
+      summary: Get skill by ID
+      operationId: skills_getById
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Skill object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Skills]
+      summary: Delete a skill (admin only)
+      operationId: skills_delete
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Skill deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Instructors ────────────────────────────────────────────────────────────
+
+  /instructors:
+    get:
+      tags: [Instructors]
+      summary: Browse approved instructors
+      operationId: instructors_list
+      security: []
+      parameters:
+        - name: skill
+          in: query
+          description: Filter by skill slug
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: Filter by location keyword
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated instructor list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InstructorSummary'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /instructors/{id}:
+    get:
+      tags: [Instructors]
+      summary: Get full instructor profile by user ID
+      operationId: instructors_getById
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Full instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /instructors/profile:
+    get:
+      tags: [Instructors]
+      summary: Get the authenticated instructor own profile
+      operationId: instructors_getMyProfile
+      responses:
+        '200':
+          description: Own instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Instructors]
+      summary: Create instructor profile (apply to become instructor)
+      operationId: instructors_createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstructorProfileRequest'
+      responses:
+        '201':
+          description: Profile created — pending admin approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    patch:
+      tags: [Instructors]
+      summary: Update own instructor profile
+      operationId: instructors_updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInstructorProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /instructors/portfolio:
+    post:
+      tags: [Instructors]
+      summary: Add a portfolio item (photo or video)
+      operationId: instructors_addPortfolioItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPortfolioItemRequest'
+      responses:
+        '201':
+          description: Portfolio item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /instructors/portfolio/{itemId}:
+    delete:
+      tags: [Instructors]
+      summary: Delete a portfolio item
+      operationId: instructors_deletePortfolioItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /instructors/skills:
+    post:
+      tags: [Instructors]
+      summary: Add a skill to own instructor profile
+      operationId: instructors_addSkill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skillId]
+              properties:
+                skillId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Skill added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /instructors/skills/{skillId}:
+    delete:
+      tags: [Instructors]
+      summary: Remove a skill from own instructor profile
+      operationId: instructors_removeSkill
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Skill removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /instructors/availability:
+    get:
+      tags: [Instructors]
+      summary: List own availability rules
+      operationId: instructors_listAvailability
+      responses:
+        '200':
+          description: Array of availability rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstructorAvailability'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Instructors]
+      summary: Create an availability rule
+      description: >
+        Defines a recurring weekly window. Slots are auto-generated from
+        this rule based on slotDuration.
+      operationId: instructors_createAvailability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAvailabilityRequest'
+      responses:
+        '201':
+          description: Availability rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorAvailability'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /instructors/availability/{id}:
+    patch:
+      tags: [Instructors]
+      summary: Update an availability rule
+      operationId: instructors_updateAvailability
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAvailabilityRequest'
+      responses:
+        '200':
+          description: Updated availability rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorAvailability'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Instructors]
+      summary: Delete an availability rule
+      operationId: instructors_deleteAvailability
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Availability rule deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /instructors/by-id/{id}/availability:
+    get:
+      tags: [Instructors]
+      summary: Get public availability rules for an instructor
+      operationId: instructors_getAvailabilityById
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Availability rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstructorAvailability'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Slots ──────────────────────────────────────────────────────────────────
+
+  /slots:
+    post:
+      tags: [Slots]
+      summary: Create a slot (instructor — manual override)
+      operationId: slots_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSlotRequest'
+      responses:
+        '201':
+          description: Slot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /slots/instructor/{instructorId}:
+    get:
+      tags: [Slots]
+      summary: Get available slots for an instructor
+      operationId: slots_byInstructor
+      security: []
+      parameters:
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: ISO 8601 start of window
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: ISO 8601 end of window
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Array of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /slots/{id}:
+    get:
+      tags: [Slots]
+      summary: Get a slot by ID
+      operationId: slots_getById
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Slot object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Slots]
+      summary: Update a slot (instructor)
+      operationId: slots_update
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSlotRequest'
+      responses:
+        '200':
+          description: Updated slot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags: [Slots]
+      summary: Delete a slot (instructor)
+      operationId: slots_delete
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Slot deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Bookings ───────────────────────────────────────────────────────────────
+
+  /bookings:
+    post:
+      tags: [Bookings]
+      summary: Initiate a booking
+      description: >
+        Student selects an available slot. Status starts as INITIATED.
+        Slot moves to RESERVED with a reservedUntil TTL.
+        A payment session must be created next to move it to PAYMENT_PENDING.
+      operationId: bookings_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Booking initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /bookings/my:
+    get:
+      tags: [Bookings]
+      summary: List bookings for the current student
+      operationId: bookings_listMine
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatus'
+      responses:
+        '200':
+          description: Student booking list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /bookings/instructor:
+    get:
+      tags: [Bookings]
+      summary: List sessions for the authenticated instructor
+      operationId: bookings_listInstructor
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatus'
+      responses:
+        '200':
+          description: Instructor session list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /bookings/{id}:
+    get:
+      tags: [Bookings]
+      summary: Get booking details
+      operationId: bookings_getById
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Full booking with slot, payment, review, messages and video sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /bookings/{id}/cancel:
+    post:
+      tags: [Bookings]
+      summary: Cancel a booking
+      operationId: bookings_cancel
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Booking cancelled — slot reverts to AVAILABLE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Payments ───────────────────────────────────────────────────────────────
+
+  /payments/session:
+    post:
+      tags: [Payments]
+      summary: Create a payment session (Stripe or Razorpay)
+      description: >
+        Creates a hosted checkout session. The client redirects the user to
+        checkoutUrl. On completion the provider hits /payments/webhook.
+      operationId: payments_createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentSessionRequest'
+      responses:
+        '201':
+          description: Payment session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/webhook:
+    post:
+      tags: [Payments]
+      summary: Payment provider webhook
+      description: >
+        Endpoint called by Stripe or Razorpay after payment completes.
+        Validates the signature header and updates booking + slot status.
+      operationId: payments_webhook
+      security: []
+      parameters:
+        - name: stripe-signature
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: x-razorpay-signature
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw provider webhook payload
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /payments/{bookingId}:
+    get:
+      tags: [Payments]
+      summary: Get payment details for a booking
+      operationId: payments_getByBooking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Reviews ────────────────────────────────────────────────────────────────
+
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: Submit a review for a completed booking
+      operationId: reviews_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: Review submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /reviews/instructor/{instructorId}:
+    get:
+      tags: [Reviews]
+      summary: Get reviews for an instructor
+      operationId: reviews_byInstructor
+      security: []
+      parameters:
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ── Chat ───────────────────────────────────────────────────────────────────
+
+  /chat/{bookingId}:
+    get:
+      tags: [Chat]
+      summary: Get chat history for a booking
+      operationId: chat_getMessages
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Array of messages ordered oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Chat]
+      summary: Send a message in a booking chat
+      operationId: chat_sendMessage
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── VideoCall ──────────────────────────────────────────────────────────────
+
+  /sessions/{bookingId}/token:
+    get:
+      tags: [VideoCall]
+      summary: Get a video-call access token for a booking
+      description: >
+        Returns a short-lived provider token the client uses to join the live
+        session. Both the student and instructor of the booking may call this.
+        The booking must be in CONFIRMED status. Each call creates or reuses a
+        video_sessions row, incrementing attemptNumber on reconnect.
+      operationId: videocall_getToken
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Token, room details and associated video session record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoCallTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Booking is not in CONFIRMED status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions/{bookingId}/end:
+    post:
+      tags: [VideoCall]
+      summary: End the live session (instructor only)
+      description: >
+        Sets video_sessions.status to ENDED and records endedAt.
+        Booking status transitions to COMPLETED.
+        Students are notified and redirected to leave a review.
+      operationId: videocall_endSession
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session ended — booking is now COMPLETED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sessions/{bookingId}/status:
+    get:
+      tags: [VideoCall]
+      summary: Poll live session status
+      description: >
+        Returns the latest video_sessions row for this booking so the client
+        can detect whether the other participant has joined.
+      operationId: videocall_getStatus
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current video session record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Admin ──────────────────────────────────────────────────────────────────
+
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Platform overview statistics
+      operationId: admin_getStats
+      responses:
+        '200':
+          description: Aggregate platform stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all platform users
+      operationId: admin_listUsers
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/Role'
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: Get full user detail by ID
+      operationId: admin_getUser
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/users/{id}/block:
+    post:
+      tags: [Admin]
+      summary: Block a user (isActive to false)
+      operationId: admin_blockUser
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: User blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/users/{id}/unblock:
+    post:
+      tags: [Admin]
+      summary: Unblock a user (isActive to true)
+      operationId: admin_unblockUser
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: User unblocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/instructors:
+    get:
+      tags: [Admin]
+      summary: List all instructor applications by status
+      operationId: admin_listInstructors
+      parameters:
+        - name: status
+          in: query
+          description: Filter by approval status
+          schema:
+            $ref: '#/components/schemas/ApplicationStatus'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Paginated instructor profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InstructorProfile'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/instructors/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve an instructor application (isApproved to true)
+      operationId: admin_approveInstructor
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Instructor approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/instructors/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject an instructor application
+      operationId: admin_rejectInstructor
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional rejection reason sent to applicant
+                  example: Portfolio does not meet quality standards
+      responses:
+        '200':
+          description: Instructor rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstructorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/bookings:
+    get:
+      tags: [Admin]
+      summary: List all bookings (admin monitoring)
+      operationId: admin_listBookings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatus'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Paginated bookings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Booking'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/bookings/{id}:
+    get:
+      tags: [Admin]
+      summary: Get full booking detail (admin)
+      operationId: admin_getBooking
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Full booking detail with slot, payment, review and video sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/payments:
+    get:
+      tags: [Admin]
+      summary: List all payments (admin)
+      operationId: admin_listPayments
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+        - name: provider
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentProvider'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Paginated payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/payments/{id}:
+    get:
+      tags: [Admin]
+      summary: Get payment detail (admin)
+      operationId: admin_getPayment
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+      responses:
+        '200':
+          description: Payment detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ===============================================================================
+# COMPONENTS
+# ===============================================================================
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    idParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  # ── Reusable Responses ─────────────────────────────────────────────────────
+
+  responses:
+    BadRequest:
+      description: Invalid input or validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Insufficient permissions (wrong role)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Resource already exists or state conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Schemas ────────────────────────────────────────────────────────────────
+
+  schemas:
+
+    # ── Enums ──────────────────────────────────────────────────────────────────
+
+    Role:
+      type: string
+      enum: [STUDENT, INSTRUCTOR, ADMIN]
+      description: User role on the platform
+
+    BookingStatus:
+      type: string
+      enum: [INITIATED, PAYMENT_PENDING, CONFIRMED, COMPLETED, CANCELLED]
+      description: >
+        INITIATED: slot reserved with TTL.
+        PAYMENT_PENDING: checkout session created.
+        CONFIRMED: payment succeeded.
+        COMPLETED: video session ended.
+        CANCELLED: cancelled before confirmation.
+
+    SlotStatus:
+      type: string
+      enum: [AVAILABLE, RESERVED, BOOKED]
+      description: >
+        AVAILABLE: open for booking.
+        RESERVED: held during payment window (TTL via reservedUntil).
+        BOOKED: payment confirmed.
+
+    PaymentStatus:
+      type: string
+      enum: [PENDING, SUCCESS, FAILED, REFUNDED]
+
+    PaymentProvider:
+      type: string
+      enum: [STRIPE, RAZORPAY]
+
+    PortfolioMediaType:
+      type: string
+      enum: [photo, video]
+      description: Media type of a portfolio item
+
+    VideoSessionStatus:
+      type: string
+      enum: [WAITING, ACTIVE, ENDED, FAILED]
+      description: >
+        WAITING: room created, no participants yet.
+        ACTIVE: at least one participant has joined.
+        ENDED: instructor ended session normally.
+        FAILED: session dropped unexpectedly.
+
+    ApplicationStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+      description: Admin review status of an instructor application
+
+    DayOfWeek:
+      type: integer
+      minimum: 0
+      maximum: 6
+      description: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
+
+    # ── User ───────────────────────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        name:
+          type: string
+          example: Aisha Khan
+        email:
+          type: string
+          format: email
+          example: aisha@example.com
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          example: [STUDENT]
+        imageUrl:
+          type: string
+          nullable: true
+          example: https://cdn.kala.app/avatars/aisha.jpg
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password, roles]
+      properties:
+        name:
+          type: string
+          example: Aisha Khan
+        email:
+          type: string
+          format: email
+          example: aisha@example.com
+        password:
+          type: string
+          minLength: 8
+          example: secret123
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          example: [STUDENT]
+
+    VerifyOtpRequest:
+      type: object
+      required: [email, otp]
+      properties:
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+          example: '482901'
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        imageUrl:
+          type: string
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    ResetPasswordRequest:
+      type: object
+      required: [email, otp, newPassword]
+      properties:
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    # ── Skill ──────────────────────────────────────────────────────────────────
+
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Mehendi
+        slug:
+          type: string
+          example: mehendi
+        description:
+          type: string
+          nullable: true
+          example: Traditional henna art applied to skin
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateSkillRequest:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          example: Mehendi
+        slug:
+          type: string
+          example: mehendi
+        description:
+          type: string
+
+    # ── Portfolio ──────────────────────────────────────────────────────────────
+
+    PortfolioItem:
+      type: object
+      description: A photo or video in the instructor portfolio
+      properties:
+        id:
+          type: string
+          format: uuid
+        instructorId:
+          type: string
+          format: uuid
+          description: References users.id (the instructor user ID)
+        type:
+          $ref: '#/components/schemas/PortfolioMediaType'
+        url:
+          type: string
+          description: Direct URL to the image or video file
+          example: https://cdn.kala.app/portfolio/priya-001.jpg
+        thumbnailUrl:
+          type: string
+          nullable: true
+          description: Thumbnail URL (recommended for videos)
+          example: https://cdn.kala.app/portfolio/priya-001-thumb.jpg
+        caption:
+          type: string
+          nullable: true
+          example: Bridal Rajasthani mehendi design
+        duration:
+          type: integer
+          nullable: true
+          description: Video duration in seconds (null for photos)
+          example: 45
+        createdAt:
+          type: string
+          format: date-time
+
+    AddPortfolioItemRequest:
+      type: object
+      required: [type, url]
+      properties:
+        type:
+          $ref: '#/components/schemas/PortfolioMediaType'
+        url:
+          type: string
+          description: CDN URL after client-side upload
+        thumbnailUrl:
+          type: string
+          description: Required when type is video
+        caption:
+          type: string
+        duration:
+          type: integer
+          description: Video duration in seconds
+
+    # ── Instructor Availability ────────────────────────────────────────────────
+
+    InstructorAvailability:
+      type: object
+      description: Recurring weekly availability rule used to auto-generate slots
+      properties:
+        id:
+          type: string
+          format: uuid
+        instructorId:
+          type: string
+          format: uuid
+          description: References users.id
+        dayOfWeek:
+          $ref: '#/components/schemas/DayOfWeek'
+        startTime:
+          type: string
+          description: Wall-clock start time HH:MM
+          example: '09:00'
+        endTime:
+          type: string
+          description: Wall-clock end time HH:MM
+          example: '17:00'
+        timezone:
+          type: string
+          example: Asia/Kolkata
+        slotDuration:
+          type: integer
+          description: Duration of each generated slot in minutes
+          example: 60
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAvailabilityRequest:
+      type: object
+      required: [dayOfWeek, startTime, endTime, slotDuration]
+      properties:
+        dayOfWeek:
+          $ref: '#/components/schemas/DayOfWeek'
+        startTime:
+          type: string
+          example: '09:00'
+        endTime:
+          type: string
+          example: '17:00'
+        timezone:
+          type: string
+          default: UTC
+          example: Asia/Kolkata
+        slotDuration:
+          type: integer
+          description: Slot duration in minutes
+          example: 60
+        isActive:
+          type: boolean
+          default: true
+
+    UpdateAvailabilityRequest:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        timezone:
+          type: string
+        slotDuration:
+          type: integer
+        isActive:
+          type: boolean
+
+    # ── Instructor Profile ─────────────────────────────────────────────────────
+
+    InstructorProfile:
+      type: object
+      description: One-to-one with users. userId is both the PK and FK to users.id.
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: PK — same as users.id
+        bio:
+          type: string
+          example: I have been teaching Rajasthani mehendi for over 8 years.
+        pricePerHour:
+          type: number
+          format: float
+          description: Session price in INR
+          example: 799
+        location:
+          type: string
+          nullable: true
+          example: Mumbai, Maharashtra
+        instagramURL:
+          type: string
+          nullable: true
+          example: https://instagram.com/priya.mehendi
+        isApproved:
+          type: boolean
+          example: false
+        avgRating:
+          type: number
+          format: float
+          nullable: true
+          example: 4.9
+        isTopRated:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        portfolioItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioItem'
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstructorAvailability'
+
+    InstructorSummary:
+      type: object
+      description: Lightweight card used in browse/search listing
+      properties:
+        userId:
+          type: string
+          format: uuid
+        bio:
+          type: string
+        pricePerHour:
+          type: number
+        location:
+          type: string
+          nullable: true
+        avgRating:
+          type: number
+          nullable: true
+        isTopRated:
+          type: boolean
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            imageUrl:
+              type: string
+              nullable: true
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+
+    CreateInstructorProfileRequest:
+      type: object
+      required: [bio, pricePerHour]
+      properties:
+        bio:
+          type: string
+        pricePerHour:
+          type: number
+          format: float
+          example: 799
+        instagramURL:
+          type: string
+        location:
+          type: string
+
+    UpdateInstructorProfileRequest:
+      type: object
+      properties:
+        bio:
+          type: string
+        pricePerHour:
+          type: number
+          format: float
+        instagramURL:
+          type: string
+        location:
+          type: string
+
+    # ── Slot ───────────────────────────────────────────────────────────────────
+
+    Slot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        instructorId:
+          type: string
+          format: uuid
+          description: References users.id
+        availabilityId:
+          type: string
+          format: uuid
+          nullable: true
+          description: The instructor_availability rule this slot was generated from
+        title:
+          type: string
+          nullable: true
+          example: Morning Mehendi Session
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          example: Asia/Kolkata
+        status:
+          $ref: '#/components/schemas/SlotStatus'
+        reservedUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: Expiry timestamp of the RESERVED hold
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateSlotRequest:
+      type: object
+      required: [startTime, endTime]
+      properties:
+        availabilityId:
+          type: string
+          format: uuid
+          description: Optional link to the availability rule
+        title:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          default: UTC
+
+    UpdateSlotRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+
+    # ── Booking ────────────────────────────────────────────────────────────────
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          description: The student — references users.id
+        instructorId:
+          type: string
+          format: uuid
+          description: The instructor — references users.id
+        slotId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        slot:
+          $ref: '#/components/schemas/Slot'
+        instructor:
+          $ref: '#/components/schemas/InstructorProfile'
+        payment:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Payment'
+        review:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Review'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        videoSessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoSession'
+
+    CreateBookingRequest:
+      type: object
+      required: [slotId, instructorId]
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        instructorId:
+          type: string
+          format: uuid
+
+    # ── Payment ────────────────────────────────────────────────────────────────
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: float
+          example: 799
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        provider:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PaymentProvider'
+        providerSessionId:
+          type: string
+          nullable: true
+          example: cs_test_a1b2c3
+        transactionId:
+          type: string
+          nullable: true
+          example: pay_QtY8X123
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePaymentSessionRequest:
+      type: object
+      required: [bookingId, provider]
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        provider:
+          $ref: '#/components/schemas/PaymentProvider'
+
+    PaymentSessionResponse:
+      type: object
+      properties:
+        providerSessionId:
+          type: string
+          description: Stripe checkout session ID or Razorpay order ID
+          example: cs_test_a1b2c3
+        checkoutUrl:
+          type: string
+          description: URL to redirect the user to complete payment
+          example: https://checkout.stripe.com/pay/cs_test_a1b2c3
+
+    # ── Review ─────────────────────────────────────────────────────────────────
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          description: The reviewer (student) — references users.id
+        instructorId:
+          type: string
+          format: uuid
+          description: The reviewed instructor — references users.id
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          nullable: true
+          example: Beautiful bridal design, very patient and professional!
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateReviewRequest:
+      type: object
+      required: [bookingId, rating]
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+
+    # ── Chat ───────────────────────────────────────────────────────────────────
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+          description: References users.id
+        content:
+          type: string
+          example: Hi! I will bring my own mehendi cone.
+        createdAt:
+          type: string
+          format: date-time
+
+    SendMessageRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    # ── Video Session ──────────────────────────────────────────────────────────
+
+    VideoSession:
+      type: object
+      description: >
+        Tracks each video call attempt for a booking.
+        attemptNumber increments on rejoin so call history is preserved.
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          description: Provider room identifier (e.g. Daily.co room name)
+          example: kala-room-booking-abc123
+        attemptNumber:
+          type: integer
+          description: Starts at 1, increments on reconnect
+          example: 1
+        status:
+          $ref: '#/components/schemas/VideoSessionStatus'
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    VideoCallTokenResponse:
+      type: object
+      description: Issued when a participant requests to join — creates or reuses a VideoSession row
+      properties:
+        token:
+          type: string
+          description: Short-lived provider access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        roomId:
+          type: string
+          description: Provider room identifier
+          example: kala-room-booking-abc123
+        roomUrl:
+          type: string
+          description: Full URL for iframe / SDK use
+          example: https://kala.daily.co/kala-room-booking-abc123
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the token expires
+        provider:
+          type: string
+          enum: [DAILY, TWILIO, JITSI]
+          example: DAILY
+        videoSession:
+          $ref: '#/components/schemas/VideoSession'
+
+    # ── Admin ──────────────────────────────────────────────────────────────────
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+          example: 1240
+        totalStudents:
+          type: integer
+          example: 1153
+        totalInstructors:
+          type: integer
+          example: 87
+        pendingApplications:
+          type: integer
+          example: 12
+        totalBookings:
+          type: integer
+          example: 3456
+        confirmedBookings:
+          type: integer
+          example: 2890
+        completedBookings:
+          type: integer
+          example: 2601
+        cancelledBookings:
+          type: integer
+          example: 289
+        totalRevenue:
+          type: number
+          format: float
+          description: Sum of all SUCCESS payments in INR
+          example: 1245000
+        activeVideoSessions:
+          type: integer
+          example: 4
+
+    # ── Common ─────────────────────────────────────────────────────────────────
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Operation completed successfully
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Validation failed
+        error:
+          type: string
+          example: Bad Request
+
+    PaginatedMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 87
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalPages:
+          type: integer
+          example: 5

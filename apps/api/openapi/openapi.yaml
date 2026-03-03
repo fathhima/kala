@@ -1,0 +1,130 @@
+openapi: 3.0.3
+
+info:
+  title: Kala API
+  version: 1.0.0
+  description: >
+    Kala is a live creative learning marketplace that connects students
+    with verified instructors for skill-based sessions.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Registration, login, token refresh and logout
+  - name: Users
+    description: Current user profile management
+  - name: Instructors
+    description: Instructor profile, portfolio and skills
+  - name: Admin
+    description: Platform administration — instructor approvals
+  - name: Skills
+    description: Skills catalog
+  - name: Slots
+    description: Instructor availability slots
+  - name: Bookings
+    description: Session booking lifecycle
+  - name: Payments
+    description: Payment sessions and webhook verification
+  - name: Reviews
+    description: Post-session ratings and reviews
+  - name: Chat
+    description: Per-booking persistent chat history
+
+paths:
+  # ── Auth ──────────────────────────────────────────────────────────────────
+  /auth/register:
+    $ref: './paths/auth.yaml#/register'
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+
+  # ── Users ─────────────────────────────────────────────────────────────────
+  /users/me:
+    $ref: './paths/users.yaml#/me'
+
+  # ── Instructors ───────────────────────────────────────────────────────────
+  /instructors:
+    $ref: './paths/instructors.yaml#/list'
+  /instructors/profile:
+    $ref: './paths/instructors.yaml#/profile'
+  /instructors/{id}:
+    $ref: './paths/instructors.yaml#/byId'
+  /instructors/portfolio:
+    $ref: './paths/instructors.yaml#/portfolio'
+  /instructors/portfolio/{itemId}:
+    $ref: './paths/instructors.yaml#/portfolioItem'
+  /instructors/skills:
+    $ref: './paths/instructors.yaml#/skills'
+  /instructors/skills/{skillId}:
+    $ref: './paths/instructors.yaml#/skillItem'
+
+  # ── Admin ─────────────────────────────────────────────────────────────────
+  /admin/instructors/pending:
+    $ref: './paths/admin.yaml#/pending'
+  /admin/instructors/{id}/approve:
+    $ref: './paths/admin.yaml#/approve'
+  /admin/instructors/{id}/reject:
+    $ref: './paths/admin.yaml#/reject'
+
+  # ── Skills ────────────────────────────────────────────────────────────────
+  /skills:
+    $ref: './paths/skills.yaml#/list'
+  /skills/{id}:
+    $ref: './paths/skills.yaml#/byId'
+
+  # ── Slots ─────────────────────────────────────────────────────────────────
+  /slots:
+    $ref: './paths/slots.yaml#/slots'
+  /slots/{id}:
+    $ref: './paths/slots.yaml#/slotById'
+  /slots/instructor/{instructorId}:
+    $ref: './paths/slots.yaml#/byInstructor'
+
+  # ── Bookings ──────────────────────────────────────────────────────────────
+  /bookings:
+    $ref: './paths/bookings.yaml#/bookings'
+  /bookings/my:
+    $ref: './paths/bookings.yaml#/myBookings'
+  /bookings/instructor:
+    $ref: './paths/bookings.yaml#/instructorBookings'
+  /bookings/{id}:
+    $ref: './paths/bookings.yaml#/bookingById'
+  /bookings/{id}/cancel:
+    $ref: './paths/bookings.yaml#/cancel'
+
+  # ── Payments ──────────────────────────────────────────────────────────────
+  /payments/session:
+    $ref: './paths/payments.yaml#/session'
+  /payments/webhook:
+    $ref: './paths/payments.yaml#/webhook'
+  /payments/{bookingId}:
+    $ref: './paths/payments.yaml#/byBooking'
+
+  # ── Reviews ───────────────────────────────────────────────────────────────
+  /reviews:
+    $ref: './paths/reviews.yaml#/reviews'
+  /reviews/instructor/{instructorId}:
+    $ref: './paths/reviews.yaml#/byInstructor'
+
+  # ── Chat ──────────────────────────────────────────────────────────────────
+  /chat/{bookingId}:
+    $ref: './paths/chat.yaml#/messages'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    $ref: './components/schemas.yaml'

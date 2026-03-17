@@ -1,8 +1,23 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { Server } from 'node:http';
+import { ConfigService } from '@nestjs/config';
+
+import { setupApp } from '@/shared/config/app.config';
+import { Logger } from '@/shared/logger/winston-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const app = await setupApp();
+
+  const configService = app.get(ConfigService);
+  const port = configService.getOrThrow<number>('PORT');
+
+  await app.listen(port).then((value: Server) => {
+    Logger.log(
+      `Server Started Listening: ${port}`,
+    );
+  });
 }
-bootstrap();
+
+bootstrap().catch((error) => {
+  Logger.error('Error during application bootstrap:', error);
+  process.exit(1);
+});

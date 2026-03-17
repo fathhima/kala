@@ -1,19 +1,6 @@
 import { create } from 'zustand'
-import { mockInstructors, mockUser, pendingInstructors } from '../lib/mock'
 import type { InstructorProfile, User } from '../types'
 
-const initialUsers: User[] = [
-  mockUser,
-  ...mockInstructors.map((instructor) => instructor.user),
-  {
-    id: 'user-admin1',
-    name: 'Admin User',
-    email: 'admin@kala.app',
-    roles: ['ADMIN'],
-    isActive: true,
-    createdAt: '2024-01-01T10:00:00Z',
-  },
-]
 
 interface AdminState {
   users: User[]
@@ -26,8 +13,8 @@ interface AdminState {
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
-  users: initialUsers,
-  applications: pendingInstructors,
+  users: [],
+  applications: [],
   approvedApplicationIds: [],
   rejectedApplicationIds: [],
   toggleUserBlocked: (id) =>

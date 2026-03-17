@@ -53,8 +53,7 @@ $ pnpm run test
 # e2e tests
 $ pnpm run test:e2e
 
-# test coverage
-$ pnpm run test:cov
+# test coverage$ pnpm run test:cov
 ```
 
 ## Deployment

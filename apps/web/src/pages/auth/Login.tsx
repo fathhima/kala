@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useNavigation } from 'react-router-dom'
 import { Palette, Eye, EyeOff } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { mockUser, mockInstructorUser, mockAdminUser } from '../../lib/mock'
+import { AuthService } from '@/services/auth.service'
 
 function GoogleIcon() {
   return (
@@ -17,45 +18,33 @@ function GoogleIcon() {
   )
 }
 
+
 export function Login() {
-  const { login } = useAuthStore()
   const navigate = useNavigate()
+  const { login, isLoading, error, isAuthenticated } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+   }, [isAuthenticated,navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 600))
+    await login(email, password)
 
-    // Mock login — match by email
-    if (email === mockAdminUser.email) {
-      login(mockAdminUser, 'mock-admin-token')
-      navigate('/admin')
-    } else if (email === mockInstructorUser.email) {
-      login(mockInstructorUser, 'mock-instructor-token')
-      navigate('/instructor')
-    } else if (email === mockUser.email || email !== '') {
-      login(mockUser, 'mock-student-token')
-      navigate('/dashboard')
-    } else {
-      setError('Invalid email or password')
-    }
-
-    setLoading(false)
+    navigate('/')
   }
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
     // Mock Google OAuth — signs in as the default student
     await new Promise((r) => setTimeout(r, 800))
-    login(mockUser, 'mock-google-token')
     navigate('/dashboard')
     setGoogleLoading(false)
   }
@@ -108,7 +97,7 @@ export function Login() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                error={error}
+                error={error || undefined}
                 required
               />
               <button
@@ -145,7 +134,7 @@ export function Login() {
               {googleLoading ? 'Signing in…' : 'Continue with Google'}
             </button>
 
-            <Button type="submit" loading={loading} className="w-full">
+            <Button type="submit" loading={isLoading} className="w-full">
               Sign In
             </Button>
           </form>

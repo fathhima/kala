@@ -4,9 +4,31 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useAdminStore } from '../../stores/adminStore'
+import { useUsers } from '@/hooks/user/use-users.hooks'
+import { useUpdateUserStatus } from '@/hooks/user/use-update-user-status'
 
 export function ManageUsers() {
-  const { users, toggleUserBlocked } = useAdminStore()
+  const mutate = useUpdateUserStatus()
+  const { data: users, isLoading, isError } = useUsers()
+
+  function toggleUserBlocked(userId: string) {
+    
+    const user = users?.find((user) => user.id === userId)
+    if (!user) return
+    console.log(userId);
+
+    mutate.mutate({ id: userId, status: !user.isActive })
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (isError || !users.length) {
+    return <div>Error loading users</div>
+  }
+
+
 
   return (
     <div className="space-y-6">
@@ -56,16 +78,20 @@ export function ManageUsers() {
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex justify-end gap-2">
-                      <Link to={`/admin/users/${user.id}`}>
+                      {/* <Link to={`/admin/users/${user.id}`}>
                         <Button variant="outline" size="sm">Details</Button>
-                      </Link>
-                      <Button
-                        size="sm"
-                        variant={user.isActive ? 'destructive' : 'primary'}
-                        onClick={() => toggleUserBlocked(user.id)}
-                      >
-                        {user.isActive ? 'Block' : 'Unblock'}
-                      </Button>
+                      </Link> */}
+                      {user.roles.includes('ADMIN') ? (
+                        <Button variant="outline" size="sm" disabled>Cannot block admin</Button>
+                      ) : (
+                        <Button
+                          variant={user.isActive ? 'destructive' : 'primary'}
+                          size="sm"
+                          onClick={() => toggleUserBlocked(user.id)}
+                        >
+                          {user.isActive ? 'Block' : 'Unblock'}
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -1,26 +1,55 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '../types'
-import { mockUser } from '../lib/mock'
+import { AuthService } from '@/services/auth.service'
 
 interface AuthState {
   user: User | null
-  token: string | null
+  error: string | null
   isAuthenticated: boolean
-  login: (user: User, token: string) => void
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<void>
+  adminLogin: (email: string, password: string) => Promise<void>
+  fetchUser: () => Promise<void>
   logout: () => void
-  setUser: (user: User) => void
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      user: mockUser,
-      token: 'mock-token',
-      isAuthenticated: true,
-      login: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
-      setUser: (user) => set({ user }),
+    (set,get) => ({
+      user: null,
+      error: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: async (email, password) => {
+        set({ isLoading: true, error: null })
+        const { error } = await AuthService.login(email, password)
+        if (error) {
+          set({ error:error.message || 'Login failed' })
+        }
+        set({ isLoading: false, isAuthenticated: !error })
+      },
+      adminLogin: async (email, password) => {
+        set({ isLoading: true, error: null,isAuthenticated: false, user: null})
+        const { error } = await AuthService.adminLogin(email, password)
+        if (error) {
+          set({ error:error.message || 'Login failed' })
+        }
+        set({ isLoading: false, isAuthenticated: !error })
+      },
+      fetchUser: async () => {
+        if (!get().isAuthenticated) return;
+        const {data,error} = await AuthService.me();
+        if (error) {
+          set({ error: error.message || 'Failed to fetch user' });
+        } else {
+          set({ user: data, error: null });
+        }
+      },
+      logout: async() => {
+        await AuthService.logout()
+        set({ user: null, isAuthenticated: false })
+      }
     }),
     { name: 'kala-auth' }
   )

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { mockUser } from '../../lib/mock'
+import { AuthService } from '@/services/auth.service'
 
 
 
@@ -26,17 +27,31 @@ export function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // Mock: simulate account creation, then send OTP
-    await new Promise((r) => setTimeout(r, 700))
+
+    const { data, error } = await AuthService.register(name, email, password)
+
+    if (error) {
+      setError(error.message || 'something went wrong')
+      setLoading(false)
+      return
+    }
+
     setLoading(false)
-    // Redirect to OTP verification; completion happens there
-    navigate('/verify-otp', { state: { email, name, purpose: 'registration' } })
+    navigate('/verify-otp', {
+      state: {
+        email,
+        purpose: 'registration',
+        name
+      }
+    })
+
   }
 
   const handleGoogleSignUp = async () => {

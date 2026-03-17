@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.20.0",
+    "generators": {
+      "typescript-axios": {
+        "output": "src/api",
+        "generatorName": "typescript-axios",
+        "inputSpec": "http://localhost:4000/api/docs-json",
+        "additionalProperties": {
+          "supportsES6": true
+        }
+      }
+    }
+  }
+}

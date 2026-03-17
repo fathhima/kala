@@ -1,0 +1,17 @@
+.gitignore
+.npmignore
+api.ts
+base.ts
+common.ts
+configuration.ts
+docs/AuthenticationApi.md
+docs/HttpResponse.md
+docs/LoginDto.md
+docs/MessageOnlyHttpResponse.md
+docs/RegisterDto.md
+docs/UpdatePasswordDto.md
+docs/UpdateUserStatusDto.md
+docs/UserResponseDto.md
+docs/UsersApi.md
+git_push.sh
+index.ts

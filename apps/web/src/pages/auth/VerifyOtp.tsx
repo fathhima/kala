@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Palette, ArrowLeft, ShieldCheck } from 'lucide-react'
-import { useAuthStore } from '../../stores/authStore'
+import { Palette, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
-import { mockUser } from '../../lib/mock'
+import { AuthService } from '@/services/auth.service'
 
 const OTP_LENGTH = 6
 
@@ -16,7 +15,6 @@ type LocationState = {
 export function VerifyOtp() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useAuthStore()
 
   const state = (location.state as LocationState) ?? {}
   const email = state.email ?? ''
@@ -91,27 +89,30 @@ export function VerifyOtp() {
     setError('')
     setLoading(true)
 
-    // Mock: any 6-digit code is accepted
-    await new Promise((r) => setTimeout(r, 700))
+    const { error: verifyError } = await AuthService.verifyOtp(email, code)
+    if (verifyError) {
+      setError(verifyError.message || 'Verification failed')
+      setLoading(false)
+      return
+    }
     setLoading(false)
 
-    if (purpose === 'registration') {
-      // Complete registration — log the user in and go to dashboard
-      login(
-        { ...mockUser, name: pendingName || mockUser.name, email: email || mockUser.email },
-        'mock-token'
-      )
-      navigate('/dashboard', { replace: true })
-    } else {
-      // Password reset flow — proceed to set new password
-      navigate('/reset-password', { state: { email, verified: true } })
-    }
+    navigate('/login', { replace: true })
   }
 
   const handleResend = async () => {
+    setError('')
     setResendLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
+
+    const { error: resendError } = await AuthService.resendOtp(email)
+
     setResendLoading(false)
+
+    if (resendError) {
+      setError(resendError.message || 'Unable to resend OTP')
+      return
+    }
+
     setResendCooldown(60)
     setDigits(Array(OTP_LENGTH).fill(''))
     setError('')
@@ -127,7 +128,7 @@ export function VerifyOtp() {
     : 'Check your inbox'
 
   // const backLabel = purpose === 'registration'
-    // ? 'Use a different email'
+  // ? 'Use a different email'
   //   : 'Use a different email'
 
   return (

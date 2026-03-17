@@ -1,0 +1,46 @@
+services:
+  # postgres:
+  #   container_name: kala-postgres
+  #   image: postgres:latest
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: kala
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql
+  #   command:
+  #     - postgres
+  #     - -c
+  #     - log_statement=none
+  #     - -c
+  #     - log_min_messages=panic
+
+  redis:
+    container_name: kala-redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  # api:
+  #   container_name: kala-api
+  #   image: kala-api-image:latest
+  #   pull_policy: never
+  #   build:
+  #     context: apps/api
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./apps/api:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "4000:4000"
+  #   environment:
+  #     - PORT=4000
+  #     - REDIS_URI=redis://redis:6379
+  #   depends_on:
+  #     - redis
+      # - postgres
+
+volumes:
+  postgres-data:

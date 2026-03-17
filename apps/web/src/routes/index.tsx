@@ -11,14 +11,14 @@ import { BrowseSkills } from '../pages/public/BrowseSkills'
 import { BrowseInstructors } from '../pages/public/BrowseInstructors'
 import { InstructorProfile } from '../pages/public/InstructorProfile'
 
-import Login from '../pages/auth/Login'
-import Register from '../pages/auth/Register'
-import ForgotPassword from '../pages/auth/ForgotPassword'
-import VerifyOtp from '../pages/auth/VerifyOtp'
+import { Login } from '../pages/auth/Login'
+import { Register } from '../pages/auth/Register'
+import { ForgotPassword } from '../pages/auth/ForgotPassword'
+import { VerifyOtp } from '../pages/auth/VerifyOtp'
 import { ResetPassword } from '../pages/auth/ResetPassword'
 
-import StudentDashboard from '../pages/student/Dashboard'
-import MyBookings from '../pages/student/MyBookings'
+import { StudentDashboard } from '../pages/student/Dashboard'
+import { MyBookings } from '../pages/student/MyBookings'
 import { BookingDetails } from '../pages/student/BookingDetails'
 import { StudentProfileSettings } from '../pages/student/ProfileSettings'
 import { ChangePassword } from '../pages/student/ChangePassword'
@@ -26,29 +26,30 @@ import { BecomeInstructor } from '../pages/student/BecomeInstructor'
 import { Payment } from '../pages/student/Payment'
 import { PaymentHistory } from '../pages/student/PaymentHistory'
 import { BookingChat } from '../pages/student/BookingChat'
-import VideoCall from '../pages/student/VideoCall'
+import { VideoCall } from '../pages/student/VideoCall'
 
-import InstructorDashboard from '../pages/instructor/Dashboard'
-import ManageSlots from '../pages/instructor/ManageSlots'
+import { InstructorDashboard } from '../pages/instructor/Dashboard'
+import { ManageSlots } from '../pages/instructor/ManageSlots'
 import { MySessions } from '../pages/instructor/MySessions'
 import { InstructorSessionDetails } from '../pages/instructor/SessionDetails'
 import { InstructorSessionChat } from '../pages/instructor/SessionChat'
-import Portfolio from '../pages/instructor/Portfolio'
+import { Portfolio } from '../pages/instructor/Portfolio'
 import { InstructorSkills } from '../pages/instructor/Skills'
 import { Reviews } from '../pages/instructor/Reviews'
 import { InstructorProfileSettings } from '../pages/instructor/ProfileSettings'
 import { InstructorPayments } from '../pages/instructor/Payments'
 
-import AdminDashboard from '../pages/admin/Dashboard'
-import InstructorApplications from '../pages/admin/InstructorApplications'
-import ApplicationDetails from '../pages/admin/ApplicationDetails'
+import { AdminDashboard } from '../pages/admin/Dashboard'
+import { InstructorApplications } from '../pages/admin/InstructorApplications'
+import { ApplicationDetails } from '../pages/admin/ApplicationDetails'
 import { ManageSkills } from '../pages/admin/ManageSkills'
-import ManageUsers from '../pages/admin/ManageUsers'
-import UserDetails from '../pages/admin/UserDetails'
-import BookingMonitoring from '../pages/admin/BookingMonitoring'
-import AdminBookingDetails from '../pages/admin/BookingDetails'
-import PaymentsOverview from '../pages/admin/PaymentsOverview'
-import AdminPaymentDetails from '../pages/admin/PaymentDetails'
+import { ManageUsers } from '../pages/admin/ManageUsers'
+import { UserDetails } from '../pages/admin/UserDetails'
+import { BookingMonitoring } from '../pages/admin/BookingMonitoring'
+import { AdminBookingDetails } from '../pages/admin/BookingDetails'
+import { PaymentsOverview } from '../pages/admin/PaymentsOverview'
+import { AdminPaymentDetails } from '../pages/admin/PaymentDetails'
+import { AdminLogin } from '@/pages/auth/AdminLogin'
 
 export const router = createBrowserRouter([
   {
@@ -119,6 +120,7 @@ export const router = createBrowserRouter([
       { path: 'settings', element: <InstructorProfileSettings /> },
     ],
   },
+  { path: 'admin/login', element: <AdminLogin /> },
   {
     path: '/admin',
     element: (

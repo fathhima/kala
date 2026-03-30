@@ -6,12 +6,13 @@
       "ssh": "Disabled",
       "previewLimit": 50,
       "server": "localhost",
-      "port": 5432,
-      "askForPassword": true,
+      "port": 5433,
+      "askForPassword": false,
       "driver": "PostgreSQL",
       "name": "docker",
       "database": "kala",
-      "username": "postgres"
+      "username": "postgres",
+      "password": "postgres"
     }
   ]
 }

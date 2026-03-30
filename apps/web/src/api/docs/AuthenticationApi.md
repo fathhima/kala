@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost:4000*
 |[**authControllerLogout**](#authcontrollerlogout) | **POST** /api/auth/logout | |
 |[**authControllerMe**](#authcontrollerme) | **GET** /api/auth/me | Get current user details|
 |[**authControllerRegister**](#authcontrollerregister) | **POST** /api/auth/register | User register|
+|[**authControllerResendOtp**](#authcontrollerresendotp) | **POST** /api/auth/resend-otp | Resend registration OTP|
 |[**authControllerResetPassword**](#authcontrollerresetpassword) | **POST** /api/auth/reset-password | |
 |[**authControllerUpdatePassword**](#authcontrollerupdatepassword) | **POST** /api/auth/update-password | |
 |[**authControllerVerifyOtp**](#authcontrollerverifyotp) | **POST** /api/auth/verify-otp | Verify registration OTP|
@@ -210,7 +211,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerMe**
-> HttpResponse authControllerMe()
+> AuthControllerMe200Response authControllerMe()
 
 
 ### Example
@@ -233,7 +234,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**HttpResponse**
+**AuthControllerMe200Response**
 
 ### Authorization
 
@@ -280,6 +281,56 @@ const { status, data } = await apiInstance.authControllerRegister(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **registerDto** | **RegisterDto**|  | |
+
+
+### Return type
+
+**MessageOnlyHttpResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authControllerResendOtp**
+> MessageOnlyHttpResponse authControllerResendOtp(body)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let body: object; //
+
+const { status, data } = await apiInstance.authControllerResendOtp(
+    body
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **object**|  | |
 
 
 ### Return type

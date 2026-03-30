@@ -23,6 +23,10 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface AuthControllerMe200Response {
+    'message': string;
+    'data': MeResponseDto;
+}
 export interface HttpResponse {
     'message': string;
     'data'?: object;
@@ -37,6 +41,24 @@ export interface LoginDto {
      */
     'password': string;
 }
+export interface MeResponseDto {
+    'id': string;
+    'name': string;
+    'email': string;
+    'roles': Array<MeResponseDtoRolesEnum>;
+    'imageUrl'?: object | null;
+    'isVerified': boolean;
+    'createdAt': string;
+}
+
+export const MeResponseDtoRolesEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR',
+    Admin: 'ADMIN'
+} as const;
+
+export type MeResponseDtoRolesEnum = typeof MeResponseDtoRolesEnum[keyof typeof MeResponseDtoRolesEnum];
+
 export interface MessageOnlyHttpResponse {
     'message': string;
 }
@@ -285,6 +307,41 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
+         * @summary Resend registration OTP
+         * @param {object} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerResendOtp: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('authControllerResendOtp', 'body', body)
+            const localVarPath = `/api/auth/resend-otp`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -448,7 +505,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HttpResponse>> {
+        async authControllerMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthControllerMe200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerMe(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerMe']?.[localVarOperationServerIndex]?.url;
@@ -465,6 +522,19 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerRegister(registerDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerRegister']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Resend registration OTP
+         * @param {object} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authControllerResendOtp(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerResendOtp(body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerResendOtp']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -556,7 +626,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerMe(options?: RawAxiosRequestConfig): AxiosPromise<HttpResponse> {
+        authControllerMe(options?: RawAxiosRequestConfig): AxiosPromise<AuthControllerMe200Response> {
             return localVarFp.authControllerMe(options).then((request) => request(axios, basePath));
         },
         /**
@@ -568,6 +638,16 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          */
         authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
             return localVarFp.authControllerRegister(registerDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Resend registration OTP
+         * @param {object} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerResendOtp(body: object, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
+            return localVarFp.authControllerResendOtp(body, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -664,6 +744,17 @@ export class AuthenticationApi extends BaseAPI {
      */
     public authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig) {
         return AuthenticationApiFp(this.configuration).authControllerRegister(registerDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Resend registration OTP
+     * @param {object} body 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authControllerResendOtp(body: object, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerResendOtp(body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

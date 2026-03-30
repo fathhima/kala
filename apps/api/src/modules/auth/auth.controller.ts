@@ -14,6 +14,8 @@ import { HttpResponse } from "@/shared/dto/common/http-response.dto";
 import { UserId } from "@/shared/decorators/user-id.decorator";
 import { UserResponseDto } from "../user/dto/response/user.response.dto";
 import { Public } from "@/shared/decorators/public.decorator";
+import { ApiResponseWithType } from "@/shared/decorators/api-responsewithtype.decorator";
+import { MeResponseDto } from "./dto/response/me-response.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -23,9 +25,9 @@ export class AuthController {
 
     @Get('me')
     @HttpCode(HttpStatus.OK)
-    @ApiOkResponse({ type: HttpResponse })
+    @ApiResponseWithType({},MeResponseDto)
     @ApiOperation({ summary: 'Get current user details' })
-    async me(@UserId() userId: string): Promise<HttpResponse<UserResponseDto>> {
+    async me(@UserId() userId: string): Promise<HttpResponse<MeResponseDto>> {
         console.log("User ID from token:", userId);
         const user = await this.authService.me(userId);
         return {

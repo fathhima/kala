@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common"
+import { ConflictException, Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { LoginDto } from "../dto/login.dto"
 import { RegisterDto } from "../dto/register.dto"
@@ -36,6 +36,7 @@ export class AuthService {
 
     async me(userId: string) {
         const user = await this.userService.findById(userId)
+        if (!user) throw new NotFoundException('User not found');
         return user
     }
 

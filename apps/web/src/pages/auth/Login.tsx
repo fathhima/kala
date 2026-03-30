@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useNavigation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Palette, Eye, EyeOff } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { mockUser, mockInstructorUser, mockAdminUser } from '../../lib/mock'
-import { AuthService } from '@/services/auth.service'
 
 function GoogleIcon() {
   return (
@@ -31,14 +29,13 @@ export function Login() {
     if (isAuthenticated) {
       navigate('/', { replace: true })
     }
-   }, [isAuthenticated,navigate])
+  }, [isAuthenticated, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     await login(email, password)
-
-    navigate('/')
+      navigate('/')
   }
 
   const handleGoogleSignIn = async () => {
@@ -63,23 +60,6 @@ export function Login() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-8">
           <h1 className="text-2xl font-bold text-kala-brown mb-6 text-center">Sign In</h1>
-
-          {/* Demo accounts hint */}
-          {/* <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-6 text-xs text-amber-800">
-            <p className="font-semibold mb-1">Demo accounts:</p>
-            <p>Student: aisha@example.com</p>
-            <p>Instructor: priya@example.com</p>
-            <p>Admin: admin@kala.app</p>
-            <p className="mt-1 text-stone-500">Any password works</p>
-          </div> */}
-
-
-          {/* Divider */}
-          {/* <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-stone-100" />
-            <span className="text-xs text-stone-400">or sign in with email</span>
-            <div className="flex-1 h-px bg-stone-100" />
-          </div> */}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input

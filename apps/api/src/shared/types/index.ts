@@ -26,7 +26,7 @@ export interface HTTP_PAGINATED_RESPONSE {
 
 export interface JWTPayload {
     sub: string;
-    role: 'user' | 'admin';
+    role: Array<'user' | 'admin'>;
 }
 
 export interface RequestUser {

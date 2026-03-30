@@ -4,9 +4,11 @@ api.ts
 base.ts
 common.ts
 configuration.ts
+docs/AuthControllerMe200Response.md
 docs/AuthenticationApi.md
 docs/HttpResponse.md
 docs/LoginDto.md
+docs/MeResponseDto.md
 docs/MessageOnlyHttpResponse.md
 docs/RegisterDto.md
 docs/UpdatePasswordDto.md

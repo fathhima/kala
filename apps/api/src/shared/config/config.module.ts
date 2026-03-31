@@ -16,10 +16,14 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         PORT: Joi.number().default(4000),
         CORS_ORIGINS: Joi.string().default('http://localhost:5173'),
         OTP_TTL_SECONDS: Joi.number().integer().min(60).default(600),
+        REFRESH_TOKEN_TTL_SECONDS: Joi.number()
+          .integer()
+          .min(60)
+          .default(604800),
         ACCESS_TOKEN_SECRET: Joi.string().default('ACCESS_SECRET'),
         REFRESH_TOKEN_SECRET: Joi.string().default('REFRESH_SECRET')
       }),
     }),
   ],
 })
-export class ConfigModule {}
+export class ConfigModule { }

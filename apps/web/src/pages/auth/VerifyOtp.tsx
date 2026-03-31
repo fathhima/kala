@@ -43,6 +43,13 @@ export function VerifyOtp() {
     return () => clearTimeout(timer)
   }, [resendCooldown])
 
+  // Start cooldown immediately for forgot-password flow after code is sent.
+  useEffect(() => {
+    if (purpose === 'password-reset' && email) {
+      setResendCooldown(60)
+    }
+  }, [purpose, email])
+
   const handleChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(-1)
     const next = [...digits]
@@ -89,27 +96,51 @@ export function VerifyOtp() {
     setError('')
     setLoading(true)
 
-    const { error: verifyError } = await AuthService.verifyOtp(email, code)
-    if (verifyError) {
-      setError(verifyError.message || 'Verification failed')
+    if (purpose === 'registration') {
+      const { error: verifyError } = await AuthService.verifyOtp(email, code)
+
+      if (verifyError) {
+        setError(
+          Array.isArray(verifyError.message)
+            ? verifyError.message.join(', ')
+            : verifyError.message || 'Verification failed'
+        )
+        setLoading(false)
+        return
+      }
+
       setLoading(false)
+      navigate('/login', { replace: true })
       return
     }
-    setLoading(false)
 
-    navigate('/login', { replace: true })
+    setLoading(false)
+    navigate('/reset-password', {
+      state: {
+        email,
+        otp: code,
+        verified: true,
+      },
+      replace: true,
+    })
   }
 
   const handleResend = async () => {
     setError('')
     setResendLoading(true)
 
-    const { error: resendError } = await AuthService.resendOtp(email)
+    const { error: resendError } = purpose === 'registration'
+      ? await AuthService.resendOtp(email)
+      : await AuthService.forgotPassword(email)
 
     setResendLoading(false)
 
     if (resendError) {
-      setError(resendError.message || 'Unable to resend OTP')
+      setError(
+        Array.isArray(resendError.message)
+          ? resendError.message.join(', ')
+          : resendError.message || 'Unable to resend OTP'
+      )
       return
     }
 
@@ -125,7 +156,7 @@ export function VerifyOtp() {
 
   const subtitle = purpose === 'registration'
     ? 'Verify your email to complete sign up'
-    : 'Check your inbox'
+    : 'Check your email for a reset code'
 
   // const backLabel = purpose === 'registration'
   // ? 'Use a different email'
@@ -187,7 +218,7 @@ export function VerifyOtp() {
             )}
 
             <Button type="submit" loading={loading} className="w-full">
-              {purpose === 'registration' ? 'Verify & Create Account' : 'Verify Code'}
+              {purpose === 'registration' ? 'Verify & Create Account' : 'Continue'}
             </Button>
           </form>
 

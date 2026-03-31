@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Palette, Eye, EyeOff } from 'lucide-react'
+import { useGoogleLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../stores/authStore'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { AuthService } from '../../services/auth.service'
 
 function GoogleIcon() {
   return (
@@ -20,6 +22,7 @@ function GoogleIcon() {
 export function Login() {
   const navigate = useNavigate()
   const { login, isLoading, error, isAuthenticated } = useAuthStore()
+  const setError = useAuthStore((state) => state.error)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -38,12 +41,52 @@ export function Login() {
       navigate('/')
   }
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      setGoogleLoading(true)
+      try {
+        const result = await AuthService.googleSignIn(codeResponse.access_token)
+        if (!result.error) {
+          // Fetch user details after successful login
+          const userResult = await AuthService.me()
+          if (!userResult.error) {
+            // Update auth store with user data
+            useAuthStore.setState({
+              user: userResult.data,
+              isAuthenticated: true,
+              error: null,
+            })
+            navigate('/')
+          } else {
+            useAuthStore.setState({
+              error: userResult.error?.message || 'Failed to fetch user after login',
+            })
+          }
+        } else {
+          useAuthStore.setState({
+            error: result.error?.message || 'Google sign-in failed',
+          })
+        }
+      } catch (err: any) {
+        useAuthStore.setState({
+          error: 'Google sign-in failed: ' + (err?.message || 'Unknown error'),
+        })
+      } finally {
+        setGoogleLoading(false)
+      }
+    },
+    onError: () => {
+      useAuthStore.setState({
+        error: 'Google sign-in failed',
+      })
+      setGoogleLoading(false)
+    },
+    flow: 'implicit',
+  })
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
-    // Mock Google OAuth — signs in as the default student
-    await new Promise((r) => setTimeout(r, 800))
-    navigate('/dashboard')
-    setGoogleLoading(false)
+    googleLogin()
   }
 
   return (

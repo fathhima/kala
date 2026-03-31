@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Palette, Eye, EyeOff } from 'lucide-react'
-import { useAuthStore } from '../../stores/authStore'
+import { useGoogleLogin } from '@react-oauth/google'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { mockUser } from '../../lib/mock'
 import { AuthService } from '@/services/auth.service'
+import { useAuthStore } from '../../stores/authStore'
 
 
 
@@ -21,24 +21,28 @@ function GoogleIcon() {
 }
 
 export function Register() {
-  const { login } = useAuthStore()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormError(null)
     setLoading(true)
 
-    const { data, error } = await AuthService.register(name, email, password)
+    const { error } = await AuthService.register(name, email, password)
 
     if (error) {
-      setError(error.message || 'something went wrong')
+      const message = Array.isArray(error.message)
+        ? error.message.join(', ')
+        : error.message || 'Registration failed. Please try again.'
+
+      setFormError(message)
       setLoading(false)
       return
     }
@@ -54,13 +58,52 @@ export function Register() {
 
   }
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      setGoogleLoading(true)
+      try {
+        const result = await AuthService.googleSignIn(codeResponse.access_token)
+        if (!result.error) {
+          // Fetch user details after successful signup
+          const userResult = await AuthService.me()
+          if (!userResult.error) {
+            // Update auth store with user data (auto-verified via Google)
+            useAuthStore.setState({
+              user: userResult.data,
+              isAuthenticated: true,
+              error: null,
+            })
+            navigate('/dashboard')
+          } else {
+            useAuthStore.setState({
+              error: userResult.error?.message || 'Failed to fetch user after signup',
+            })
+          }
+        } else {
+          useAuthStore.setState({
+            error: result.error?.message || 'Google sign-up failed',
+          })
+        }
+      } catch (err: any) {
+        useAuthStore.setState({
+          error: 'Google sign-up failed: ' + (err?.message || 'Unknown error'),
+        })
+      } finally {
+        setGoogleLoading(false)
+      }
+    },
+    onError: () => {
+      useAuthStore.setState({
+        error: 'Google sign-up failed',
+      })
+      setGoogleLoading(false)
+    },
+    flow: 'implicit',
+  })
+
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true)
-    // Google handles its own verification — sign in directly
-    await new Promise((r) => setTimeout(r, 800))
-    login(mockUser, 'mock-google-token')
-    navigate('/dashboard')
-    setGoogleLoading(false)
+    googleLogin()
   }
 
   return (
@@ -76,15 +119,6 @@ export function Register() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-8">
           <h1 className="text-2xl font-bold text-kala-brown mb-2 text-center">Create Account</h1>
-          {/* <p className="text-sm text-stone-500 mb-6">Join as a student. You can apply to become an instructor later.</p> */}
-
-
-          {/* Divider */}
-          {/* <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-stone-100" />
-            <span className="text-xs text-stone-400">or sign up with email</span>
-            <div className="flex-1 h-px bg-stone-100" />
-          </div> */}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
@@ -93,7 +127,6 @@ export function Register() {
               placeholder="Aisha Khan"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
             />
             <Input
               label="Email"
@@ -101,7 +134,6 @@ export function Register() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
             />
             <div className="relative">
               <Input
@@ -111,7 +143,7 @@ export function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 hint="Use a strong password with letters and numbers"
-                required
+                error={formError || undefined}
                 minLength={8}
               />
               <button
@@ -122,10 +154,6 @@ export function Register() {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-
-            {/* <p className="text-xs text-stone-400">
-              By signing up, you agree to Kala's Terms of Service and Privacy Policy.
-            </p> */}
 
             {/* Google sign-up */}
             <button

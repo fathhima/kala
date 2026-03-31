@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, Req, BadRequestException } from "@nestjs/common";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
@@ -9,10 +9,11 @@ import { AuthService } from "./services/auth.service";
 import { MessageOnlyHttpResponse } from "@/shared/types";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { UpdatePasswordDto } from "./dto/request/update-password.request.dto";
-import type { Response, Request } from "express";
+import { GoogleSignInRequestDto } from "./dto/request/google-signin.request.dto";
+import { RefreshTokenRequestDto } from "./dto/request/refresh-token.request.dto";
+import type { Response } from "express";
 import { HttpResponse } from "@/shared/dto/common/http-response.dto";
 import { UserId } from "@/shared/decorators/user-id.decorator";
-import { UserResponseDto } from "../user/dto/response/user.response.dto";
 import { Public } from "@/shared/decorators/public.decorator";
 import { ApiResponseWithType } from "@/shared/decorators/api-responsewithtype.decorator";
 import { MeResponseDto } from "./dto/response/me-response.dto";
@@ -28,7 +29,6 @@ export class AuthController {
     @ApiResponseWithType({},MeResponseDto)
     @ApiOperation({ summary: 'Get current user details' })
     async me(@UserId() userId: string): Promise<HttpResponse<MeResponseDto>> {
-        console.log("User ID from token:", userId);
         const user = await this.authService.me(userId);
         return {
             message: "User details retrieved successfully",
@@ -95,18 +95,29 @@ export class AuthController {
     }
 
     @Post('forgot-password')
-    forgotPassword(@Body() body: ForgotPasswordDto) {
-        // return this.authService.forgotPassword(body)
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: MessageOnlyHttpResponse })
+    @ApiOperation({ summary: 'Send password reset OTP' })
+    forgotPassword(@Body() body: ForgotPasswordDto): Promise<MessageOnlyHttpResponse> {
+        return this.authService.forgotPassword(body)
     }
 
     @Post('reset-password')
-    resetPassword(@Body() body: ResetPasswordDto) {
-        // return this.authService.resetPassword(body)
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: MessageOnlyHttpResponse })
+    @ApiOperation({ summary: 'Reset password with OTP' })
+    resetPassword(@Body() body: ResetPasswordDto): Promise<MessageOnlyHttpResponse> {
+        return this.authService.resetPassword(body)
     }
 
     @Post('update-password')
-    updatePassword(@Body() body: UpdatePasswordDto) {
-        // return this.authService.updatePassword(body)
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: MessageOnlyHttpResponse })
+    @ApiOperation({ summary: 'Update password for authenticated user' })
+    updatePassword(@UserId() userId: string, @Body() body: UpdatePasswordDto): Promise<MessageOnlyHttpResponse> {
+        return this.authService.updatePassword(userId, body)
     }
 
     @Post('logout')
@@ -117,23 +128,67 @@ export class AuthController {
         }
     }
 
+    @Post('google/sign-in')
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: MessageOnlyHttpResponse })
+    @ApiOperation({ summary: 'Google OAuth sign-in/sign-up' })
+    async googleSignIn(@Body() body: GoogleSignInRequestDto, @Res({ passthrough: true }) res: Response): Promise<MessageOnlyHttpResponse> {
+        const { accessToken, refreshToken } = await this.authService.googleSignIn(body.idToken)
+        this.setAuthCookies(res, accessToken, refreshToken)
+        return {
+            message: "google sign-in success"
+        }
+    }
+
+    @Post('refresh')
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: MessageOnlyHttpResponse })
+    @ApiOperation({ summary: 'Refresh access token using refresh token' })
+    async refreshToken(@Req() req: any, @Body() body: RefreshTokenRequestDto = {}, @Res({ passthrough: true }) res: Response): Promise<MessageOnlyHttpResponse> {
+        // Get refresh token from request body or cookies
+        const refreshToken = body?.refreshToken || req.cookies?.['refresh_token']
+        
+        if (!refreshToken) {
+            throw new BadRequestException('Refresh token not provided')
+        }
+
+        const { accessToken } = await this.authService.refreshAccessToken(refreshToken)
+        const isProduction = process.env.NODE_ENV === 'production'
+        
+        // Update access token cookie
+        res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'strict' : 'lax',
+            maxAge: 15 * 60 * 1000,
+        })
+
+        return {
+            message: "access token refreshed successfully"
+        }
+    }
+
     // Helper methods
     private setAuthCookies(
         res: Response,
         accessToken: string,
         refreshToken: string,
     ): void {
+        const isProduction = process.env.NODE_ENV === 'production'
+
         res.cookie('access_token', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'strict' : 'lax',
             maxAge: 15 * 60 * 1000,
         });
 
         res.cookie('refresh_token', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'strict' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
     }

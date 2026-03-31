@@ -10,9 +10,10 @@ export class User {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password: string | null;
   roles: UserRole[];
   imageUrl: string | null;
+  googleId: string | null;
   isVerified: boolean;
   isActive: boolean;
   createdAt: Date;
@@ -22,7 +23,7 @@ export class User {
     id: string,
     name: string,
     email: string,
-    password: string,
+    password: string | null,
     roles: UserRole[]
   ) {
     this.id = id
@@ -32,6 +33,7 @@ export class User {
     this.roles = roles
 
     this.imageUrl = null
+    this.googleId = null
     this.isVerified = false
     this.isActive = true
     this.createdAt = new Date()

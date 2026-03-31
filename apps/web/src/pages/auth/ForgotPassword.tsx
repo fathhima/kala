@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Palette, ArrowLeft, Mail } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { AuthService } from '@/services/auth.service'
 
 export function ForgotPassword() {
   const navigate = useNavigate()
@@ -15,11 +16,26 @@ export function ForgotPassword() {
     setError('')
     setLoading(true)
 
-    // Mock: simulate sending OTP email
-    await new Promise((r) => setTimeout(r, 800))
+    const normalizedEmail = email.trim().toLowerCase()
+    const { error: forgotPasswordError } = await AuthService.forgotPassword(normalizedEmail)
+
+    if (forgotPasswordError) {
+      setError(
+        Array.isArray(forgotPasswordError.message)
+          ? forgotPasswordError.message.join(', ')
+          : forgotPasswordError.message || 'Unable to send reset code. Please try again.'
+      )
+      setLoading(false)
+      return
+    }
 
     setLoading(false)
-    navigate('/verify-otp', { state: { email } })
+    navigate('/verify-otp', {
+      state: {
+        email: normalizedEmail,
+        purpose: 'password-reset',
+      },
+    })
   }
 
   return (

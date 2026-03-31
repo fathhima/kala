@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { useUserStore } from '../../stores/userStore'
 
 export function ChangePassword() {
   const navigate = useNavigate()
+  const { changePassword, isLoading, error, success, clearMessages } = useUserStore()
 
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -17,8 +19,15 @@ export function ChangePassword() {
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [errors, setErrors] = useState({ current: '', next: '', confirm: '' })
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard/settings')
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [success, navigate])
 
   const validate = () => {
     const e = { current: '', next: '', confirm: '' }
@@ -32,12 +41,14 @@ export function ChangePassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    setLoading(true)
-    // Mock API call
-    await new Promise((r) => setTimeout(r, 700))
-    setLoading(false)
-    setSuccess(true)
+    await changePassword(current, next, confirm)
   }
+
+  useEffect(() => {
+    return () => {
+      clearMessages()
+    }
+  }, [])
 
   if (success) {
     return (
@@ -73,6 +84,12 @@ export function ChangePassword() {
       </div>
 
       <Card className="p-6">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Current password */}
           <div className="relative">
@@ -83,6 +100,7 @@ export function ChangePassword() {
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               error={errors.current}
+              disabled={isLoading}
             />
             <button
               type="button"
@@ -103,6 +121,7 @@ export function ChangePassword() {
                 value={next}
                 onChange={(e) => setNext(e.target.value)}
                 error={errors.next}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -122,6 +141,7 @@ export function ChangePassword() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 error={errors.confirm}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -134,13 +154,14 @@ export function ChangePassword() {
           </div>
 
           <div className="flex gap-3 pt-1">
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={isLoading}>
               Update Password
             </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={() => navigate('/dashboard/settings')}
+              disabled={isLoading}
             >
               Cancel
             </Button>
@@ -150,3 +171,4 @@ export function ChangePassword() {
     </div>
   )
 }
+

@@ -4,9 +4,11 @@ export class UpdateUserDto {
 
   name?: string;
 
-  password?: string;
+  password?: string | null;
 
-  imageUrl?: string;
+  imageUrl?: string | null;
+
+  googleId?: string;
 
   roles?: UserRole[];
 

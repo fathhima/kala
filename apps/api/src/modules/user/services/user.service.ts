@@ -40,6 +40,11 @@ export class UserService {
     return user ? user : null
   }
 
+  async findEntityById(id: string): Promise<User | null> {
+    const user = await this.userRepository.findById(id);
+    return user ? user : null;
+  }
+
   async create(dto: CreateUserDto): Promise<void> {
     const user = new User(cuid.createId(),dto.name,dto.email,dto.password,dto.roles)
     await this.userRepository.create(user)

@@ -3,11 +3,15 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Palette, Eye, EyeOff, KeyRound, CheckCircle2 } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { AuthService } from '@/services/auth.service'
 
 export function ResetPassword() {
   const navigate = useNavigate()
   const location = useLocation()
-  const verified: boolean = (location.state as { verified?: boolean })?.verified ?? false
+  const state = (location.state as { verified?: boolean; email?: string; otp?: string }) ?? {}
+  const verified: boolean = state.verified ?? false
+  const email = (state.email ?? '').trim().toLowerCase()
+  const otp = (state.otp ?? '').replace(/\D/g, '').slice(0, 6)
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -15,28 +19,44 @@ export function ResetPassword() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [formError, setFormError] = useState('')
   const [errors, setErrors] = useState({ password: '', confirmPassword: '' })
 
   // Redirect back if OTP was not verified
   useEffect(() => {
-    if (!verified) navigate('/forgot-password', { replace: true })
-  }, [verified, navigate])
+    if (!verified || !email || otp.length !== 6) navigate('/forgot-password', { replace: true })
+  }, [verified, email, otp, navigate])
 
   const validate = () => {
     const next = { password: '', confirmPassword: '' }
     if (password.length < 8) next.password = 'Password must be at least 8 characters'
     if (password !== confirmPassword) next.confirmPassword = 'Passwords do not match'
     setErrors(next)
+    setFormError('')
     return !next.password && !next.confirmPassword
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
+    if (otp.length !== 6) {
+      setFormError('Invalid or expired verification code. Please request a new one.')
+      return
+    }
 
     setLoading(true)
-    // Mock: simulate API call
-    await new Promise((r) => setTimeout(r, 800))
+    const { error } = await AuthService.resetPassword(email, otp, password, confirmPassword)
+
+    if (error) {
+      setFormError(
+        Array.isArray(error.message)
+          ? error.message.join(', ')
+          : error.message || 'Unable to reset password. Please try again.'
+      )
+      setLoading(false)
+      return
+    }
+
     setLoading(false)
     setSuccess(true)
   }
@@ -134,6 +154,10 @@ export function ResetPassword() {
             <Button type="submit" loading={loading} className="w-full">
               Reset Password
             </Button>
+
+            {formError && (
+              <p className="text-xs text-red-500">{formError}</p>
+            )}
           </form>
 
           {/* <p className="text-center text-sm text-stone-500 mt-6">

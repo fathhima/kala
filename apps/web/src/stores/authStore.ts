@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string) => Promise<void>
   adminLogin: (email: string, password: string) => Promise<void>
   fetchUser: () => Promise<void>
   logout: () => void
@@ -25,6 +26,21 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         set({ isLoading: true, error: null })
         const { error } = await AuthService.login(email, password)
+        if (error) {
+          set({
+            error: error.message || 'Login failed',
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+          })
+          return
+        }
+        set({ isLoading: false, isAuthenticated: true, error: null })
+      },
+
+      register: async (name, email, password) => {
+        set({ isLoading: true, error: null })
+        const { data, error } = await AuthService.register(name, email, password)
         if (error) {
           set({
             error: error.message || 'Login failed',
@@ -60,11 +76,11 @@ export const useAuthStore = create<AuthState>()(
           if (error.status === 401) {
             set({ user: null, isAuthenticated: false, error: null, isLoading: false })
           } else {
-            set({ error: error.message || 'Failed to fetch user', isLoading: false }) 
+            set({ error: error.message || 'Failed to fetch user', isLoading: false })
           }
           return
         }
-        set({ user: data, isAuthenticated: true, error: null, isLoading: false }) 
+        set({ user: data, isAuthenticated: true, error: null, isLoading: false })
       },
 
       logout: async () => {

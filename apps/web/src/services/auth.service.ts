@@ -11,7 +11,16 @@ export const AuthService = {
     adminLogin: (email: string, password: string) => handleRequest(() => authApi.authControllerAdminLogin({ email, password })),
     register: (name: string, email: string, password: string) => handleRequest(() => authApi.authControllerRegister({ name, email, password })),
     verifyOtp: (email: string, otp: string) => handleRequest(() => authApi.authControllerVerifyOtp({ email, otp })),
-    resendOtp: (email: string) => handleRequest(() => apiClient.post('/api/auth/resend-otp', { email })),
-    logout: () => handleRequest(() => apiClient.post<{ message: string }>('/api/auth/logout'))
+    resendOtp: (email: string) => handleRequest(() => authApi.authControllerResendOtp({ email })),
+    forgotPassword: (email: string) =>
+        handleRequest(() => apiClient.post<{ message: string }>('/api/auth/forgot-password', { email })),
+    resetPassword: (email: string, otp: string, newPassword: string, confirmPassword: string) =>
+        handleRequest(() => apiClient.post<{ message: string }>('/api/auth/reset-password', { email, otp, newPassword, confirmPassword })),
+    updatePassword: (password: string, newPassword: string) =>
+        handleRequest(() => authApi.authControllerUpdatePassword({ password, newPassword })),
+    changePassword: (password: string, newPassword: string) =>
+        handleRequest(() => authApi.authControllerUpdatePassword({ password, newPassword })),
+    logout: () => handleRequest(() => apiClient.post<{ message: string }>('/api/auth/logout')),
+    googleSignIn: (idToken: string) => handleRequest(() => apiClient.post<{ message: string }>('/api/auth/google/sign-in', { idToken })),
 
 }

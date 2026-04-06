@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import { Card } from '../../components/ui/Card'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
@@ -10,6 +11,22 @@ import { useUpdateUserStatus } from '@/hooks/user/use-update-user-status'
 export function ManageUsers() {
   const mutate = useUpdateUserStatus()
   const { data: users, isLoading, isError } = useUsers()
+  const [search, setSearch] = useState('')
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return []
+    const query = search.trim().toLowerCase()
+    if (!query) return users
+
+    return users.filter((user) => {
+      const roles = user.roles.join(' ').toLowerCase()
+      return (
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        roles.includes(query)
+      )
+    })
+  }, [users, search])
 
   function toggleUserBlocked(userId: string) {
     
@@ -32,9 +49,20 @@ export function ManageUsers() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
         <h1 className="text-2xl font-bold text-kala-brown">Manage Users</h1>
-        <p className="text-stone-500 text-sm mt-1">{users.length} users shown</p>
+          <p className="text-stone-500 text-sm mt-1">{filteredUsers.length} users shown</p>
+        </div>
+        <label className="flex w-full flex-col gap-1 sm:w-72">
+          <span className="text-xs font-medium text-stone-500">Search</span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by name, email, role..."
+            className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 shadow-sm outline-none transition focus:border-kala-brown focus:ring-2 focus:ring-kala-brown/20"
+          />
+        </label>
       </div>
 
       <Card className="overflow-hidden">
@@ -50,7 +78,7 @@ export function ManageUsers() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="border-b border-stone-50 hover:bg-stone-50 transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -96,6 +124,13 @@ export function ManageUsers() {
                   </td>
                 </tr>
               ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td className="px-5 py-6 text-center text-stone-500" colSpan={5}>
+                    No users match "{search.trim()}".
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

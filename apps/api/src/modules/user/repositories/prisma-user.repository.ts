@@ -17,6 +17,13 @@ export class PrismaUserRepository implements UserRepository {
     return user ? UserMapper.toEntity(user) : null
   }
 
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id }
+    })
+    return user ? UserMapper.toEntity(user) : null
+  }
+
   async findAuthByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email }

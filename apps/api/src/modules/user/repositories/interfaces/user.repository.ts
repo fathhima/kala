@@ -1,13 +1,11 @@
-import { User } from '../../entities/user.entity';
-import { UserQueryDto } from '../../dto/user-query.dto';
+import { UserEntity } from "../../entities/user.entity";
+import { AuthUser } from "../../types/auth-user.type";
+import { CreateUserInput } from "../../types/create-user-input.type";
 
-export const USER_REPOSITORY = 'USER_REPOSITORY';
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY')
 
 export interface UserRepository {
-  create(userData: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User>;
-  update(id: string, data: Partial<User>): Promise<User>;
-  find(query: UserQueryDto): Promise<{ users: User[]; total: number }>;
-  findByEmail(email: string): Promise<User | null>;
-  findById(id: string): Promise<User | null>;
-  delete(id: string): Promise<void>;
+  findByEmail(email: string): Promise<UserEntity | null>;
+  findAuthByEmail(email: string): Promise<AuthUser | null>
+  create(data: CreateUserInput): Promise<UserEntity>;
 }

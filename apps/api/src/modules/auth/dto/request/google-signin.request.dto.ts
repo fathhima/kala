@@ -8,5 +8,5 @@ export class GoogleSignInRequestDto {
     })
     @IsString()
     @IsNotEmpty()
-    idToken: string
+    idToken!: string
 }

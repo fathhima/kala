@@ -1,12 +1,9 @@
-import { JWTPayload } from '@/common/types/index';
+import { JwtPayload } from "../jwt/types/jwt-payload.type";
 
 declare global {
   namespace Express {
     interface Request {
-      user: {
-        id: string;
-        role: JWTPayload['role'];
-      };
+      user?: JwtPayload;
     }
   }
 }

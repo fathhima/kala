@@ -8,7 +8,7 @@ const instance = createLogger({
   format: winston.format.combine(
     winston.format.timestamp({ format: 'HH:mm:ss' }),
     winston.format.ms(),
-    nestWinstonModuleUtilities.format.nestLike('ArticleFeed', {
+    nestWinstonModuleUtilities.format.nestLike('kala', {
       colors: true,
       prettyPrint: true,
       processId: false,

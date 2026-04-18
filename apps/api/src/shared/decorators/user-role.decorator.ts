@@ -5,12 +5,15 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-export const UserRole = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+export const UserRoles = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    const userRole = request.user.role;
-    if (!userRole)
-      throw new UnauthorizedException('User Role not found in request');
-    return userRole;
+    const roles = request.user?.roles;
+
+    if (!roles || roles.length === 0) {
+      throw new UnauthorizedException('User roles not found in request');
+    }
+
+    return roles;
   },
 );

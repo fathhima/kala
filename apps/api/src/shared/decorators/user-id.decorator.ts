@@ -8,9 +8,12 @@ import { Request } from 'express';
 export const UserId = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    const userId = request.user.id;
-    if (!userId)
+    const userId = request.user?.sub;
+
+    if (!userId) {
       throw new UnauthorizedException('User ID not found in request');
+    }
+
     return userId;
   },
 );

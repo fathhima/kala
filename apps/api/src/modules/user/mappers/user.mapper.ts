@@ -1,34 +1,36 @@
-import { Role } from '@prisma/client';
-import { User, UserRole } from '../entities/user.entity';
-
-type PrismaUserRecord = {
-  id: string;
-  name: string;
-  email: string;
-  password: string | null;
-  roles: Role[];
-  imageUrl: string | null;
-  googleId: string | null;
-  isVerified: boolean;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import { User } from "@prisma/client";
+import { UserEntity } from "../entities/user.entity";
+import { AuthUser } from "../types/auth-user.type";
 
 export class UserMapper {
-  static toDomain(raw: PrismaUserRecord): User {
-    return {
-      id : raw.id,
-      name : raw.name,
-      email : raw.email,
-      password : raw.password,
-      roles : raw.roles as unknown as UserRole[],
-      imageUrl : raw.imageUrl,
-      googleId : raw.googleId,
-      isVerified : raw.isVerified,
-      isActive : raw.isActive,
-      createdAt : raw.createdAt,
-      updatedAt : raw.updatedAt,
+    static toEntity(user: User): UserEntity {
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            roles: user.roles,
+            imageUrl: user.imageUrl,
+            googleId: user.googleId,
+            isVerified: user.isVerified,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        }
     }
-  }
+
+    static toAuthUser(user: User): AuthUser {
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            roles: user.roles,
+            imageUrl: user.imageUrl,
+            googleId: user.googleId,
+            isVerified: user.isVerified,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+    }
 }

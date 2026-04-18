@@ -1,43 +1,23 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { JwtPayload } from "./types/jwt-payload.type";
 import { ConfigService } from "@nestjs/config";
-import * as jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
+
 
 @Injectable()
 export class JwtService {
+  constructor(private readonly configService: ConfigService) { }
 
-  private readonly accessSecret: string;
-  private readonly refreshSecret: string;
-
-  constructor(private readonly configService: ConfigService) {
-    this.accessSecret = this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET')
-    this.refreshSecret = this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET')
+  async signAccessToken(payload: JwtPayload): Promise<string> {
+    return jwt.sign(payload, this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'), { expiresIn: '15m' })
   }
-
-  generateAccessToken(payload: any) {
-    return jwt.sign(payload, this.accessSecret, {
-      expiresIn: "15m",
-    });
+  async signRefreshToken(payload: JwtPayload): Promise<string> {
+    return jwt.sign(payload, this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'), { expiresIn: '7d' })
   }
-
-  generateRefreshToken(payload: any) {
-    return jwt.sign(payload, this.refreshSecret, {
-      expiresIn: "7d",
-    });
+  async verifyAccessToken(token: string): Promise<JwtPayload> {
+    return jwt.verify(token, this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'))
   }
-
-  verifyAccessToken(token: string) {
-    try {
-      return jwt.verify(token, this.accessSecret);
-    } catch {
-      throw new UnauthorizedException("Invalid access token");
-    }
-  }
-
-  verifyRefreshToken(token: string) {
-    try {
-      return jwt.verify(token, this.refreshSecret);
-    } catch {
-      throw new UnauthorizedException("Invalid refresh token");
-    }
+  async verifyRefreshToken(token: string): Promise<JwtPayload> {
+    return jwt.verify(token, this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'))
   }
 }

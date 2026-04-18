@@ -7,14 +7,14 @@ export class RegisterDto {
         description: "The full name of the user"
     })
     @IsString()
-    name: string
+    name!: string
 
     @ApiProperty({
         example: "john.doe@example.com",
         description: "The email address of the user"
     })
     @IsEmail()
-    email: string
+    email!: string
 
     @ApiProperty({
         example: "password123",
@@ -22,5 +22,5 @@ export class RegisterDto {
     })
     @IsString()
     @MinLength(8)
-    password: string
+    password!: string
 }

@@ -3,17 +3,17 @@ import { IsEmail, IsString, Length, MinLength } from "class-validator"
 export class ResetPasswordDto {
 
     @IsEmail()
-    email: string
+    email!: string
 
     @IsString()
     @Length(6, 6)
-    otp: string
+    otp!: string
 
     @IsString()
     @MinLength(8)
-    newPassword: string
+    newPassword!: string
 
     @IsString()
     @MinLength(8)
-    confirmPassword: string
+    confirmPassword!: string
 }

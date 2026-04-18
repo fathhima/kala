@@ -1,4 +1,4 @@
-import { UserRole } from "../entities/user.entity";
+import { Role } from "@prisma/client";
 
 export class UpdateUserDto {
 
@@ -10,7 +10,7 @@ export class UpdateUserDto {
 
   googleId?: string;
 
-  roles?: UserRole[];
+  roles?: Role[];
 
   isVerified?: boolean;
   

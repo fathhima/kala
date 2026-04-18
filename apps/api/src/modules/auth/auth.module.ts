@@ -3,11 +3,13 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./services/auth.service";
 import { GoogleOAuthService } from "./services/google-oauth.service";
 import { UserModule } from "../user/user.module";
-import { JwtService } from "../../shared/jwt/jwt.service";
+import { MailerModule } from "@/shared/mailer/mailer.module";
+import { RedisModule } from "@/shared/redis/redis.module";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
-    imports: [UserModule],
+    imports: [UserModule, MailerModule, RedisModule, JwtModule],
     controllers: [AuthController],
-    providers: [AuthService, GoogleOAuthService, JwtService]
+    providers: [AuthService]
 })
 export class AuthModule { }

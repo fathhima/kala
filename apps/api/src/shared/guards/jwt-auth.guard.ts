@@ -4,9 +4,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { JwtPayload } from 'jsonwebtoken';
+import { Request } from 'express';
 
 import { JwtService } from '@/shared/jwt/jwt.service';
 import { IS_PUBLIC_KEY } from '@/shared/decorators/public.decorator';
@@ -18,53 +17,45 @@ export class JwtAuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const isPublic =
-      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]) || false;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    if (isPublic) return true;
+    if (isPublic) {
+      return true;
+    }
 
     const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractTokenFromHeader(request);
 
-    let accessToken: string | undefined;
-    const authHeader = request.headers['authorization'];
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      accessToken = authHeader.split(' ')[1];
-    }
-
-    if (!accessToken) {
-      accessToken = request.cookies['access_token'] as string;
-    }
-
-    if (!accessToken) {
-      throw new UnauthorizedException('Missing access token');
+    if (!token) {
+      throw new UnauthorizedException('Access token is missing');
     }
 
     try {
-      const payload = this.jwtService.verifyAccessToken(accessToken);
-
-      if (typeof payload === 'string') {
-        throw new UnauthorizedException('Invalid token payload');
-      }
-
-      const jwtPayload = payload as JwtPayload & { role?: string };
-
-      if (!jwtPayload.sub || !jwtPayload.role) {
-        throw new UnauthorizedException('Invalid token payload');
-      }
-
-      request.user = {
-        id: String(jwtPayload.sub),
-        role: jwtPayload.role,
-      };
-
+      const payload = await this.jwtService.verifyAccessToken(token);
+      request.user = payload;
       return true;
     } catch {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Invalid or expired access token');
     }
+  }
+
+  private extractTokenFromHeader(request: Request): string | null {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader) {
+      return null;
+    }
+
+    const [type, token] = authHeader.split(' ');
+
+    if (type !== 'Bearer' || !token) {
+      return null;
+    }
+
+    return token;
   }
 }

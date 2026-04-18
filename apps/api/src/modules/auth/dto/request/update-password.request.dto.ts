@@ -6,11 +6,11 @@ export class UpdatePasswordDto {
     @IsString()
     @MinLength(8)
     @MaxLength(50)
-    password: string;
+    password!: string;
 
     @ApiProperty({ example: '12345678', minLength: 8, maxLength: 50 })
     @IsString()
     @MinLength(8)
     @MaxLength(50)
-    newPassword: string
+    newPassword!: string
 } 

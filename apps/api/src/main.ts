@@ -1,4 +1,3 @@
-import { Server } from 'node:http';
 import { ConfigService } from '@nestjs/config';
 
 import { setupApp } from '@/shared/config/app.config';
@@ -10,7 +9,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.getOrThrow<number>('PORT');
 
-  await app.listen(port).then((value: Server) => {
+  await app.listen(port).then(() => {
     Logger.log(
       `Server Started Listening: ${port}`,
     );

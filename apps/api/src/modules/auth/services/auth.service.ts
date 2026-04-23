@@ -11,6 +11,8 @@ import { Role } from "@prisma/client";
 import { JwtService } from "@/shared/jwt/jwt.service";
 import { ConfigService } from "@nestjs/config";
 import { LoginDto } from "../dto/request/login.dto";
+import { generateOtp } from "../utils/generate-otp";
+import { normalizeEmail } from "../utils/normalize-email";
 
 @Injectable()
 export class AuthService {
@@ -29,7 +31,7 @@ export class AuthService {
 
     async register(dto: RegisterDto) {
 
-        const email = this.normalizeEmail(dto.email);
+        const email = normalizeEmail(dto.email);
 
         const existingUser = await this.userRepository.findByEmail(email)
 
@@ -39,7 +41,7 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(dto.password, 10)
 
-        const otp = this.generateOtp()
+        const otp = generateOtp()
 
         const pendingSignup: PendingSignup = {
             name: dto.name,
@@ -60,7 +62,7 @@ export class AuthService {
 
     async verifyOtp(dto: VerifyOtpDto) {
 
-        const email = this.normalizeEmail(dto.email);
+        const email = normalizeEmail(dto.email);
 
         const rawPendingSignup = await this.redisService.get(this.signupKey(email))
 
@@ -105,7 +107,7 @@ export class AuthService {
 
     async login(dto: LoginDto) {
 
-        const email = this.normalizeEmail(dto.email)
+        const email = normalizeEmail(dto.email)
 
         const authUser = await this.userRepository.findAuthByEmail(email)
 
@@ -159,14 +161,6 @@ export class AuthService {
             message: 'User fetched successfully',
             data: user
         }
-    }
-
-    private normalizeEmail(email: string): string {
-        return email.trim().toLowerCase();
-    }
-
-    private generateOtp() {
-        return Math.floor(100000 + Math.random() * 900000).toString()
     }
 
     private signupKey(email: string) {

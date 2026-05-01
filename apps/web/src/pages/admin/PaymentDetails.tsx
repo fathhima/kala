@@ -1,26 +1,21 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { mockBookings } from '../../lib/mock'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { formatDateTime, formatPrice, getBookingStatusLabel } from '../../lib/utils'
 
-const paymentRows = mockBookings
-  .filter((booking) => booking.payment)
-  .map((booking) => ({
-    booking,
-    payment: booking.payment!,
-    student: booking.studentName,
-    instructor: booking.instructor.user.name,
-    date: booking.slot.startTime,
-  }))
+const paymentRows: Array<any> = []
 
 export function AdminPaymentDetails() {
   const { id } = useParams<{ id: string }>()
   const row = paymentRows.find((item) => item.payment.id === id)
 
   if (!row) {
-    return <Navigate to="/admin/payments" replace />
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-sm text-stone-500">No payment data available.</p>
+      </Card>
+    )
   }
 
   return (

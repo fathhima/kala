@@ -12,7 +12,7 @@ class SafeUserDto {
     @ApiProperty({ example: 'john.doe@example.com', description: 'The email address of the user' })
     email!: string;
 
-    @ApiProperty({ enum: Role, isArray: true, description: 'The roles assigned to the user' })
+    @ApiProperty({ enum: Role, isArray: true, enumName: 'Role', description: 'The roles assigned to the user' })
     roles!: Role[];
 
     @ApiProperty({ nullable: true, example: 'https://example.com/image.jpg', description: 'The URL of the user\'s profile image' })

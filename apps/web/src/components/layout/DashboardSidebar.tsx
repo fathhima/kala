@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { X, Palette } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { useUIStore } from '../../stores/uiStore'
+import { useUIStore } from '../../lib/uiStore'
 
 export interface NavItem {
   label: string

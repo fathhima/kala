@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom'
-import { mockBookings } from '../../lib/mock'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { cn, formatDate, getBookingStatusColor, getBookingStatusLabel } from '../../lib/utils'
 
 export function BookingMonitoring() {
+  const bookings: Array<any> = []
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-kala-brown">Booking Monitoring</h1>
-        <p className="text-stone-500 text-sm mt-1">{mockBookings.length} bookings (demo data)</p>
+        <p className="text-stone-500 text-sm mt-1">{bookings.length} bookings</p>
       </div>
 
       <Card className="overflow-hidden">
@@ -27,7 +28,7 @@ export function BookingMonitoring() {
               </tr>
             </thead>
             <tbody>
-              {mockBookings.map((booking) => (
+              {bookings.length > 0 ? bookings.map((booking) => (
                 <tr key={booking.id} className="border-b border-stone-50 hover:bg-stone-50 transition-colors">
                   <td className="px-5 py-3 text-stone-400 font-mono text-xs">{booking.id.slice(0, 8)}...</td>
                   <td className="px-5 py-3 font-medium text-stone-800">{booking.studentName}</td>
@@ -49,7 +50,13 @@ export function BookingMonitoring() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-stone-500">
+                    No bookings yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

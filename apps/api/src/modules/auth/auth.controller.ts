@@ -9,6 +9,7 @@ import { VerifyOtpDto } from "./dto/request/verify-otp.dto";
 import { LoginDto } from "./dto/request/login.dto";
 import { MeResponseDto } from "./dto/response/me-response.dto";
 import { UserId } from "@/shared/decorators/user-id.decorator";
+import { ResendOtpDto } from "./dto/request/resend-otp.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -34,6 +35,15 @@ export class AuthController {
     }
 
     @Public()
+    @Post('resend-otp')
+    @ApiOperation({ summary: 'Resend OTP to email' })
+    @ApiOkResponse({ type: MessageResponseDto })
+    @ApiBadRequestResponse({ description: 'Registration not found or already verified' })
+    resendOtp(@Body() dto: ResendOtpDto) {
+        return this.authService.resendOtp(dto)
+    }
+
+    @Public()
     @Post('login')
     @ApiOperation({ summary: 'Login with email and password' })
     @ApiOkResponse({ type: AuthResponseDto })
@@ -49,5 +59,4 @@ export class AuthController {
     me(@UserId() userId: string) {
         return this.authService.me(userId)
     }
-
 }

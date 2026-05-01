@@ -7,7 +7,6 @@ import {
 import { useInstructorStore } from '../../stores/instructorStore'
 import { useBookingStore } from '../../stores/bookingStore'
 import { useAuthStore } from '../../stores/authStore'
-import { mockSlots } from '../../lib/mock'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -56,7 +55,8 @@ export function Payment() {
   const price = state?.price ?? 0
 
   const instructor = instructors.find((i) => i.id === instructorId)
-  const slot = mockSlots.find((s) => s.id === slotId)
+  const slots: Array<any> = []
+  const slot = slots.find((s) => s.id === slotId)
 
   const [method, setMethod] = useState<PaymentMethod>('card')
   const [cardNumber, setCardNumber] = useState('')

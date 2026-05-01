@@ -1,16 +1,20 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { mockBookings } from '../../lib/mock'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { formatDateTime, formatPrice, getBookingStatusLabel } from '../../lib/utils'
 
 export function AdminBookingDetails() {
   const { id } = useParams<{ id: string }>()
-  const booking = mockBookings.find((item) => item.id === id)
+  const bookings: Array<any> = []
+  const booking = bookings.find((item) => item.id === id)
 
   if (!booking) {
-    return <Navigate to="/admin/bookings" replace />
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-sm text-stone-500">No booking data available.</p>
+      </Card>
+    )
   }
 
   return (

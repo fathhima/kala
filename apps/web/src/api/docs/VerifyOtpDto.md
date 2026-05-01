@@ -1,21 +1,21 @@
-# UpdatePasswordDto
+# VerifyOtpDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**password** | **string** |  | [default to undefined]
-**newPassword** | **string** |  | [default to undefined]
+**email** | **string** | The email address of the user to verify OTP for | [default to undefined]
+**otp** | **string** | The 6-digit OTP sent to the user\&#39;s email | [default to undefined]
 
 ## Example
 
 ```typescript
-import { UpdatePasswordDto } from './api';
+import { VerifyOtpDto } from './api';
 
-const instance: UpdatePasswordDto = {
-    password,
-    newPassword,
+const instance: VerifyOtpDto = {
+    email,
+    otp,
 };
 ```
 

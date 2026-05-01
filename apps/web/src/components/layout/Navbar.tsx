@@ -1,18 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Palette, Menu, X, ChevronDown, LogOut, User, LayoutDashboard } from 'lucide-react'
 import { useState } from 'react'
-import { useAuthStore } from '../../stores/authStore'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
+import { useAuthStore } from '@/features/auth/store'
 
 export function Navbar() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, isAuthenticated, clearAuth } = useAuthStore()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const handleLogout = () => {
-    logout()
+    clearAuth()
     navigate('/login')
   }
 
@@ -48,7 +48,7 @@ export function Navbar() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-50 transition-colors"
                 >
-                  <Avatar name={user.name} src={user.avatarUrl} size="sm" />
+                  <Avatar name={user.name} src={user.imageUrl} size="sm" />
                   <span className="text-sm font-medium text-stone-700">{user.name.split(' ')[0]}</span>
                   <ChevronDown size={14} className="text-stone-400" />
                 </button>

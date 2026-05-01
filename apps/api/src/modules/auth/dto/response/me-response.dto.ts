@@ -12,14 +12,15 @@ export class MeResponseDto {
   @ApiProperty({ example: 'john@example.com' })
   email!: string;
 
-  @ApiProperty({ enum: Role, isArray: true, example: [Role.STUDENT] })
+  @ApiProperty({ enum: Role, isArray: true, enumName: 'Role', example: [Role.STUDENT] })
   roles!: Role[];
 
   @ApiPropertyOptional({
+    type: String,
     example: 'https://cdn.example.com/avatar.png',
     nullable: true,
   })
-  imageUrl!: string | null;
+  imageUrl?: string | null;
 
   @ApiProperty({ example: true })
   isVerified!: boolean;
@@ -28,10 +29,10 @@ export class MeResponseDto {
   isActive!: boolean;
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt!: Date;
+  createdAt?: Date;
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt!: Date;
+  updatedAt?: Date;
 
   static fromEntity(user: UserEntity): MeResponseDto {
     const dto = new MeResponseDto();

@@ -23,13 +23,33 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
-export interface AuthControllerMe200Response {
-    'message': string;
-    'data': MeResponseDto;
+export interface AuthDataDto {
+    /**
+     * The access token for the user
+     */
+    'accessToken': string;
+    /**
+     * The refresh token for the user
+     */
+    'refreshToken': string;
+    /**
+     * The user information
+     */
+    'user': SafeUserDto;
 }
-export interface HttpResponse {
+export interface AuthResponseDto {
+    /**
+     * Indicates whether the authentication was successful
+     */
+    'success': boolean;
+    /**
+     * A message describing the result of the authentication attempt
+     */
     'message': string;
-    'data'?: object;
+    /**
+     * The authentication data
+     */
+    'data': AuthDataDto;
 }
 export interface LoginDto {
     /**
@@ -45,21 +65,15 @@ export interface MeResponseDto {
     'id': string;
     'name': string;
     'email': string;
-    'roles': Array<MeResponseDtoRolesEnum>;
-    'imageUrl'?: object | null;
+    'roles': Array<Role>;
+    'imageUrl'?: string | null;
     'isVerified': boolean;
+    'isActive': boolean;
     'createdAt': string;
+    'updatedAt': string;
 }
-
-export const MeResponseDtoRolesEnum = {
-    Student: 'STUDENT',
-    Instructor: 'INSTRUCTOR',
-    Admin: 'ADMIN'
-} as const;
-
-export type MeResponseDtoRolesEnum = typeof MeResponseDtoRolesEnum[keyof typeof MeResponseDtoRolesEnum];
-
-export interface MessageOnlyHttpResponse {
+export interface MessageResponseDto {
+    'success': boolean;
     'message': string;
 }
 export interface RegisterDto {
@@ -76,33 +90,65 @@ export interface RegisterDto {
      */
     'password': string;
 }
-export interface UpdatePasswordDto {
-    'password': string;
-    'newPassword': string;
-}
-export interface UpdateUserStatusDto {
-    'status': boolean;
-}
-export interface UserResponseDto {
-    'id': string;
-    'name': string;
+export interface ResendOtpDto {
+    /**
+     * Email address to resend OTP to
+     */
     'email': string;
-    'roles': Array<UserResponseDtoRolesEnum>;
-    'imageUrl'?: object | null;
-    'isVerified': boolean;
-    'isActive': boolean;
-    'createdAt': string;
-    'updatedAt': string;
 }
+/**
+ * The roles assigned to the user
+ */
 
-export const UserResponseDtoRolesEnum = {
+export const Role = {
     Student: 'STUDENT',
     Instructor: 'INSTRUCTOR',
     Admin: 'ADMIN'
 } as const;
 
-export type UserResponseDtoRolesEnum = typeof UserResponseDtoRolesEnum[keyof typeof UserResponseDtoRolesEnum];
+export type Role = typeof Role[keyof typeof Role];
 
+
+export interface SafeUserDto {
+    /**
+     * The unique identifier of the user
+     */
+    'id': string;
+    /**
+     * The name of the user
+     */
+    'name': string;
+    /**
+     * The email address of the user
+     */
+    'email': string;
+    /**
+     * The roles assigned to the user
+     */
+    'roles': Array<Role>;
+    /**
+     * The URL of the user\'s profile image
+     */
+    'imageUrl': object | null;
+    /**
+     * Indicates whether the user has verified their email address
+     */
+    'isVerified': boolean;
+    /**
+     * Indicates whether the user is active
+     */
+    'isActive': boolean;
+}
+export interface VerifyOtpDto {
+    /**
+     * The email address of the user to verify OTP for
+     */
+    'email': string;
+    /**
+     * The 6-digit OTP sent to the user\'s email
+     */
+    'otp': string;
+}
 
 /**
  * AuthenticationApi - axios parameter creator
@@ -111,75 +157,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
     return {
         /**
          * 
-         * @summary Admin login
-         * @param {LoginDto} loginDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerAdminLogin: async (loginDto: LoginDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'loginDto' is not null or undefined
-            assertParamExists('authControllerAdminLogin', 'loginDto', loginDto)
-            const localVarPath = `/api/auth/login/admin`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(loginDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerForgotPassword: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerForgotPassword', 'body', body)
-            const localVarPath = `/api/auth/forgot-password`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary User login
+         * @summary Login with email and password
          * @param {LoginDto} loginDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -214,35 +192,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerLogout: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/auth/logout`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get current user details
+         * @summary Get current authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -272,7 +222,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary User register
+         * @summary Register user and send OTP to email
          * @param {RegisterDto} registerDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -307,14 +257,14 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary Resend registration OTP
-         * @param {object} body 
+         * @summary Resend OTP to email
+         * @param {ResendOtpDto} resendOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerResendOtp: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerResendOtp', 'body', body)
+        authControllerResendOtp: async (resendOtpDto: ResendOtpDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'resendOtpDto' is not null or undefined
+            assertParamExists('authControllerResendOtp', 'resendOtpDto', resendOtpDto)
             const localVarPath = `/api/auth/resend-otp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -333,7 +283,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(resendOtpDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -342,80 +292,14 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @param {object} body 
+         * @summary Verify OTP and create account
+         * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerResetPassword: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerResetPassword', 'body', body)
-            const localVarPath = `/api/auth/reset-password`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {UpdatePasswordDto} updatePasswordDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerUpdatePassword: async (updatePasswordDto: UpdatePasswordDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'updatePasswordDto' is not null or undefined
-            assertParamExists('authControllerUpdatePassword', 'updatePasswordDto', updatePasswordDto)
-            const localVarPath = `/api/auth/update-password`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updatePasswordDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Verify registration OTP
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerVerifyOtp: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('authControllerVerifyOtp', 'body', body)
+        authControllerVerifyOtp: async (verifyOtpDto: VerifyOtpDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'verifyOtpDto' is not null or undefined
+            assertParamExists('authControllerVerifyOtp', 'verifyOtpDto', verifyOtpDto)
             const localVarPath = `/api/auth/verify-otp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -434,7 +318,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(verifyOtpDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -452,37 +336,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Admin login
+         * @summary Login with email and password
          * @param {LoginDto} loginDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerAdminLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerAdminLogin(loginDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerAdminLogin']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authControllerForgotPassword(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerForgotPassword(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerForgotPassword']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary User login
-         * @param {LoginDto} loginDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authControllerLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
+        async authControllerLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerLogin(loginDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerLogin']?.[localVarOperationServerIndex]?.url;
@@ -490,22 +349,11 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Get current authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerLogout(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerLogout(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerLogout']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get current user details
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authControllerMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthControllerMe200Response>> {
+        async authControllerMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MeResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerMe(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerMe']?.[localVarOperationServerIndex]?.url;
@@ -513,12 +361,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary User register
+         * @summary Register user and send OTP to email
          * @param {RegisterDto} registerDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
+        async authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerRegister(registerDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerRegister']?.[localVarOperationServerIndex]?.url;
@@ -526,50 +374,26 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Resend registration OTP
-         * @param {object} body 
+         * @summary Resend OTP to email
+         * @param {ResendOtpDto} resendOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerResendOtp(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerResendOtp(body, options);
+        async authControllerResendOtp(resendOtpDto: ResendOtpDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerResendOtp(resendOtpDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerResendOtp']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {object} body 
+         * @summary Verify OTP and create account
+         * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authControllerResetPassword(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerResetPassword(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerResetPassword']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {UpdatePasswordDto} updatePasswordDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authControllerUpdatePassword(updatePasswordDto: UpdatePasswordDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerUpdatePassword(updatePasswordDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerUpdatePassword']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Verify registration OTP
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async authControllerVerifyOtp(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerVerifyOtp(body, options);
+        async authControllerVerifyOtp(verifyOtpDto: VerifyOtpDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerVerifyOtp(verifyOtpDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerVerifyOtp']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -585,97 +409,52 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
     return {
         /**
          * 
-         * @summary Admin login
+         * @summary Login with email and password
          * @param {LoginDto} loginDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerAdminLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
-            return localVarFp.authControllerAdminLogin(loginDto, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerForgotPassword(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.authControllerForgotPassword(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary User login
-         * @param {LoginDto} loginDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
+        authControllerLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
             return localVarFp.authControllerLogin(loginDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Get current authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerLogout(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.authControllerLogout(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get current user details
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerMe(options?: RawAxiosRequestConfig): AxiosPromise<AuthControllerMe200Response> {
+        authControllerMe(options?: RawAxiosRequestConfig): AxiosPromise<MeResponseDto> {
             return localVarFp.authControllerMe(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @summary User register
+         * @summary Register user and send OTP to email
          * @param {RegisterDto} registerDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
+        authControllerRegister(registerDto: RegisterDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
             return localVarFp.authControllerRegister(registerDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @summary Resend registration OTP
-         * @param {object} body 
+         * @summary Resend OTP to email
+         * @param {ResendOtpDto} resendOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerResendOtp(body: object, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
-            return localVarFp.authControllerResendOtp(body, options).then((request) => request(axios, basePath));
+        authControllerResendOtp(resendOtpDto: ResendOtpDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.authControllerResendOtp(resendOtpDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {object} body 
+         * @summary Verify OTP and create account
+         * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authControllerResetPassword(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.authControllerResetPassword(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {UpdatePasswordDto} updatePasswordDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerUpdatePassword(updatePasswordDto: UpdatePasswordDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.authControllerUpdatePassword(updatePasswordDto, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Verify registration OTP
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        authControllerVerifyOtp(body: object, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
-            return localVarFp.authControllerVerifyOtp(body, options).then((request) => request(axios, basePath));
+        authControllerVerifyOtp(verifyOtpDto: VerifyOtpDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
+            return localVarFp.authControllerVerifyOtp(verifyOtpDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -686,28 +465,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
 export class AuthenticationApi extends BaseAPI {
     /**
      * 
-     * @summary Admin login
-     * @param {LoginDto} loginDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public authControllerAdminLogin(loginDto: LoginDto, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerAdminLogin(loginDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public authControllerForgotPassword(body: object, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerForgotPassword(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary User login
+     * @summary Login with email and password
      * @param {LoginDto} loginDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -718,16 +476,7 @@ export class AuthenticationApi extends BaseAPI {
 
     /**
      * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public authControllerLogout(options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerLogout(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get current user details
+     * @summary Get current authenticated user
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
@@ -737,7 +486,7 @@ export class AuthenticationApi extends BaseAPI {
 
     /**
      * 
-     * @summary User register
+     * @summary Register user and send OTP to email
      * @param {RegisterDto} registerDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -748,465 +497,26 @@ export class AuthenticationApi extends BaseAPI {
 
     /**
      * 
-     * @summary Resend registration OTP
-     * @param {object} body 
+     * @summary Resend OTP to email
+     * @param {ResendOtpDto} resendOtpDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public authControllerResendOtp(body: object, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerResendOtp(body, options).then((request) => request(this.axios, this.basePath));
+    public authControllerResendOtp(resendOtpDto: ResendOtpDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerResendOtp(resendOtpDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {object} body 
+     * @summary Verify OTP and create account
+     * @param {VerifyOtpDto} verifyOtpDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public authControllerResetPassword(body: object, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerResetPassword(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {UpdatePasswordDto} updatePasswordDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public authControllerUpdatePassword(updatePasswordDto: UpdatePasswordDto, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerUpdatePassword(updatePasswordDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Verify registration OTP
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public authControllerVerifyOtp(body: object, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).authControllerVerifyOtp(body, options).then((request) => request(this.axios, this.basePath));
+    public authControllerVerifyOtp(verifyOtpDto: VerifyOtpDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerVerifyOtp(verifyOtpDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
-
-
-/**
- * UsersApi - axios parameter creator
- */
-export const UsersApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @summary Delete a user
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('userControllerDelete', 'id', id)
-            const localVarPath = `/api/users/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary List all users with pagination and filtering
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {UserControllerFindAllRoleEnum} [role] Filter by role
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerFindAll: async (page?: number, limit?: number, search?: string, role?: UserControllerFindAllRoleEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/users`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
-
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
-            }
-
-            if (search !== undefined) {
-                localVarQueryParameter['search'] = search;
-            }
-
-            if (role !== undefined) {
-                localVarQueryParameter['role'] = role;
-            }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get a user by ID
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerFindById: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('userControllerFindById', 'id', id)
-            const localVarPath = `/api/users/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update a user profile
-         * @param {string} id User CUID
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerUpdate: async (id: string, body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('userControllerUpdate', 'id', id)
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('userControllerUpdate', 'body', body)
-            const localVarPath = `/api/users/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update a user status
-         * @param {string} id User CUID
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerUpdateStatus: async (id: string, updateUserStatusDto: UpdateUserStatusDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('userControllerUpdateStatus', 'id', id)
-            // verify required parameter 'updateUserStatusDto' is not null or undefined
-            assertParamExists('userControllerUpdateStatus', 'updateUserStatusDto', updateUserStatusDto)
-            const localVarPath = `/api/users/{id}/status`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateUserStatusDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * UsersApi - functional programming interface
- */
-export const UsersApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = UsersApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @summary Delete a user
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async userControllerDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerDelete(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerDelete']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary List all users with pagination and filtering
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {UserControllerFindAllRoleEnum} [role] Filter by role
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async userControllerFindAll(page?: number, limit?: number, search?: string, role?: UserControllerFindAllRoleEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<UserResponseDto>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerFindAll(page, limit, search, role, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerFindAll']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get a user by ID
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async userControllerFindById(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerFindById(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerFindById']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update a user profile
-         * @param {string} id User CUID
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async userControllerUpdate(id: string, body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerUpdate(id, body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerUpdate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update a user status
-         * @param {string} id User CUID
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async userControllerUpdateStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageOnlyHttpResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerUpdateStatus(id, updateUserStatusDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerUpdateStatus']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * UsersApi - factory interface
- */
-export const UsersApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = UsersApiFp(configuration)
-    return {
-        /**
-         * 
-         * @summary Delete a user
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.userControllerDelete(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary List all users with pagination and filtering
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {UserControllerFindAllRoleEnum} [role] Filter by role
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerFindAll(page?: number, limit?: number, search?: string, role?: UserControllerFindAllRoleEnum, options?: RawAxiosRequestConfig): AxiosPromise<Array<UserResponseDto>> {
-            return localVarFp.userControllerFindAll(page, limit, search, role, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get a user by ID
-         * @param {string} id User CUID
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerFindById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<UserResponseDto> {
-            return localVarFp.userControllerFindById(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update a user profile
-         * @param {string} id User CUID
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerUpdate(id: string, body: object, options?: RawAxiosRequestConfig): AxiosPromise<UserResponseDto> {
-            return localVarFp.userControllerUpdate(id, body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update a user status
-         * @param {string} id User CUID
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        userControllerUpdateStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageOnlyHttpResponse> {
-            return localVarFp.userControllerUpdateStatus(id, updateUserStatusDto, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * UsersApi - object-oriented interface
- */
-export class UsersApi extends BaseAPI {
-    /**
-     * 
-     * @summary Delete a user
-     * @param {string} id User CUID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public userControllerDelete(id: string, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).userControllerDelete(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary List all users with pagination and filtering
-     * @param {number} [page] 
-     * @param {number} [limit] 
-     * @param {string} [search] Search by name or email
-     * @param {UserControllerFindAllRoleEnum} [role] Filter by role
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public userControllerFindAll(page?: number, limit?: number, search?: string, role?: UserControllerFindAllRoleEnum, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).userControllerFindAll(page, limit, search, role, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get a user by ID
-     * @param {string} id User CUID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public userControllerFindById(id: string, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).userControllerFindById(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update a user profile
-     * @param {string} id User CUID
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public userControllerUpdate(id: string, body: object, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).userControllerUpdate(id, body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update a user status
-     * @param {string} id User CUID
-     * @param {UpdateUserStatusDto} updateUserStatusDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public userControllerUpdateStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).userControllerUpdateStatus(id, updateUserStatusDto, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-export const UserControllerFindAllRoleEnum = {
-    Student: 'STUDENT',
-    Instructor: 'INSTRUCTOR',
-    Admin: 'ADMIN'
-} as const;
-export type UserControllerFindAllRoleEnum = typeof UserControllerFindAllRoleEnum[keyof typeof UserControllerFindAllRoleEnum];
 
 

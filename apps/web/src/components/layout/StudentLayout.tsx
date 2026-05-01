@@ -3,7 +3,7 @@ import { LayoutDashboard, CalendarDays, Settings, GraduationCap, Menu, LogOut } 
 import { DashboardSidebar } from './DashboardSidebar'
 import { useAuthStore } from '../../stores/authStore'
 import { Avatar } from '../ui/Avatar'
-import { useUIStore } from '../../stores/uiStore'
+import { useUIStore } from '../../lib/uiStore'
 
 const navItems = [
   { label: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },

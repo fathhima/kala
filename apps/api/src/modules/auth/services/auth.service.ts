@@ -13,6 +13,8 @@ import { ConfigService } from "@nestjs/config";
 import { LoginDto } from "../dto/request/login.dto";
 import { generateOtp } from "../utils/generate-otp";
 import { normalizeEmail } from "../utils/normalize-email";
+import { ResendOtpDto } from "../dto/request/resend-otp.dto";
+import e from "express";
 
 @Injectable()
 export class AuthService {
@@ -102,6 +104,34 @@ export class AuthService {
                 user,
                 ...tokens
             }
+        }
+    }
+
+    async resendOtp(dto: ResendOtpDto) {
+        const email = normalizeEmail(dto.email)
+
+        const existingUser = await this.userRepository.findByEmail(email)
+        if (existingUser?.isVerified) {
+            throw new BadRequestException('Email already verified')
+        }
+
+        const rawPendingSignup = await this.redisService.get(this.signupKey(email))
+        if (!rawPendingSignup) {
+            throw new BadRequestException('Registration not found or OTP expired')
+        }
+
+        const pendingSignup = JSON.parse(rawPendingSignup)
+
+        const otp = generateOtp()
+        pendingSignup.otp = otp
+
+        await this.redisService.set(this.signupKey(email), JSON.stringify(pendingSignup), this.otpTtlSeconds)
+
+        await this.mailerService.sendOtpEmail(email, otp)
+
+        return {
+            success: true,
+            message: 'OTP resent successfully'
         }
     }
 

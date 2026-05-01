@@ -1,13 +1,10 @@
 import { Link } from 'react-router-dom'
-import { mockBookings } from '../../lib/mock'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { formatDate, formatPrice } from '../../lib/utils'
 
-const payments = mockBookings
-  .filter((b) => b.payment)
-  .map((b) => ({ ...b.payment!, student: b.studentName, instructor: b.instructor.user.name, date: b.slot.startTime }))
+const payments: Array<any> = []
 
 export function PaymentsOverview() {
   const total = payments.filter((p) => p.status === 'SUCCESS').reduce((sum, p) => sum + p.amount, 0)

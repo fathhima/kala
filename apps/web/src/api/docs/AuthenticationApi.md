@@ -4,120 +4,14 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**authControllerAdminLogin**](#authcontrolleradminlogin) | **POST** /api/auth/login/admin | Admin login|
-|[**authControllerForgotPassword**](#authcontrollerforgotpassword) | **POST** /api/auth/forgot-password | |
-|[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | User login|
-|[**authControllerLogout**](#authcontrollerlogout) | **POST** /api/auth/logout | |
-|[**authControllerMe**](#authcontrollerme) | **GET** /api/auth/me | Get current user details|
-|[**authControllerRegister**](#authcontrollerregister) | **POST** /api/auth/register | User register|
-|[**authControllerResendOtp**](#authcontrollerresendotp) | **POST** /api/auth/resend-otp | Resend registration OTP|
-|[**authControllerResetPassword**](#authcontrollerresetpassword) | **POST** /api/auth/reset-password | |
-|[**authControllerUpdatePassword**](#authcontrollerupdatepassword) | **POST** /api/auth/update-password | |
-|[**authControllerVerifyOtp**](#authcontrollerverifyotp) | **POST** /api/auth/verify-otp | Verify registration OTP|
-
-# **authControllerAdminLogin**
-> MessageOnlyHttpResponse authControllerAdminLogin(loginDto)
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration,
-    LoginDto
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-let loginDto: LoginDto; //
-
-const { status, data } = await apiInstance.authControllerAdminLogin(
-    loginDto
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **loginDto** | **LoginDto**|  | |
-
-
-### Return type
-
-**MessageOnlyHttpResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerForgotPassword**
-> authControllerForgotPassword(body)
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.authControllerForgotPassword(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+|[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | Login with email and password|
+|[**authControllerMe**](#authcontrollerme) | **GET** /api/auth/me | Get current authenticated user|
+|[**authControllerRegister**](#authcontrollerregister) | **POST** /api/auth/register | Register user and send OTP to email|
+|[**authControllerResendOtp**](#authcontrollerresendotp) | **POST** /api/auth/resend-otp | Resend OTP to email|
+|[**authControllerVerifyOtp**](#authcontrollerverifyotp) | **POST** /api/auth/verify-otp | Verify OTP and create account|
 
 # **authControllerLogin**
-> MessageOnlyHttpResponse authControllerLogin(loginDto)
+> AuthResponseDto authControllerLogin(loginDto)
 
 
 ### Example
@@ -148,7 +42,7 @@ const { status, data } = await apiInstance.authControllerLogin(
 
 ### Return type
 
-**MessageOnlyHttpResponse**
+**AuthResponseDto**
 
 ### Authorization
 
@@ -164,54 +58,13 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerLogout**
-> authControllerLogout()
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-const { status, data } = await apiInstance.authControllerLogout();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** |  |  -  |
+|**401** | Invalid credentials |  -  |
+|**403** | Account not verified or blocked |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerMe**
-> AuthControllerMe200Response authControllerMe()
+> MeResponseDto authControllerMe()
 
 
 ### Example
@@ -234,7 +87,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**AuthControllerMe200Response**
+**MeResponseDto**
 
 ### Authorization
 
@@ -254,7 +107,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerRegister**
-> MessageOnlyHttpResponse authControllerRegister(registerDto)
+> MessageResponseDto authControllerRegister(registerDto)
 
 
 ### Example
@@ -285,7 +138,7 @@ const { status, data } = await apiInstance.authControllerRegister(
 
 ### Return type
 
-**MessageOnlyHttpResponse**
+**MessageResponseDto**
 
 ### Authorization
 
@@ -301,111 +154,12 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+|**400** | Invalid data or email already exists |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerResendOtp**
-> MessageOnlyHttpResponse authControllerResendOtp(body)
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.authControllerResendOtp(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-**MessageOnlyHttpResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerResetPassword**
-> authControllerResetPassword(body)
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.authControllerResetPassword(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerUpdatePassword**
-> authControllerUpdatePassword(updatePasswordDto)
+> MessageResponseDto authControllerResendOtp(resendOtpDto)
 
 
 ### Example
@@ -414,16 +168,16 @@ No authorization required
 import {
     AuthenticationApi,
     Configuration,
-    UpdatePasswordDto
+    ResendOtpDto
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let updatePasswordDto: UpdatePasswordDto; //
+let resendOtpDto: ResendOtpDto; //
 
-const { status, data } = await apiInstance.authControllerUpdatePassword(
-    updatePasswordDto
+const { status, data } = await apiInstance.authControllerResendOtp(
+    resendOtpDto
 );
 ```
 
@@ -431,62 +185,12 @@ const { status, data } = await apiInstance.authControllerUpdatePassword(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **updatePasswordDto** | **UpdatePasswordDto**|  | |
+| **resendOtpDto** | **ResendOtpDto**|  | |
 
 
 ### Return type
 
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerVerifyOtp**
-> MessageOnlyHttpResponse authControllerVerifyOtp(body)
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.authControllerVerifyOtp(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-**MessageOnlyHttpResponse**
+**MessageResponseDto**
 
 ### Authorization
 
@@ -502,6 +206,59 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+|**400** | Registration not found or already verified |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authControllerVerifyOtp**
+> AuthResponseDto authControllerVerifyOtp(verifyOtpDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    VerifyOtpDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let verifyOtpDto: VerifyOtpDto; //
+
+const { status, data } = await apiInstance.authControllerVerifyOtp(
+    verifyOtpDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **verifyOtpDto** | **VerifyOtpDto**|  | |
+
+
+### Return type
+
+**AuthResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**400** | Invalid OTP or expired registration |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

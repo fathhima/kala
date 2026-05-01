@@ -1,10 +1,14 @@
 import { Users, Palette, CalendarDays, TrendingUp } from 'lucide-react'
-import { mockAdminStats } from '../../lib/mock'
 import { Card } from '../../components/ui/Card'
 import { formatPrice } from '../../lib/utils'
 
 export function AdminDashboard() {
-  const stats = mockAdminStats
+  const stats = {
+    totalUsers: 0,
+    totalInstructors: 0,
+    totalBookings: 0,
+    revenue: 0,
+  }
 
   return (
     <div className="space-y-8">

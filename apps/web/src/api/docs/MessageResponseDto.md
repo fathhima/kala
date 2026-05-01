@@ -1,18 +1,20 @@
-# MessageOnlyHttpResponse
+# MessageResponseDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**success** | **boolean** |  | [default to undefined]
 **message** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { MessageOnlyHttpResponse } from './api';
+import { MessageResponseDto } from './api';
 
-const instance: MessageOnlyHttpResponse = {
+const instance: MessageResponseDto = {
+    success,
     message,
 };
 ```

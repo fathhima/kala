@@ -1,4 +1,3 @@
-import { mockReviews } from '../../lib/mock'
 import { useInstructorStore } from '../../stores/instructorStore'
 import { ReviewCard } from '../../components/shared/ReviewCard'
 import { Star } from 'lucide-react'
@@ -6,7 +5,7 @@ import { Card } from '../../components/ui/Card'
 
 export function Reviews() {
   const { profile } = useInstructorStore()
-  const reviews = mockReviews.filter((r) => r.instructorId === profile?.id)
+  const reviews: Array<any> = []
   const avg = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
 
   return (

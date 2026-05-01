@@ -3,10 +3,10 @@ import { ArrowRight, Star, Palette, Users, Calendar } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { SkillCard } from '../../components/shared/SkillCard'
 import { InstructorCard } from '../../components/shared/InstructorCard'
-import { mockSkills, mockInstructors } from '../../lib/mock'
 
 export function Landing() {
-  const featuredInstructors = mockInstructors.filter((i) => i.isApproved && i.isTopRated)
+  const skills: Array<any> = []
+  const featuredInstructors: Array<any> = []
 
   return (
     <div>
@@ -67,9 +67,15 @@ export function Landing() {
             <p className="text-stone-500 max-w-md mx-auto">From traditional art forms to modern crafts — find your creative calling.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {mockSkills.map((skill) => (
-              <SkillCard key={skill.id} skill={skill} />
-            ))}
+            {skills.length > 0 ? (
+              skills.map((skill) => (
+                <SkillCard key={skill.id} skill={skill} />
+              ))
+            ) : (
+              <div className="col-span-2 sm:col-span-3 lg:col-span-6 text-center text-sm text-stone-500">
+                No skills to show yet.
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -111,9 +117,15 @@ export function Landing() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredInstructors.slice(0, 3).map((inst) => (
-              <InstructorCard key={inst.id} instructor={inst} />
-            ))}
+            {featuredInstructors.length > 0 ? (
+              featuredInstructors.slice(0, 3).map((inst) => (
+                <InstructorCard key={inst.id} instructor={inst} />
+              ))
+            ) : (
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center text-sm text-stone-500">
+                No instructors to show yet.
+              </div>
+            )}
           </div>
         </div>
       </section>

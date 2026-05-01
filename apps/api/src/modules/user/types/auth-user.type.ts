@@ -6,8 +6,8 @@ export type AuthUser = {
   email: string;
   password: string | null;
   roles: Role[];
-  imageUrl: string | null;
-  googleId: string | null;
+  imageUrl?: string | null;
+  googleId?: string | null;
   isVerified: boolean;
   isActive: boolean;
   createdAt: Date;

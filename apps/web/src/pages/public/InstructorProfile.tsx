@@ -5,7 +5,6 @@ import {
   Clock, ChevronRight, Image as ImageIcon, VideoIcon,
 } from 'lucide-react'
 import { useInstructorStore } from '../../stores/instructorStore'
-import { mockSlots, mockReviews } from '../../lib/mock'
 import { Button } from '../../components/ui/Button'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
@@ -15,7 +14,7 @@ import { formatDate, formatTime, formatPrice, cn } from '../../lib/utils'
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
-function uniqueDates(slots: ReturnType<typeof mockSlots.filter>) {
+function uniqueDates(slots: Array<{ startTime: string }>) {
   const seen = new Set<string>()
   return slots
     .map((s) => {
@@ -53,8 +52,8 @@ export function InstructorProfile() {
     )
   }
 
-  const allSlots = mockSlots.filter((s) => s.instructorId === instructor.id && s.status === 'AVAILABLE')
-  const allReviews = mockReviews.filter((r) => r.instructorId === instructor.id)
+  const allSlots: Array<any> = []
+  const allReviews: Array<any> = []
 
   const activeSkill = instructor.skills.find((s) => s.id === activeSkillId) ?? instructor.skills[0]
 

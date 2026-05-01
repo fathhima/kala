@@ -1,21 +1,19 @@
-# UpdateUserDto
+# ResendOtpDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**imageUrl** | **string** |  | [optional] [default to undefined]
+**email** | **string** | Email address to resend OTP to | [default to undefined]
 
 ## Example
 
 ```typescript
-import { UpdateUserDto } from './api';
+import { ResendOtpDto } from './api';
 
-const instance: UpdateUserDto = {
-    name,
-    imageUrl,
+const instance: ResendOtpDto = {
+    email,
 };
 ```
 

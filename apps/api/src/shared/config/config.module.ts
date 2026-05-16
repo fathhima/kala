@@ -29,6 +29,8 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
           .valid("lax", "strict", "none")
           .default("lax"),
         COOKIE_DOMAIN: Joi.string().allow("").optional(),
+        PASSWORD_RESET_TTL_SECONDS: Joi.number().integer().min(300).default(900),
+        PASSWORD_RESET_URL: Joi.string().uri().required(),
       }),
     }),
   ],

@@ -46,4 +46,37 @@ export class MailerService {
       `,
     })
   }
+
+  async sendPasswordResetEmail(
+    email: string,
+    resetLink: string,
+    ttlSeconds: number,
+  ): Promise<void> {
+    const expiresInMinutes = Math.ceil(ttlSeconds / 60);
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to: email,
+      subject: "Reset your password",
+      html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>Password Reset</h2>
+        <p>We received a request to reset your password.</p>
+        <p>
+          <a
+            href="${resetLink}"
+            style="display:inline-block;padding:10px 16px;background:#111827;color:#ffffff;text-decoration:none;border-radius:6px;"
+          >
+            Reset Password
+          </a>
+        </p>
+        <p>If the button does not work, use this link:</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>This link expires in ${expiresInMinutes} minute(s).</p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `,
+    });
+  }
+
 }

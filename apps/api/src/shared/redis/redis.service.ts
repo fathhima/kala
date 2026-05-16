@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Redis from "ioredis";
 import { RefreshSessionRecord } from "./types/refresh-session.type";
+import { PasswordResetRecord } from "./types/password-reset-record";
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -110,6 +111,61 @@ export class RedisService implements OnModuleDestroy {
     await pipeline.exec()
   }
 
+  async setPasswordResetToken(tokenHash: string, userId: string, ttlSeconds: number): Promise<void> {
+    const tokenKey = this.passwordResetTokenKey(tokenHash)
+    const userTokensKey = this.userPasswordResetTokensKey(userId)
+
+    const value: PasswordResetRecord = {
+      userId,
+      createdAt: new Date().toISOString(),
+    }
+
+    const pipeline = this.client.multi()
+    pipeline.set(tokenKey, JSON.stringify(value), 'EX', ttlSeconds)
+    pipeline.sadd(userTokensKey, tokenHash)
+    pipeline.expire(userTokensKey, ttlSeconds)
+    await pipeline.exec()
+  }
+
+  async getPasswordResetToken(
+    tokenHash: string,
+  ): Promise<PasswordResetRecord | null> {
+    const raw = await this.client.get(this.passwordResetTokenKey(tokenHash));
+
+    if (!raw) {
+      return null;
+    }
+
+    return JSON.parse(raw) as PasswordResetRecord;
+  }
+
+  async deletePasswordResetToken(tokenHash: string): Promise<void> {
+    const record = await this.getPasswordResetToken(tokenHash);
+
+    const pipeline = this.client.multi();
+    pipeline.del(this.passwordResetTokenKey(tokenHash));
+
+    if (record?.userId) {
+      pipeline.srem(this.userPasswordResetTokensKey(record.userId), tokenHash);
+    }
+
+    await pipeline.exec();
+  }
+
+  async deleteAllUserPasswordResetTokens(userId: string): Promise<void> {
+    const userTokensKey = this.userPasswordResetTokensKey(userId);
+    const tokenHashes = await this.client.smembers(userTokensKey);
+
+    const pipeline = this.client.multi();
+
+    for (const tokenHash of tokenHashes) {
+      pipeline.del(this.passwordResetTokenKey(tokenHash));
+    }
+
+    pipeline.del(userTokensKey);
+    await pipeline.exec();
+  }
+
   async onModuleDestroy() {
     await this.client.quit()
   }
@@ -121,4 +177,13 @@ export class RedisService implements OnModuleDestroy {
   private userSessionsKey(userId: string) {
     return `auth:user-sessions:${userId}`
   }
+
+  private passwordResetTokenKey(tokenHash: string) {
+    return `auth:password-reset:${tokenHash}`;
+  }
+
+  private userPasswordResetTokensKey(userId: string) {
+    return `auth:user-password-resets:${userId}`;
+  }
+
 }

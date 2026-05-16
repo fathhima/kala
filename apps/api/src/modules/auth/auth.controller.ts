@@ -15,6 +15,9 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@/shared/jwt/jwt.service";
 import { RegisterResponseDto } from "./dto/response/register-response.dto";
 import { ResendOtpResponseDto } from "./dto/response/resend-otp-response.dto";
+import { ForgotPasswordDto } from "./dto/request/forgot-password.dto";
+import { ValidateResetTokenDto } from "./dto/request/validate-reset-token.dto";
+import { ResetPasswordDto } from "./dto/request/reset-password.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -90,6 +93,30 @@ export class AuthController {
             data: result.data
         }
     }
+
+    @Public()
+    @Post("forgot-password")
+    @ApiOperation({ summary: "Send password reset link to email" })
+    @ApiOkResponse({ type: MessageResponseDto })
+    forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(dto);
+    }
+
+    @Public()
+    @Post("reset-password/validate")
+    @ApiOperation({ summary: "Validate password reset token" })
+    validateResetToken(@Body() dto: ValidateResetTokenDto) {
+        return this.authService.validateResetToken(dto);
+    }
+
+    @Public()
+    @Post("reset-password")
+    @ApiOperation({ summary: "Reset password using reset token" })
+    @ApiOkResponse({ type: MessageResponseDto })
+    resetPassword(@Body() dto: ResetPasswordDto) {
+        return this.authService.resetPassword(dto);
+    }
+
 
     @Post('logout')
     @ApiOperation({ summary: 'logout current session' })

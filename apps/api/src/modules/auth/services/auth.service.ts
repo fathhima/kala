@@ -14,13 +14,19 @@ import { LoginDto } from "../dto/request/login.dto";
 import { generateOtp } from "../utils/generate-otp";
 import { normalizeEmail } from "../utils/normalize-email";
 import { ResendOtpDto } from "../dto/request/resend-otp.dto";
-import { randomUUID } from "crypto";
+import { createHash, randomBytes, randomUUID } from "crypto";
 import { maskEmail } from "../utils/masked-email";
+import { ForgotPasswordDto } from "../dto/request/forgot-password.dto";
+import { ValidateResetTokenDto } from "../dto/request/validate-reset-token.dto";
+import { ResetPasswordDto } from "../dto/request/reset-password.dto";
 
 @Injectable()
 export class AuthService {
     private readonly otpTtlSeconds: number;
     private readonly refreshTokenTtlSeconds: number;
+    private readonly passwordResetTtlSeconds: number;
+    private readonly passwordResetUrl: string;
+
 
     constructor(
         @Inject(USER_REPOSITORY)
@@ -32,6 +38,10 @@ export class AuthService {
     ) {
         this.otpTtlSeconds = this.configService.getOrThrow<number>('OTP_TTL_SECONDS')
         this.refreshTokenTtlSeconds = this.jwtService.getRefreshTokenTtlSeconds()
+        this.passwordResetTtlSeconds =
+            this.configService.getOrThrow<number>("PASSWORD_RESET_TTL_SECONDS");
+        this.passwordResetUrl =
+            this.configService.getOrThrow<string>("PASSWORD_RESET_URL");
     }
 
     async register(dto: RegisterDto) {
@@ -168,7 +178,7 @@ export class AuthService {
         await this.redisService.setPendingSignup(pendingSignup.id, JSON.stringify(pendingSignup), this.otpTtlSeconds)
         await this.redisService.setPendingSignupEmailIndex(pendingSignup.email, pendingSignup.id, this.otpTtlSeconds)
 
-        await this.mailerService.sendOtpEmail(pendingSignup.email, otp)
+        await this.mailerService.sendOtpEmail(pendingSignup.email, otp, this.otpTtlSeconds)
 
         return {
             success: true,
@@ -274,6 +284,79 @@ export class AuthService {
         }
     }
 
+    async forgotPassword(dto: ForgotPasswordDto) {
+        const email = normalizeEmail(dto.email)
+
+        const user = await this.userRepository.findAuthByEmail(email)
+
+        const response = {
+            success: true,
+            message: 'if an account exists, a password reset link has been sent'
+        }
+
+        if (!user || !user.password || !user.isActive || !user.isVerified) {
+            return response
+        }
+
+        const rawToken = this.generatePasswordResetToken()
+        const tokenHash = this.hashPasswordResetToken(rawToken)
+
+        await this.redisService.setPasswordResetToken(tokenHash, user.id, this.passwordResetTtlSeconds)
+
+        const resetLink = `${this.passwordResetUrl}?token=${rawToken}`
+
+        await this.mailerService.sendPasswordResetEmail(
+            email,
+            resetLink,
+            this.passwordResetTtlSeconds
+        )
+
+        return response
+    }
+
+    async validateResetToken(dto: ValidateResetTokenDto) {
+        const tokenHash = this.hashPasswordResetToken(dto.token)
+        const record = await this.redisService.getPasswordResetToken(tokenHash)
+
+        if (!record) {
+            throw new BadRequestException('Reset link is invalid or expired')
+        }
+
+        return {
+            success: true,
+            message: 'Reset link is valid',
+            data: {
+                valid: true
+            }
+        }
+    }
+
+    async resetPassword(dto: ResetPasswordDto) {
+        const tokenHash = this.hashPasswordResetToken(dto.token)
+        const record = await this.redisService.getPasswordResetToken(tokenHash)
+
+        if (!record) {
+            throw new BadRequestException('Reset link is invalid or expired')
+        }
+
+        const user = await this.userRepository.findById(record.userId)
+
+        if (!user) {
+            throw new BadRequestException("Reset link is invalid or expired");
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
+
+        await this.userRepository.updatePassword(user.id, hashedPassword);
+        await this.redisService.deleteAllUserPasswordResetTokens(user.id);
+        await this.redisService.deleteAllUserRefreshSessions(user.id);
+
+        return {
+            success: true,
+            message: "Password reset successfully",
+        };
+    }
+
     async logout(refreshToken?: string) {
         if (refreshToken) {
             try {
@@ -320,4 +403,13 @@ export class AuthService {
             refreshToken
         }
     }
+
+    private generatePasswordResetToken(): string {
+        return randomBytes(32).toString("hex");
+    }
+
+    private hashPasswordResetToken(token: string): string {
+        return createHash("sha256").update(token).digest("hex");
+    }
+
 }

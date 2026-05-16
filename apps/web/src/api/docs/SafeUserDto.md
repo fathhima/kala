@@ -5,13 +5,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **string** | The unique identifier of the user | [default to undefined]
-**name** | **string** | The name of the user | [default to undefined]
-**email** | **string** | The email address of the user | [default to undefined]
-**roles** | [**Array&lt;Role&gt;**](Role.md) | The roles assigned to the user | [default to undefined]
-**imageUrl** | **object** | The URL of the user\&#39;s profile image | [default to undefined]
-**isVerified** | **boolean** | Indicates whether the user has verified their email address | [default to undefined]
-**isActive** | **boolean** | Indicates whether the user is active | [default to undefined]
+**id** | **string** |  | [default to undefined]
+**name** | **string** |  | [default to undefined]
+**email** | **string** |  | [default to undefined]
+**roles** | [**Array&lt;Role&gt;**](Role.md) |  | [default to undefined]
+**imageUrl** | **object** |  | [default to undefined]
+**isVerified** | **boolean** |  | [default to undefined]
+**isActive** | **boolean** |  | [default to undefined]
 
 ## Example
 

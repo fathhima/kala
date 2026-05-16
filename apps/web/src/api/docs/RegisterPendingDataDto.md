@@ -1,21 +1,23 @@
-# VerifyOtpDto
+# RegisterPendingDataDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**pendingSignupId** | **string** | The unique id for a user | [default to undefined]
-**otp** | **string** | The 6-digit OTP sent to the user\&#39;s email | [default to undefined]
+**pendingSignupId** | **string** |  | [default to undefined]
+**maskedEmail** | **string** |  | [default to undefined]
+**expiresIn** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { VerifyOtpDto } from './api';
+import { RegisterPendingDataDto } from './api';
 
-const instance: VerifyOtpDto = {
+const instance: RegisterPendingDataDto = {
     pendingSignupId,
-    otp,
+    maskedEmail,
+    expiresIn,
 };
 ```
 

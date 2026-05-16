@@ -1,7 +1,7 @@
 import { Role } from "@/api";
 import { create } from "zustand";
 
-interface AuthUser {
+export interface AuthUser {
     id: string,
     name: string,
     email: string,
@@ -13,23 +13,47 @@ interface AuthUser {
 
 interface AuthState {
     user: AuthUser | null,
+    accessToken: string | null
     isAuthenticated: boolean,
-    setUser: (user: AuthUser | null) => void,
-    clearAuth: () => void
+    isAuthResolved: boolean,
+    setAccessToken: (token: string | null) => void,
+    setAuth: (user: AuthUser, accessToken: string) => void,
+    clearAuth: () => void,
+    markAuthResolved: () => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
+    accessToken: null,
     isAuthenticated: false,
-    setUser: (user) =>
+    isAuthResolved: false,
+
+    setAccessToken: (token) =>
+        set((state) => ({
+            ...state,
+            accessToken: token,
+            isAuthenticated: !!token && !!state.user,
+        })),
+
+    setAuth: (user, accessToken) =>
         set({
             user,
-            isAuthenticated: !!user,
+            accessToken,
+            isAuthenticated: true,
+            isAuthResolved: true,
         }),
-    clearAuth: () => {
+
+    clearAuth: () =>
         set({
             user: null,
-            isAuthenticated: false
-        })
-    }
+            accessToken: null,
+            isAuthenticated: false,
+            isAuthResolved: true,
+        }),
+
+    markAuthResolved: () =>
+        set((state) => ({
+            ...state,
+            isAuthResolved: true
+        }))
 }))

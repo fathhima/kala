@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { getMe, loginUser, registerUser, resendOtp, verifyOtp } from "./api"
+import { getMe, loginUser, logoutAllSessions, logoutCurrentSession, registerUser, resendOtp, verifyOtp } from "./api"
 
 export const useRegisterMutation = () => {
     return useMutation({
@@ -24,6 +24,12 @@ export const useLoginMutation = () => {
         mutationFn: loginUser
     })
 }
+
+export const useLogoutMutation = () =>
+    useMutation({ mutationFn: logoutCurrentSession });
+
+export const useLogoutAllMutation = () =>
+    useMutation({ mutationFn: logoutAllSessions });
 
 export const useMeQuery = (enabled: boolean) => {
     return useQuery({

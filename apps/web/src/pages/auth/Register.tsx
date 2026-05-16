@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { useRegisterMutation } from '@/features/auth/hooks'
 import type { RegisterDto } from '@/api'
 import { type RegisterFields, validateRegisterForm } from '@/utils/validation'
+import { getApiErrorResponse } from '@/lib/api-error'
 
 export function Register() {
   const navigate = useNavigate()
@@ -61,14 +62,17 @@ export function Register() {
     }
 
     try {
-      await registerMutation.mutateAsync(formData)
-      navigate('/verify-otp', {
-        state: {
-          email: formData.email
-        },
-      })
+      const pending = await registerMutation.mutateAsync(formData)
+
+      sessionStorage.setItem('pendingSignupId', pending.pendingSignupId)
+      sessionStorage.setItem("pendingSignupMaskedEmail", pending.maskedEmail);
+      sessionStorage.setItem(
+        "pendingSignupOtpExpiresAt",
+        String(Date.now() + pending.expiresIn * 1000)
+      );
+      navigate('/verify-otp', { replace: true })
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Registration failed')
+      setErrorMessage(getApiErrorResponse(error, 'Registration failed'))
     }
   }
 

@@ -1,60 +1,79 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ClipboardEvent, KeyboardEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Palette, ShieldCheck } from 'lucide-react'
-import type { VerifyOtpDto } from '@/api'
 import { Button } from '@/components/ui/Button'
 import { useResendOtpMutation, useVerifyOtpMutation } from '@/features/auth/hooks'
 import { validateVerifyOtpForm, type verifyOtpFields } from '@/utils/validation'
+import { useAuthStore } from '@/features/auth/store'
+import { getApiErrorResponse } from '@/lib/api-error'
 
-type VerifyOtpLocationState = {
-  email?: string
+const PENDING_SIGNUP_ID_KEY = 'pendingSignupId'
+const PENDING_SIGNUP_MASKED_EMAIL_KEY = 'pendingSignupMaskedEmail'
+const PENDING_SIGNUP_EXPIRES_AT_KEY = 'pendingSignupOtpExpiresAt'
+
+const getInitialCooldown = () => {
+  const stored = sessionStorage.getItem(PENDING_SIGNUP_EXPIRES_AT_KEY)
+  if (!stored) return 0
+
+  const remaining = Math.ceil((Number(stored) - Date.now()) / 1000)
+  return remaining > 0 ? remaining : 0
 }
 
 export function VerifyOtp() {
+  const setAuth = useAuthStore((state) => state.setAuth)
   const navigate = useNavigate()
-  const location = useLocation()
 
   const verifyOtpMutation = useVerifyOtpMutation()
   const resendOtpMutation = useResendOtpMutation()
 
-  const state = location.state as VerifyOtpLocationState | null
-  const email = state?.email ?? ''
+  const [pendingSignupId] = useState(() => sessionStorage.getItem(PENDING_SIGNUP_ID_KEY) ?? '')
+  const [maskedEmail] = useState(() => sessionStorage.getItem(PENDING_SIGNUP_MASKED_EMAIL_KEY) ?? '')
 
-  const [formData, setFormData] = useState<VerifyOtpDto>({
-    email,
-    otp: '',
-  })
-
+  const [otp, setOtp] = useState('')
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''))
   const [errors, setErrors] = useState<Partial<Record<verifyOtpFields, string>>>({})
   const [errorMessage, setErrorMessage] = useState('')
-  const [resendCooldown, setResendCooldown] = useState(60)
+  const [resendCooldown, setResendCooldown] = useState<number>(getInitialCooldown)
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  const [isCompletingAuth, setIsCompletingAuth] = useState(false)
+
+  const expiresInMinutes = Math.ceil(resendCooldown / 60)
+
   useEffect(() => {
-    if (!email) {
+    if (!pendingSignupId && !isCompletingAuth) {
       navigate('/register', { replace: true })
     }
-  }, [email, navigate])
+  }, [pendingSignupId, isCompletingAuth, navigate])
 
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      email,
-    }))
-  }, [email])
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return
+    if (resendCooldown <= 0) {
+      sessionStorage.removeItem(PENDING_SIGNUP_EXPIRES_AT_KEY)
+      return
+    }
 
     const timer = window.setTimeout(() => {
-      setResendCooldown((prev) => prev - 1)
+      const stored = sessionStorage.getItem(PENDING_SIGNUP_EXPIRES_AT_KEY)
+
+      if (!stored) {
+        setResendCooldown(0)
+        return
+      }
+
+      const remaining = Math.ceil((Number(stored) - Date.now()) / 1000)
+      setResendCooldown(remaining > 0 ? remaining : 0)
     }, 1000)
 
     return () => window.clearTimeout(timer)
   }, [resendCooldown])
+
+  const clearPendingSignupSession = () => {
+    sessionStorage.removeItem(PENDING_SIGNUP_ID_KEY)
+    sessionStorage.removeItem(PENDING_SIGNUP_MASKED_EMAIL_KEY)
+    sessionStorage.removeItem(PENDING_SIGNUP_EXPIRES_AT_KEY)
+  }
 
   const handleOtpChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(-1)
@@ -62,10 +81,7 @@ export function VerifyOtp() {
     nextDigits[index] = digit
 
     setDigits(nextDigits)
-    setFormData((prev) => ({
-      ...prev,
-      otp: nextDigits.join(''),
-    }))
+    setOtp(nextDigits.join(''))
     setErrorMessage('')
     setErrors((prev) => ({
       ...prev,
@@ -103,10 +119,7 @@ export function VerifyOtp() {
     })
 
     setDigits(nextDigits)
-    setFormData((prev) => ({
-      ...prev,
-      otp: nextDigits.join(''),
-    }))
+    setOtp(nextDigits.join(''))
     setErrorMessage('')
     setErrors((prev) => ({
       ...prev,
@@ -122,49 +135,55 @@ export function VerifyOtp() {
     setErrorMessage('')
     setErrors({})
 
-    const validationErrors = validateVerifyOtpForm({
-      otp: formData.otp,
-    })
+    const validationErrors = validateVerifyOtpForm({ otp })
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
 
+    if (!pendingSignupId) {
+      setErrorMessage('Registration session expired. Please register again.')
+      navigate('/register', { replace: true })
+      return
+    }
+
     try {
-      await verifyOtpMutation.mutateAsync(formData)
-      navigate('/login')
+      const authData = await verifyOtpMutation.mutateAsync({
+        pendingSignupId,
+        otp,
+      })
+
+      setIsCompletingAuth(true)
+      setAuth(authData.user, authData.accessToken)
+      navigate('/', { replace: true })
+      clearPendingSignupSession()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'OTP verification failed')
+      setErrorMessage(getApiErrorResponse(error, 'OTP verification failed'))
     }
   }
 
   const handleResend = async () => {
-    if (resendCooldown > 0 || !email) return
+    if (resendCooldown > 0 || !pendingSignupId) return
 
     setErrorMessage('')
     setErrors({})
 
     try {
-      await resendOtpMutation.mutateAsync({ email })
+      const response = await resendOtpMutation.mutateAsync({ pendingSignupId })
+
+      const expiresAt = Date.now() + response.expiresIn * 1000
+      setResendCooldown(response.expiresIn)
+      sessionStorage.setItem(PENDING_SIGNUP_EXPIRES_AT_KEY, String(expiresAt))
 
       setDigits(Array(6).fill(''))
-      setFormData((prev) => ({
-        ...prev,
-        otp: '',
-      }))
+      setOtp('')
       setResendCooldown(60)
       inputRefs.current[0]?.focus()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to resend OTP')
+      setErrorMessage(getApiErrorResponse(error, 'Failed to resend OTP'))
     }
   }
-
-  const maskedEmail = email
-    ? email.replace(/^(.{2})(.*)(@.*)$/, (_, start, middle, end) => {
-      return `${start}${'*'.repeat(middle.length)}${end}`
-    })
-    : ''
 
   const subtitle = 'Verify your email to complete sign up'
 
@@ -187,8 +206,8 @@ export function VerifyOtp() {
           <h1 className="text-2xl font-bold text-kala-brown mb-2">Enter Verification Code</h1>
           <p className="text-sm text-stone-500 mb-6">
             We sent a 6-digit code to{' '}
-            <span className="font-medium text-stone-700">{maskedEmail}</span>.
-            It expires in 10 minutes.
+            <span className="font-medium text-stone-700">{maskedEmail || 'your email'}</span>.
+            It expires in {expiresInMinutes} minute{expiresInMinutes > 1 ? 's' : ''}.
           </p>
 
           <form onSubmit={handleSubmit}>

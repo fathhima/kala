@@ -9,9 +9,12 @@ docs/AuthResponseDto.md
 docs/AuthenticationApi.md
 docs/LoginDto.md
 docs/MeResponseDto.md
-docs/MessageResponseDto.md
 docs/RegisterDto.md
+docs/RegisterPendingDataDto.md
+docs/RegisterResponseDto.md
 docs/ResendOtpDto.md
+docs/ResendOtpResponseDataDto.md
+docs/ResendOtpResponseDto.md
 docs/Role.md
 docs/SafeUserDto.md
 docs/VerifyOtpDto.md

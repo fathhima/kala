@@ -1,7 +1,6 @@
 import { IsEmail, IsString, Length, MinLength } from "class-validator"
 
 export class ResetPasswordDto {
-
     @IsEmail()
     email!: string
 

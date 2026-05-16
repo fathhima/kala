@@ -1,33 +1,73 @@
-import { AuthenticationApi, Configuration, LoginDto, RegisterDto, ResendOtpDto, VerifyOtpDto } from "@/api";
-import { apiClient } from "@/lib/axios";
+import { AuthenticationApi, Configuration, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, SafeUserDto, VerifyOtpDto } from "@/api";
+import { apiClient, refreshClient } from "@/lib/axios";
+import { AuthUser } from "./store";
 
 const config = new Configuration({
     basePath: import.meta.env.VITE_API_URL
 })
 
 const authApi = new AuthenticationApi(config, undefined, apiClient)
+export const refreshAuthApi = new AuthenticationApi(config, undefined, refreshClient)
+
+export type ApiEnvelope<T> = {
+    success: boolean,
+    message: string,
+    data: T
+}
+
+const mapUser = (user: SafeUserDto | MeResponseDto): AuthUser => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    roles: user.roles,
+    imageUrl: (user.imageUrl as string | null | undefined) ?? null,
+    isActive: user.isActive,
+    isVerified: user.isVerified
+
+})
 
 export const registerUser = async (payload: RegisterDto) => {
     const response = await authApi.authControllerRegister(payload)
-    return response.data
+    return response.data.data
 }
 
 export const verifyOtp = async (payload: VerifyOtpDto) => {
     const response = await authApi.authControllerVerifyOtp(payload)
-    return response.data.data
+    return {
+        accessToken: response.data.data.accessToken,
+        user: mapUser(response.data.data.user)
+    }
 }
 
 export const resendOtp = async (payload: ResendOtpDto) => {
     const response = await authApi.authControllerResendOtp(payload)
-    return response.data
+    return response.data.data
 }
 
 export const loginUser = async (payload: LoginDto) => {
     const response = await authApi.authControllerLogin(payload)
-    return response.data.data
+    return {
+        accessToken: response.data.data.accessToken,
+        user: mapUser(response.data.data.user)
+    }
 }
 
 export const getMe = async () => {
     const response = await authApi.authControllerMe()
-    return response.data
+    const payload = response.data as unknown as ApiEnvelope<MeResponseDto>
+    return mapUser(payload.data)
+}
+
+export const refreshSession = async () => {
+    const response = await refreshAuthApi.authControllerRefresh()
+    const payload = response.data as unknown as ApiEnvelope<{ accessToken: string }>
+    return payload.data.accessToken
+}
+
+export const logoutCurrentSession = async () => {
+    await authApi.authControllerLogout()
+}
+
+export const logoutAllSessions = async () => {
+    await authApi.authControllerLogoutAll()
 }

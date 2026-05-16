@@ -19,8 +19,16 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         SMTP_PASS: Joi.string().allow('').optional(),
         SMTP_FROM: Joi.string().email().default('no-reply@kala.local'),
         OTP_TTL_SECONDS: Joi.number().integer().min(60).default(60),
-        ACCESS_TOKEN_SECRET: Joi.string().default('ACCESS_TOKEN_SECRET'),
-        REFRESH_TOKEN_SECRET: Joi.string().default('REFRESH_TOKEN_SECRET')
+        ACCESS_TOKEN_SECRET: Joi.string().min(32).required(),
+        REFRESH_TOKEN_SECRET: Joi.string().min(32).required(),
+        ACCESS_TOKEN_EXPIRES_IN: Joi.string().default("15m"),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.string().default("7d"),
+        REFRESH_COOKIE_NAME: Joi.string().default("refreshToken"),
+        COOKIE_SECURE: Joi.boolean().default(false),
+        COOKIE_SAME_SITE: Joi.string()
+          .valid("lax", "strict", "none")
+          .default("lax"),
+        COOKIE_DOMAIN: Joi.string().allow("").optional(),
       }),
     }),
   ],

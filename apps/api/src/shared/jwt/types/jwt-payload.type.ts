@@ -1,7 +1,17 @@
 import { Role } from "@prisma/client"
 
-export type JwtPayload = {
+export type TokenType = 'access' | 'refresh'
+
+export type AccessTokenPayload = {
     sub: string,
-    email: string,
-    roles: Role[]
+    roles: Role[],
+    type: 'access'
 }
+
+export type RefreshTokenPayload = {
+    sub: string,
+    sessionId: string,
+    type: 'refresh'
+}
+
+export type JwtPayload = AccessTokenPayload | RefreshTokenPayload

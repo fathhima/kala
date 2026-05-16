@@ -43,7 +43,7 @@ export const validateRegisterForm = (data: {
     if (!data.password) {
         errors.password = 'Password is required'
     } else if (!isStrongPassword(data.password)) {
-        errors.password = 'Password must be at least 8 characters'
+        errors.password = 'Enter a valid password'
     }
 
     if (!data.confirmPassword) {

@@ -1,7 +1,12 @@
 
 export type PendingSignup = {
+    id: string,
     name: string,
     email: string,
     hashedPassword: string,
-    otp: string
+    otpHash: string,
+    otpAttempts: number,
+    resendCount: number,
+    createdAt: string,
+    otpExpiresAt: string
 }

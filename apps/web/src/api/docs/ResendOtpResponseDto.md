@@ -1,4 +1,4 @@
-# AuthResponseDto
+# ResendOtpResponseDto
 
 
 ## Properties
@@ -7,14 +7,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **success** | **boolean** |  | [default to undefined]
 **message** | **string** |  | [default to undefined]
-**data** | [**AuthDataDto**](AuthDataDto.md) |  | [default to undefined]
+**data** | [**ResendOtpResponseDataDto**](ResendOtpResponseDataDto.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { AuthResponseDto } from './api';
+import { ResendOtpResponseDto } from './api';
 
-const instance: AuthResponseDto = {
+const instance: ResendOtpResponseDto = {
     success,
     message,
     data,

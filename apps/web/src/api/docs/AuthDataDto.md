@@ -5,9 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**accessToken** | **string** | The access token for the user | [default to undefined]
-**refreshToken** | **string** | The refresh token for the user | [default to undefined]
-**user** | [**SafeUserDto**](SafeUserDto.md) | The user information | [default to undefined]
+**accessToken** | **string** |  | [default to undefined]
+**user** | [**SafeUserDto**](SafeUserDto.md) |  | [default to undefined]
 
 ## Example
 
@@ -16,7 +15,6 @@ import { AuthDataDto } from './api';
 
 const instance: AuthDataDto = {
     accessToken,
-    refreshToken,
     user,
 };
 ```

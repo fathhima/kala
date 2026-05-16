@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**email** | **string** | Email address to resend OTP to | [default to undefined]
+**pendingSignupId** | **string** | The unique id for a user | [default to undefined]
 
 ## Example
 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 import { ResendOtpDto } from './api';
 
 const instance: ResendOtpDto = {
-    email,
+    pendingSignupId,
 };
 ```
 

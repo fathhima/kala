@@ -1,21 +1,19 @@
-# VerifyOtpDto
+# ResendOtpResponseDataDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**pendingSignupId** | **string** | The unique id for a user | [default to undefined]
-**otp** | **string** | The 6-digit OTP sent to the user\&#39;s email | [default to undefined]
+**expiresIn** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { VerifyOtpDto } from './api';
+import { ResendOtpResponseDataDto } from './api';
 
-const instance: VerifyOtpDto = {
-    pendingSignupId,
-    otp,
+const instance: ResendOtpResponseDataDto = {
+    expiresIn,
 };
 ```
 

@@ -26,7 +26,9 @@ export class MailerService {
     })
   }
 
-  async sendOtpEmail(email: string, otp: string): Promise<void> {
+  async sendOtpEmail(email: string, otp: string, ttlSeconds: number): Promise<void> {
+    const expiresInMinutes = Math.ceil(ttlSeconds / 60)
+
     await this.transporter.sendMail({
       from: this.from,
       to: email,
@@ -36,7 +38,10 @@ export class MailerService {
           <h2>Email Verification</h2>
           <p>Your OTP for registration is:</p>
           <h1 style="letter-spacing: 4px;">${otp}</h1>
-          <p>This OTP will expire in 1 minutes.</p>
+          <p>
+          This OTP will expire in 
+          ${expiresInMinutes} minute${expiresInMinutes > 1 ? 's' : ''}.
+        </p>
         </div>
       `,
     })

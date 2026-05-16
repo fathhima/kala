@@ -1,6 +1,5 @@
 # Role
 
-The roles assigned to the user
 
 ## Enum
 

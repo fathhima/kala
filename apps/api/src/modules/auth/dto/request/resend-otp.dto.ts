@@ -1,12 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsEmail } from "class-validator"
+import { IsString } from "class-validator"
 
 export class ResendOtpDto {
-
     @ApiProperty({
-        example:'user@example.com',
-        description:'Email address to resend OTP to',
+        example: "2f7c8b91-7a8c-4a0d-9c0c-9b0c9b9b0c9b",
+        description: "The unique id for a user",
     })
-    @IsEmail()
-    email!: string
+    @IsString()
+    pendingSignupId!: string
 }

@@ -6,6 +6,16 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Landing } from "@/pages/public/Landing";
 import { Register } from "@/pages/auth/Register";
 import { Login } from "@/pages/auth/Login";
+import { AuthBootsrap } from "@/features/auth/AuthBootstrap";
+import { PublicOnlyRoute } from "./public-only-route";
+
+const ProtectedApp = () => (
+  <AuthBootsrap>
+    <ProtectedRoute>
+      <StudentLayout />
+    </ProtectedRoute>
+  </AuthBootsrap>
+)
 
 export const router = createBrowserRouter([
   {
@@ -18,26 +28,35 @@ export const router = createBrowserRouter([
     ]
   },
   {
+    path: '/login',
+    element: (
+      <PublicOnlyRoute>
+        <Login />
+      </PublicOnlyRoute>
+    )
+  },
+  {
     path: '/register',
-    element: <Register />
+    element: (
+      <PublicOnlyRoute>
+        <Register />
+      </PublicOnlyRoute>
+    )
   },
   {
     path: '/verify-otp',
-    element: <VerifyOtp />
-  },
+    element: (
+      <PublicOnlyRoute>
+        <VerifyOtp />
+      </PublicOnlyRoute>
+    )
+  }
+  ,
   {
-    path: '/login',
-    element: <Login />
+    path: '/dashboard',
+    element: <ProtectedApp />,
+    children: []
   },
-  // {
-  //   path: '/dashboard',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <StudentLayout />
-  //     </ProtectedRoute>
-  //   ),
-  //   children: []
-  // },
   {
     path: '*',
     element: <Navigate to='/register' replace />

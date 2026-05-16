@@ -4,16 +4,22 @@ import { useState } from 'react'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import { useAuthStore } from '@/features/auth/store'
+import { useLogoutMutation } from '@/features/auth/hooks'
 
 export function Navbar() {
   const { user, isAuthenticated, clearAuth } = useAuthStore()
+  const logoutMutation = useLogoutMutation()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/login')
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync()
+    } finally {
+      clearAuth()
+      navigate('/login', { replace: true })
+    }
   }
 
   const getDashboardLink = () => {
@@ -48,7 +54,7 @@ export function Navbar() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-50 transition-colors"
                 >
-                  <Avatar name={user.name} src={user.imageUrl} size="sm" />
+                  <Avatar name={user.name} src={user.imageUrl ?? undefined} size="sm" />
                   <span className="text-sm font-medium text-stone-700">{user.name.split(' ')[0]}</span>
                   <ChevronDown size={14} className="text-stone-400" />
                 </button>
@@ -114,7 +120,10 @@ export function Navbar() {
                 <Link to={getDashboardLink()} className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg" onClick={() => setMobileOpen(false)}>
                   Dashboard
                 </Link>
-                <button onClick={() => { handleLogout(); setMobileOpen(false) }} className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">
+                <button onClick={async () => {
+                  setMobileOpen(false)
+                  await handleLogout()
+                }} className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">
                   Logout
                 </button>
               </>

@@ -7,12 +7,12 @@ import { useLoginMutation, useMeQuery } from '@/features/auth/hooks'
 import { useAuthStore } from '@/features/auth/store'
 import type { LoginDto } from '@/api'
 import { type Loginfields, validateLoginForm } from '@/utils/validation'
-import { getMe } from '@/features/auth/api'
+import { getApiErrorResponse } from '@/lib/api-error'
 
 export function Login() {
   const navigate = useNavigate()
   const loginMutation = useLoginMutation()
-  const setUser = useAuthStore((state) => state.setUser)
+  const setAuth = useAuthStore((state) => state.setAuth)
 
   const [formData, setFormData] = useState<LoginDto>({
     email: '',
@@ -51,12 +51,11 @@ export function Login() {
     }
 
     try {
-      await loginMutation.mutateAsync(formData)
-      const user = await getMe()
-      setUser(user)
-      navigate('/dashboard')
+      const authData = await loginMutation.mutateAsync(formData)
+      setAuth(authData.user, authData.accessToken)
+      navigate('/', { replace: true })
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Login failed')
+      setErrorMessage(getApiErrorResponse(error, 'Login failed'))
     }
   }
 

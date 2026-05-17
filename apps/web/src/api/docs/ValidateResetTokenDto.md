@@ -1,21 +1,19 @@
-# ResendOtpResponseDataDto
+# ValidateResetTokenDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**expiresIn** | **number** |  | [default to undefined]
-**resendAfter** | **number** |  | [default to undefined]
+**token** | **string** | The token send with the email | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ResendOtpResponseDataDto } from './api';
+import { ValidateResetTokenDto } from './api';
 
-const instance: ResendOtpResponseDataDto = {
-    expiresIn,
-    resendAfter,
+const instance: ValidateResetTokenDto = {
+    token,
 };
 ```
 

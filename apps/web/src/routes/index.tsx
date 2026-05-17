@@ -6,8 +6,10 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Landing } from "@/pages/public/Landing";
 import { Register } from "@/pages/auth/Register";
 import { Login } from "@/pages/auth/Login";
-import { AuthBootsrap } from "@/features/auth/AuthBootstrap";
 import { PublicOnlyRoute } from "./public-only-route";
+import { ForgotPassword } from "@/pages/auth/ForgotPassword";
+import { ResetPassword } from "@/pages/auth/ResetPassword";
+import { AuthBootsrap } from "@/features/auth/AuthBootstrap";
 
 const ProtectedApp = () => (
   <AuthBootsrap>
@@ -15,7 +17,7 @@ const ProtectedApp = () => (
       <StudentLayout />
     </ProtectedRoute>
   </AuthBootsrap>
-)
+);
 
 export const router = createBrowserRouter([
   {
@@ -50,11 +52,24 @@ export const router = createBrowserRouter([
         <VerifyOtp />
       </PublicOnlyRoute>
     )
-  }
-  ,
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicOnlyRoute>
+        <ForgotPassword />
+      </PublicOnlyRoute>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
   {
     path: '/dashboard',
-    element: <ProtectedApp />,
+    element: (
+      <ProtectedApp />
+    ),
     children: []
   },
   {

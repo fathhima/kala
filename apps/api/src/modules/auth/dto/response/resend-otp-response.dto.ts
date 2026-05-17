@@ -3,6 +3,9 @@ import { ApiProperty } from "@nestjs/swagger"
 export class ResendOtpResponseDataDto {
     @ApiProperty()
     expiresIn!: number
+
+    @ApiProperty()
+    resendAfter!: number
 }
 
 export class ResendOtpResponseDto {

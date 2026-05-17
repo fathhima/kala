@@ -7,7 +7,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **pendingSignupId** | **string** |  | [default to undefined]
 **maskedEmail** | **string** |  | [default to undefined]
-**expiresIn** | **number** |  | [default to undefined]
+**expiresIn** | **string** |  | [default to undefined]
+**resendAfter** | **string** |  | [default to undefined]
 
 ## Example
 
@@ -18,6 +19,7 @@ const instance: RegisterPendingDataDto = {
     pendingSignupId,
     maskedEmail,
     expiresIn,
+    resendAfter,
 };
 ```
 

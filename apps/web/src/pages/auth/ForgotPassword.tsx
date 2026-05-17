@@ -1,41 +1,80 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link} from 'react-router-dom'
 import { Palette, ArrowLeft, Mail } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { AuthService } from '@/services/auth.service'
+import { useForgotPasswordMutation } from '@/features/auth/hooks'
+import { ForgotPasswordFields, validateForgotPasswordForm } from '@/utils/validation'
+import { getApiErrorResponse } from '@/lib/api-error'
 
 export function ForgotPassword() {
-  const navigate = useNavigate()
+  const forgotPasswordMutation = useForgotPasswordMutation()
+
   const [email, setEmail] = useState('')
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<Partial<Record<ForgotPasswordFields, string>>>({});
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    setErrors({})
+    setErrorMessage('')
 
-    const normalizedEmail = email.trim().toLowerCase()
-    const { error: forgotPasswordError } = await AuthService.forgotPassword(normalizedEmail)
+    const validationErrors = validateForgotPasswordForm({ email });
 
-    if (forgotPasswordError) {
-      setError(
-        Array.isArray(forgotPasswordError.message)
-          ? forgotPasswordError.message.join(', ')
-          : forgotPasswordError.message || 'Unable to send reset code. Please try again.'
-      )
-      setLoading(false)
-      return
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
     }
 
-    setLoading(false)
-    navigate('/verify-otp', {
-      state: {
-        email: normalizedEmail,
-        purpose: 'password-reset',
-      },
-    })
+    try {
+      await forgotPasswordMutation.mutateAsync({
+        email: email.trim().toLowerCase(),
+      });
+      setIsSubmitted(true);
+    } catch (error) {
+      setErrorMessage(getApiErrorResponse(error, "Unable to process your request"));
+    }
+  }
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-kala-brown font-bold text-2xl"
+            >
+              <Palette className="text-kala-amber" size={28} />
+              Kala
+            </Link>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-8 text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-amber-50 rounded-xl mx-auto mb-6">
+              <Mail className="text-kala-amber" size={24} />
+            </div>
+
+            <h1 className="text-2xl font-bold text-kala-brown mb-2">
+              Check your email
+            </h1>
+            <p className="text-sm text-stone-500 mb-6">
+              If an account exists for this email, we sent a password reset
+              link.
+            </p>
+
+            <Link
+              to="/login"
+              className="text-sm text-kala-terracotta font-medium hover:underline"
+            >
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -67,13 +106,18 @@ export function ForgotPassword() {
               type="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={error}
-              required
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrorMessage("");
+                setErrors((prev) => ({ ...prev, email: "" }));
+              }}
+              error={errors.email}
             />
 
+            {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
             <Button type="submit" loading={loading} className="w-full">
-              Send Reset Code
+              Send Reset Link
             </Button>
           </form>
 

@@ -32,6 +32,12 @@ export interface AuthResponseDto {
     'message': string;
     'data': AuthDataDto;
 }
+export interface ForgotPasswordDto {
+    /**
+     * The email address of the user trying to log in
+     */
+    'email': string;
+}
 export interface LoginDto {
     /**
      * The email address of the user trying to log in
@@ -53,6 +59,10 @@ export interface MeResponseDto {
     'createdAt': string;
     'updatedAt': string;
 }
+export interface MessageResponseDto {
+    'success': boolean;
+    'message': string;
+}
 export interface RegisterDto {
     /**
      * The full name of the user
@@ -70,7 +80,8 @@ export interface RegisterDto {
 export interface RegisterPendingDataDto {
     'pendingSignupId': string;
     'maskedEmail': string;
-    'expiresIn': number;
+    'expiresIn': string;
+    'resendAfter': string;
 }
 export interface RegisterResponseDto {
     'success': boolean;
@@ -85,11 +96,22 @@ export interface ResendOtpDto {
 }
 export interface ResendOtpResponseDataDto {
     'expiresIn': number;
+    'resendAfter': number;
 }
 export interface ResendOtpResponseDto {
     'success': boolean;
     'message': string;
     'data': ResendOtpResponseDataDto;
+}
+export interface ResetPasswordDto {
+    /**
+     * The token send with the email
+     */
+    'token': string;
+    /**
+     * The password of the user. Must be at least 8 characters long.
+     */
+    'newPassword': string;
 }
 
 export const Role = {
@@ -110,6 +132,12 @@ export interface SafeUserDto {
     'isVerified': boolean;
     'isActive': boolean;
 }
+export interface ValidateResetTokenDto {
+    /**
+     * The token send with the email
+     */
+    'token': string;
+}
 export interface VerifyOtpDto {
     /**
      * The unique id for a user
@@ -126,6 +154,41 @@ export interface VerifyOtpDto {
  */
 export const AuthenticationApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @summary Send password reset link to email
+         * @param {ForgotPasswordDto} forgotPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerForgotPassword: async (forgotPasswordDto: ForgotPasswordDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'forgotPasswordDto' is not null or undefined
+            assertParamExists('authControllerForgotPassword', 'forgotPasswordDto', forgotPasswordDto)
+            const localVarPath = `/api/auth/forgot-password`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(forgotPasswordDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @summary Login with email and password
@@ -350,6 +413,75 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
+         * @summary Reset password using reset token
+         * @param {ResetPasswordDto} resetPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerResetPassword: async (resetPasswordDto: ResetPasswordDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'resetPasswordDto' is not null or undefined
+            assertParamExists('authControllerResetPassword', 'resetPasswordDto', resetPasswordDto)
+            const localVarPath = `/api/auth/reset-password`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(resetPasswordDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Validate password reset token
+         * @param {ValidateResetTokenDto} validateResetTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerValidateResetToken: async (validateResetTokenDto: ValidateResetTokenDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'validateResetTokenDto' is not null or undefined
+            assertParamExists('authControllerValidateResetToken', 'validateResetTokenDto', validateResetTokenDto)
+            const localVarPath = `/api/auth/reset-password/validate`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(validateResetTokenDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Verify OTP and create account
          * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
@@ -392,6 +524,19 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
 export const AuthenticationApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = AuthenticationApiAxiosParamCreator(configuration)
     return {
+        /**
+         * 
+         * @summary Send password reset link to email
+         * @param {ForgotPasswordDto} forgotPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authControllerForgotPassword(forgotPasswordDto: ForgotPasswordDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerForgotPassword(forgotPasswordDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerForgotPassword']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
         /**
          * 
          * @summary Login with email and password
@@ -481,6 +626,32 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Reset password using reset token
+         * @param {ResetPasswordDto} resetPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authControllerResetPassword(resetPasswordDto: ResetPasswordDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerResetPassword(resetPasswordDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerResetPassword']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Validate password reset token
+         * @param {ValidateResetTokenDto} validateResetTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authControllerValidateResetToken(validateResetTokenDto: ValidateResetTokenDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerValidateResetToken(validateResetTokenDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerValidateResetToken']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Verify OTP and create account
          * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
@@ -501,6 +672,16 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
 export const AuthenticationApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = AuthenticationApiFp(configuration)
     return {
+        /**
+         * 
+         * @summary Send password reset link to email
+         * @param {ForgotPasswordDto} forgotPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerForgotPassword(forgotPasswordDto: ForgotPasswordDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.authControllerForgotPassword(forgotPasswordDto, options).then((request) => request(axios, basePath));
+        },
         /**
          * 
          * @summary Login with email and password
@@ -569,6 +750,26 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         },
         /**
          * 
+         * @summary Reset password using reset token
+         * @param {ResetPasswordDto} resetPasswordDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerResetPassword(resetPasswordDto: ResetPasswordDto, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.authControllerResetPassword(resetPasswordDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Validate password reset token
+         * @param {ValidateResetTokenDto} validateResetTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerValidateResetToken(validateResetTokenDto: ValidateResetTokenDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.authControllerValidateResetToken(validateResetTokenDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Verify OTP and create account
          * @param {VerifyOtpDto} verifyOtpDto 
          * @param {*} [options] Override http request option.
@@ -584,6 +785,17 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
  * AuthenticationApi - object-oriented interface
  */
 export class AuthenticationApi extends BaseAPI {
+    /**
+     * 
+     * @summary Send password reset link to email
+     * @param {ForgotPasswordDto} forgotPasswordDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authControllerForgotPassword(forgotPasswordDto: ForgotPasswordDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerForgotPassword(forgotPasswordDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary Login with email and password
@@ -655,6 +867,28 @@ export class AuthenticationApi extends BaseAPI {
      */
     public authControllerResendOtp(resendOtpDto: ResendOtpDto, options?: RawAxiosRequestConfig) {
         return AuthenticationApiFp(this.configuration).authControllerResendOtp(resendOtpDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Reset password using reset token
+     * @param {ResetPasswordDto} resetPasswordDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authControllerResetPassword(resetPasswordDto: ResetPasswordDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerResetPassword(resetPasswordDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Validate password reset token
+     * @param {ValidateResetTokenDto} validateResetTokenDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authControllerValidateResetToken(validateResetTokenDto: ValidateResetTokenDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerValidateResetToken(validateResetTokenDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

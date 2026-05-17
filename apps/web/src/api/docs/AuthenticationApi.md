@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**authControllerForgotPassword**](#authcontrollerforgotpassword) | **POST** /api/auth/forgot-password | Send password reset link to email|
 |[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | Login with email and password|
 |[**authControllerLogout**](#authcontrollerlogout) | **POST** /api/auth/logout | logout current session|
 |[**authControllerLogoutAll**](#authcontrollerlogoutall) | **POST** /api/auth/logout-all | Logout all sessions of current user|
@@ -11,7 +12,60 @@ All URIs are relative to *http://localhost:4000*
 |[**authControllerRefresh**](#authcontrollerrefresh) | **POST** /api/auth/refresh | Refresh access token using refresh cookie|
 |[**authControllerRegister**](#authcontrollerregister) | **POST** /api/auth/register | Register user and send OTP to email|
 |[**authControllerResendOtp**](#authcontrollerresendotp) | **POST** /api/auth/resend-otp | Resend OTP to email|
+|[**authControllerResetPassword**](#authcontrollerresetpassword) | **POST** /api/auth/reset-password | Reset password using reset token|
+|[**authControllerValidateResetToken**](#authcontrollervalidateresettoken) | **POST** /api/auth/reset-password/validate | Validate password reset token|
 |[**authControllerVerifyOtp**](#authcontrollerverifyotp) | **POST** /api/auth/verify-otp | Verify OTP and create account|
+
+# **authControllerForgotPassword**
+> MessageResponseDto authControllerForgotPassword(forgotPasswordDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    ForgotPasswordDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let forgotPasswordDto: ForgotPasswordDto; //
+
+const { status, data } = await apiInstance.authControllerForgotPassword(
+    forgotPasswordDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **forgotPasswordDto** | **ForgotPasswordDto**|  | |
+
+
+### Return type
+
+**MessageResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerLogin**
 > AuthResponseDto authControllerLogin(loginDto)
@@ -339,6 +393,108 @@ No authorization required
 |-------------|-------------|------------------|
 |**200** |  |  -  |
 |**400** | Registration not found or already verified |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authControllerResetPassword**
+> MessageResponseDto authControllerResetPassword(resetPasswordDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    ResetPasswordDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let resetPasswordDto: ResetPasswordDto; //
+
+const { status, data } = await apiInstance.authControllerResetPassword(
+    resetPasswordDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **resetPasswordDto** | **ResetPasswordDto**|  | |
+
+
+### Return type
+
+**MessageResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authControllerValidateResetToken**
+> authControllerValidateResetToken(validateResetTokenDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    ValidateResetTokenDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let validateResetTokenDto: ValidateResetTokenDto; //
+
+const { status, data } = await apiInstance.authControllerValidateResetToken(
+    validateResetTokenDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **validateResetTokenDto** | **ValidateResetTokenDto**|  | |
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

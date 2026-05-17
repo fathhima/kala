@@ -19,6 +19,8 @@ export const isValidOtp = (value: string) => {
 export type RegisterFields = 'name' | 'email' | 'password' | 'confirmPassword'
 export type Loginfields = 'email' | 'password'
 export type verifyOtpFields = 'otp'
+export type ForgotPasswordFields = "email";
+export type ResetPasswordFields = "newPassword" | "confirmPassword";
 
 export const validateRegisterForm = (data: {
     name: string,
@@ -87,3 +89,38 @@ export const validateVerifyOtpForm = (data: {
 
     return errors
 }
+
+export const validateForgotPasswordForm = (data: {
+    email: string;
+}): ValidationErrors<ForgotPasswordFields> => {
+    const errors: ValidationErrors<ForgotPasswordFields> = {};
+
+    if (!data.email.trim()) {
+        errors.email = "Email is required";
+    } else if (!isEmail(data.email)) {
+        errors.email = "Enter a valid email address";
+    }
+
+    return errors;
+};
+
+export const validateResetPasswordForm = (data: {
+    newPassword: string;
+    confirmPassword: string;
+}): ValidationErrors<ResetPasswordFields> => {
+    const errors: ValidationErrors<ResetPasswordFields> = {};
+
+    if (!data.newPassword) {
+        errors.newPassword = "New password is required";
+    } else if (!isStrongPassword(data.newPassword)) {
+        errors.newPassword = "Enter a valid password";
+    }
+
+    if (!data.confirmPassword) {
+        errors.confirmPassword = "Please confirm your password";
+    } else if (data.newPassword !== data.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+    }
+
+    return errors;
+};

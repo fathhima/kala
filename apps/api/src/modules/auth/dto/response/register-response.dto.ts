@@ -8,7 +8,10 @@ class RegisterPendingDataDto {
   maskedEmail!: string;
 
   @ApiProperty()
-  expiresIn!: number;
+  expiresIn!: string;
+
+  @ApiProperty()
+  resendAfter!: string;
 }
 
 export class RegisterResponseDto {

@@ -23,10 +23,10 @@ import { ResetPasswordDto } from "../dto/request/reset-password.dto";
 @Injectable()
 export class AuthService {
     private readonly otpTtlSeconds: number;
+    private readonly otpResendCooldownSeconds: number;
     private readonly refreshTokenTtlSeconds: number;
     private readonly passwordResetTtlSeconds: number;
     private readonly passwordResetUrl: string;
-
 
     constructor(
         @Inject(USER_REPOSITORY)
@@ -42,6 +42,7 @@ export class AuthService {
             this.configService.getOrThrow<number>("PASSWORD_RESET_TTL_SECONDS");
         this.passwordResetUrl =
             this.configService.getOrThrow<string>("PASSWORD_RESET_URL");
+        this.otpResendCooldownSeconds = this.configService.getOrThrow<number>("OTP_RESEND_COOLDOWN_SECONDS");
     }
 
     async register(dto: RegisterDto) {
@@ -72,7 +73,8 @@ export class AuthService {
             otpAttempts: 0,
             resendCount: 0,
             createdAt: new Date().toISOString(),
-            otpExpiresAt: new Date(Date.now() + this.otpTtlSeconds * 1000).toISOString()
+            otpExpiresAt: new Date(Date.now() + this.otpTtlSeconds * 1000).toISOString(),
+            resendAfter: new Date(Date.now() + this.otpResendCooldownSeconds * 1000).toISOString(),
         }
 
         await this.redisService.setPendingSignup(pendingSignupId, JSON.stringify(pendingSignup), this.otpTtlSeconds)
@@ -86,7 +88,8 @@ export class AuthService {
             data: {
                 pendingSignupId,
                 maskedEmail: maskEmail(email),
-                expiresIn: this.otpTtlSeconds
+                expiresIn: this.otpTtlSeconds,
+                resendAfter: this.otpResendCooldownSeconds
             }
         }
     }
@@ -184,7 +187,8 @@ export class AuthService {
             success: true,
             message: 'OTP resent successfully',
             data: {
-                expiresIn: this.otpTtlSeconds
+                expiresIn: this.otpTtlSeconds,
+                resendAfter: this.otpResendCooldownSeconds
             }
         }
     }

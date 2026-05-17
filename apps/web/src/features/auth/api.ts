@@ -1,4 +1,4 @@
-import { AuthenticationApi, Configuration, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, SafeUserDto, VerifyOtpDto } from "@/api";
+import { AuthenticationApi, Configuration, ForgotPasswordDto, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
 import { apiClient, refreshClient } from "@/lib/axios";
 import { AuthUser } from "./store";
 
@@ -51,6 +51,24 @@ export const loginUser = async (payload: LoginDto) => {
         user: mapUser(response.data.data.user)
     }
 }
+
+export const forgotPassword = async (payload: ForgotPasswordDto) => {
+    const response = await authApi.authControllerForgotPassword(payload);
+    return (
+        response.data.message ??
+        "If an account exists, a password reset link has been sent."
+    );
+};
+
+export const validateResetToken = async (payload: ValidateResetTokenDto) => {
+    await authApi.authControllerValidateResetToken(payload);
+    return true;
+};
+
+export const resetPassword = async (payload: ResetPasswordDto) => {
+    const response = await authApi.authControllerResetPassword(payload);
+    return response.data.message ?? "Password reset successfully";
+};
 
 export const getMe = async () => {
     const response = await authApi.authControllerMe()

@@ -46,7 +46,7 @@ export function Register() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setErrorMessage('')
+    setErrorMessage("")
     setErrors({})
 
     const validationErrors = validateRegisterForm({
@@ -64,15 +64,20 @@ export function Register() {
     try {
       const pending = await registerMutation.mutateAsync(formData)
 
-      sessionStorage.setItem('pendingSignupId', pending.pendingSignupId)
-      sessionStorage.setItem("pendingSignupMaskedEmail", pending.maskedEmail);
+      sessionStorage.setItem("pendingSignupId", pending.pendingSignupId)
+      sessionStorage.setItem("pendingSignupMaskedEmail", pending.maskedEmail)
       sessionStorage.setItem(
         "pendingSignupOtpExpiresAt",
         String(Date.now() + pending.expiresIn * 1000)
-      );
-      navigate('/verify-otp', { replace: true })
+      )
+      sessionStorage.setItem(
+        "pendingSignupResendAvailableAt",
+        String(Date.now() + pending.resendAfter * 1000)
+      )
+
+      navigate("/verify-otp", { replace: true })
     } catch (error) {
-      setErrorMessage(getApiErrorResponse(error, 'Registration failed'))
+      setErrorMessage(getApiErrorResponse(error, "Registration failed"))
     }
   }
 

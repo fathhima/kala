@@ -1,21 +1,19 @@
-# ResendOtpResponseDataDto
+# ForgotPasswordDto
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**expiresIn** | **number** |  | [default to undefined]
-**resendAfter** | **number** |  | [default to undefined]
+**email** | **string** | The email address of the user trying to log in | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ResendOtpResponseDataDto } from './api';
+import { ForgotPasswordDto } from './api';
 
-const instance: ResendOtpResponseDataDto = {
-    expiresIn,
-    resendAfter,
+const instance: ForgotPasswordDto = {
+    email,
 };
 ```
 

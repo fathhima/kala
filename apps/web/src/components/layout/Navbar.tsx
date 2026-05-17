@@ -18,7 +18,7 @@ export function Navbar() {
       await logoutMutation.mutateAsync()
     } finally {
       clearAuth()
-      navigate('/login', { replace: true })
+      navigate('/', { replace: true })
     }
   }
 

@@ -10,12 +10,24 @@ import { PublicOnlyRoute } from "./public-only-route";
 import { ForgotPassword } from "@/pages/auth/ForgotPassword";
 import { ResetPassword } from "@/pages/auth/ResetPassword";
 import { AuthBootsrap } from "@/features/auth/AuthBootstrap";
+import { AdminRoute } from "./admin-route";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { AdminPublicOnlyRoute } from "./admin-public-only-route";
+import { AdminLogin } from "@/pages/auth/AdminLogin";
 
 const ProtectedApp = () => (
   <AuthBootsrap>
     <ProtectedRoute>
       <StudentLayout />
     </ProtectedRoute>
+  </AuthBootsrap>
+);
+
+const ProtectedAdminApp = () => (
+  <AuthBootsrap>
+    <AdminRoute>
+      <AdminLayout />
+    </AdminRoute>
   </AuthBootsrap>
 );
 
@@ -35,6 +47,16 @@ export const router = createBrowserRouter([
       <PublicOnlyRoute>
         <Login />
       </PublicOnlyRoute>
+    )
+  },
+  {
+    path: '/admin/login',
+    element: (
+      <AuthBootsrap>
+        <AdminPublicOnlyRoute>
+          <AdminLogin />
+        </AdminPublicOnlyRoute>
+      </AuthBootsrap>
     )
   },
   {
@@ -71,6 +93,10 @@ export const router = createBrowserRouter([
       <ProtectedApp />
     ),
     children: []
+  },
+  {
+    path: '/admin',
+    element: <ProtectedAdminApp />
   },
   {
     path: '*',

@@ -1,9 +1,10 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Sparkles, CheckCircle, CalendarDays, CreditCard, Menu, LogOut } from 'lucide-react'
 import { DashboardSidebar } from './DashboardSidebar'
-import { useAuthStore } from '../../stores/authStore'
 import { Avatar } from '../ui/Avatar'
-import { useUIStore } from '../../stores/uiStore'
+import { useUIStore } from '../../lib/uiStore'
+import { useAuthStore } from '@/features/auth/store'
+import { useLogoutMutation } from '@/features/auth/hooks'
 
 const navItems = [
   { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
@@ -15,9 +16,20 @@ const navItems = [
 ]
 
 export function AdminLayout() {
-  const { user, logout } = useAuthStore()
   const { toggleSidebar } = useUIStore()
+  const user = useAuthStore((state) => state.user)
+  const clearAuth = useAuthStore((state) => state.clearAuth)
+  const logoutMutation = useLogoutMutation()
   const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync()
+    } finally {
+      clearAuth()
+      navigate('/admin/login', { replace: true })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -32,8 +44,8 @@ export function AdminLayout() {
             {user && (
               <>
                 <span className="text-sm text-stone-600 hidden sm:block">{user.name}</span>
-                <Avatar name={user.name} src={user.avatarUrl} size="sm" />
-                <button onClick={() => { logout(); navigate('/login') }} className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-red-500 transition-colors" title="Logout">
+                <Avatar name={user.name} src={user.imageUrl ?? undefined} size="sm" />
+                <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-red-500 transition-colors" title="Logout">
                   <LogOut size={16} />
                 </button>
               </>

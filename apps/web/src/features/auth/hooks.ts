@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { forgotPassword, getMe, loginUser, logoutAllSessions, logoutCurrentSession, registerUser, resendOtp, resetPassword, validateResetToken, verifyOtp } from "./api"
+import { forgotPassword, getMe, googleSignin, loginUser, logoutAllSessions, logoutCurrentSession, registerUser, resendOtp, resetPassword, validateResetToken, verifyOtp } from "./api"
 
 export const useRegisterMutation = () => {
     return useMutation({
@@ -46,6 +46,12 @@ export const useValidateResetTokenQuery = (
 export const useResetPasswordMutation = () => {
     return useMutation({
         mutationFn: resetPassword,
+    });
+};
+
+export const useGoogleSigninMutation = () => {
+    return useMutation({
+        mutationFn: googleSignin,
     });
 };
 

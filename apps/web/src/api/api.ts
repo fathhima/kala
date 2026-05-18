@@ -38,6 +38,12 @@ export interface ForgotPasswordDto {
      */
     'email': string;
 }
+export interface GoogleSignInRequestDto {
+    /**
+     * The Google ID token obtained from the frontend @react-oauth/google
+     */
+    'idToken': string;
+}
 export interface LoginDto {
     /**
      * The email address of the user trying to log in
@@ -80,8 +86,8 @@ export interface RegisterDto {
 export interface RegisterPendingDataDto {
     'pendingSignupId': string;
     'maskedEmail': string;
-    'expiresIn': string;
-    'resendAfter': string;
+    'expiresIn': number;
+    'resendAfter': number;
 }
 export interface RegisterResponseDto {
     'success': boolean;
@@ -183,6 +189,41 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(forgotPasswordDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Sign in with Google
+         * @param {GoogleSignInRequestDto} googleSignInRequestDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerGoogleSignin: async (googleSignInRequestDto: GoogleSignInRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'googleSignInRequestDto' is not null or undefined
+            assertParamExists('authControllerGoogleSignin', 'googleSignInRequestDto', googleSignInRequestDto)
+            const localVarPath = `/api/auth/google-signin`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(googleSignInRequestDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -539,6 +580,19 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Sign in with Google
+         * @param {GoogleSignInRequestDto} googleSignInRequestDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authControllerGoogleSignin(googleSignInRequestDto: GoogleSignInRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authControllerGoogleSignin(googleSignInRequestDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.authControllerGoogleSignin']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Login with email and password
          * @param {LoginDto} loginDto 
          * @param {*} [options] Override http request option.
@@ -684,6 +738,16 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         },
         /**
          * 
+         * @summary Sign in with Google
+         * @param {GoogleSignInRequestDto} googleSignInRequestDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authControllerGoogleSignin(googleSignInRequestDto: GoogleSignInRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
+            return localVarFp.authControllerGoogleSignin(googleSignInRequestDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Login with email and password
          * @param {LoginDto} loginDto 
          * @param {*} [options] Override http request option.
@@ -794,6 +858,17 @@ export class AuthenticationApi extends BaseAPI {
      */
     public authControllerForgotPassword(forgotPasswordDto: ForgotPasswordDto, options?: RawAxiosRequestConfig) {
         return AuthenticationApiFp(this.configuration).authControllerForgotPassword(forgotPasswordDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Sign in with Google
+     * @param {GoogleSignInRequestDto} googleSignInRequestDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authControllerGoogleSignin(googleSignInRequestDto: GoogleSignInRequestDto, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).authControllerGoogleSignin(googleSignInRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

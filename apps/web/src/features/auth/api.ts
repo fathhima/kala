@@ -1,4 +1,4 @@
-import { AuthenticationApi, Configuration, ForgotPasswordDto, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
+import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
 import { apiClient, refreshClient } from "@/lib/axios";
 import { AuthUser } from "./store";
 
@@ -81,6 +81,14 @@ export const refreshSession = async () => {
     const payload = response.data as unknown as ApiEnvelope<{ accessToken: string }>
     return payload.data.accessToken
 }
+
+export const googleSignin = async (payload: GoogleSignInRequestDto) => {
+    const response = await authApi.authControllerGoogleSignin(payload);
+    return {
+        accessToken: response.data.data.accessToken,
+        user: mapUser(response.data.data.user),
+    };
+};
 
 export const logoutCurrentSession = async () => {
     await authApi.authControllerLogout()

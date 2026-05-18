@@ -3,15 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Palette, Eye, EyeOff } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { useLoginMutation} from '@/features/auth/hooks'
+import { useGoogleSigninMutation, useLoginMutation } from '@/features/auth/hooks'
 import { useAuthStore } from '@/features/auth/store'
 import type { LoginDto } from '@/api'
 import { type Loginfields, validateLoginForm } from '@/utils/validation'
 import { getApiErrorResponse } from '@/lib/api-error'
+import { GoogleLogin } from '@react-oauth/google'
 
 export function Login() {
   const navigate = useNavigate()
   const loginMutation = useLoginMutation()
+  const googleSigninMutation = useGoogleSigninMutation();
   const setAuth = useAuthStore((state) => state.setAuth)
 
   const [formData, setFormData] = useState<LoginDto>({
@@ -58,6 +60,32 @@ export function Login() {
       setErrorMessage(getApiErrorResponse(error, 'Login failed'))
     }
   }
+
+  const handleGoogleSuccess = async (credentialResponse: {
+    credential?: string;
+  }) => {
+    if (!credentialResponse.credential) {
+      setErrorMessage("Google sign-in failed");
+      return;
+    }
+
+    setErrorMessage("");
+
+    try {
+      const authData = await googleSigninMutation.mutateAsync({
+        idToken: credentialResponse.credential,
+      });
+
+      setAuth(authData.user, authData.accessToken);
+      navigate('/', { replace: true });
+    } catch (error) {
+      setErrorMessage(getApiErrorResponse(error, "Google sign-in failed"));
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMessage("Google sign-in failed");
+  };
 
   return (
     <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
@@ -115,6 +143,16 @@ export function Login() {
               Sign In
             </Button>
           </form>
+
+          <div className="mt-4 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              text="signin_with"
+              shape="pill"
+              width="320"
+            />
+          </div>
 
           <p className="text-center text-sm text-stone-500 mt-6">
             New to Kala?{' '}

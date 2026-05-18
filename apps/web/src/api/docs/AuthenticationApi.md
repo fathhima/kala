@@ -5,6 +5,7 @@ All URIs are relative to *http://localhost:4000*
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**authControllerForgotPassword**](#authcontrollerforgotpassword) | **POST** /api/auth/forgot-password | Send password reset link to email|
+|[**authControllerGoogleSignin**](#authcontrollergooglesignin) | **POST** /api/auth/google-signin | Sign in with Google|
 |[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | Login with email and password|
 |[**authControllerLogout**](#authcontrollerlogout) | **POST** /api/auth/logout | logout current session|
 |[**authControllerLogoutAll**](#authcontrollerlogoutall) | **POST** /api/auth/logout-all | Logout all sessions of current user|
@@ -64,6 +65,59 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authControllerGoogleSignin**
+> AuthResponseDto authControllerGoogleSignin(googleSignInRequestDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    GoogleSignInRequestDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let googleSignInRequestDto: GoogleSignInRequestDto; //
+
+const { status, data } = await apiInstance.authControllerGoogleSignin(
+    googleSignInRequestDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **googleSignInRequestDto** | **GoogleSignInRequestDto**|  | |
+
+
+### Return type
+
+**AuthResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**401** | Invalid Google token |  -  |
+|**403** | Account is blocked |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

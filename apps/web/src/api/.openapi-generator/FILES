@@ -8,6 +8,7 @@ docs/AuthDataDto.md
 docs/AuthResponseDto.md
 docs/AuthenticationApi.md
 docs/ForgotPasswordDto.md
+docs/GoogleSignInRequestDto.md
 docs/LoginDto.md
 docs/MeResponseDto.md
 docs/MessageResponseDto.md

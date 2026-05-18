@@ -58,4 +58,24 @@ export class PrismaUserRepository implements UserRepository {
       }
     })
   }
+
+  async updateGoogleAccount(
+    userId: string,
+    data: {
+      googleId: string;
+      imageUrl?: string | null;
+      isVerified?: boolean;
+    },
+  ) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        googleId: data.googleId,
+        imageUrl: data.imageUrl ?? null,
+        isVerified: data.isVerified ?? true,
+      },
+    });
+
+    return UserMapper.toEntity(user);
+  }
 }

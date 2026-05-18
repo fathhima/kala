@@ -18,6 +18,7 @@ import { ResendOtpResponseDto } from "./dto/response/resend-otp-response.dto";
 import { ForgotPasswordDto } from "./dto/request/forgot-password.dto";
 import { ValidateResetTokenDto } from "./dto/request/validate-reset-token.dto";
 import { ResetPasswordDto } from "./dto/request/reset-password.dto";
+import { GoogleSignInRequestDto } from "./dto/request/google-signin.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -117,6 +118,22 @@ export class AuthController {
         return this.authService.resetPassword(dto);
     }
 
+    @Public()
+    @Post("google-signin")
+    @ApiOperation({ summary: "Sign in with Google" })
+    @ApiOkResponse({ type: AuthResponseDto })
+    @ApiUnauthorizedResponse({ description: "Invalid Google token" })
+    @ApiForbiddenResponse({ description: "Account is blocked" })
+    async googleSignin(@Body() dto: GoogleSignInRequestDto, @Res({ passthrough: true }) response: Response,) {
+        const result = await this.authService.googleSignin(dto);
+        this.setRefreshCookie(response, result.refreshToken);
+
+        return {
+            success: result.success,
+            message: result.message,
+            data: result.data,
+        };
+    }
 
     @Post('logout')
     @ApiOperation({ summary: 'logout current session' })

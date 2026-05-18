@@ -32,6 +32,7 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         COOKIE_DOMAIN: Joi.string().allow("").optional(),
         PASSWORD_RESET_TTL_SECONDS: Joi.number().integer().min(300).default(900),
         PASSWORD_RESET_URL: Joi.string().uri().required(),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
       }),
     }),
   ],

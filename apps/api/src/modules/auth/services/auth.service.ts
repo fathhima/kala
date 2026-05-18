@@ -19,6 +19,8 @@ import { maskEmail } from "../utils/masked-email";
 import { ForgotPasswordDto } from "../dto/request/forgot-password.dto";
 import { ValidateResetTokenDto } from "../dto/request/validate-reset-token.dto";
 import { ResetPasswordDto } from "../dto/request/reset-password.dto";
+import { GoogleOAuthService } from "./google-oauth.service";
+import { GoogleSignInRequestDto } from "../dto/request/google-signin.dto";
 
 @Injectable()
 export class AuthService {
@@ -34,7 +36,9 @@ export class AuthService {
         private readonly redisService: RedisService,
         private readonly mailerService: MailerService,
         private readonly jwtService: JwtService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly googleOAuthService: GoogleOAuthService
+
     ) {
         this.otpTtlSeconds = this.configService.getOrThrow<number>('OTP_TTL_SECONDS')
         this.refreshTokenTtlSeconds = this.jwtService.getRefreshTokenTtlSeconds()
@@ -358,6 +362,58 @@ export class AuthService {
         return {
             success: true,
             message: "Password reset successfully",
+        };
+    }
+
+    async googleSignin(dto: GoogleSignInRequestDto) {
+        const googleProfile = await this.googleOAuthService.verifyIdToken(dto.idToken);
+
+        const email = normalizeEmail(googleProfile.email);
+        const existingAuthUser = await this.userRepository.findAuthByEmail(email);
+
+        let safeUser;
+
+        if (existingAuthUser) {
+            if (!existingAuthUser.isActive) {
+                throw new ForbiddenException("Account is blocked");
+            }
+
+            if (existingAuthUser.googleId !== googleProfile.googleId) {
+                safeUser = await this.userRepository.updateGoogleAccount(existingAuthUser.id, {
+                    googleId: googleProfile.googleId,
+                    imageUrl: googleProfile.picture ?? null,
+                    isVerified: true,
+                });
+            } else {
+                safeUser = await this.userRepository.findById(existingAuthUser.id);
+            }
+
+            if (!safeUser) {
+                throw new UnauthorizedException("User not found");
+            }
+        } else {
+            safeUser = await this.userRepository.create({
+                name: googleProfile.name,
+                email,
+                password: null,
+                googleId: googleProfile.googleId,
+                imageUrl: googleProfile.picture ?? null,
+                roles: [Role.STUDENT],
+                isVerified: true,
+                isActive: true,
+            });
+        }
+
+        const tokens = await this.generateTokens(safeUser);
+
+        return {
+            success: true,
+            message: "Google sign-in successful",
+            data: {
+                user: safeUser,
+                accessToken: tokens.accessToken,
+            },
+            refreshToken: tokens.refreshToken,
         };
     }
 

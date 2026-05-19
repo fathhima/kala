@@ -14,6 +14,9 @@ import { AdminRoute } from "./admin-route";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { AdminPublicOnlyRoute } from "./admin-public-only-route";
 import { AdminLogin } from "@/pages/auth/AdminLogin";
+import { ManageUsers } from "@/pages/admin/ManageUsers";
+import { AdminDashboard } from "@/pages/admin/Dashboard";
+import { UserDetails } from "@/pages/admin/UserDetails";
 
 const ProtectedApp = () => (
   <AuthBootsrap>
@@ -96,7 +99,21 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin',
-    element: <ProtectedAdminApp />
+    element: <ProtectedAdminApp />,
+    children: [
+      {
+        index: true,
+        element: <AdminDashboard />,
+      },
+      {
+        path: 'users',
+        element: <ManageUsers />,
+      },
+      {
+        path: 'users/:id',
+        element: <UserDetails />,
+      },
+    ]
   },
   {
     path: '*',

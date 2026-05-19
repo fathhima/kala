@@ -1,4 +1,6 @@
+import { PaginatedResult } from "@/shared/types";
 import { UserEntity } from "../../entities/user.entity";
+import { AdminUserListParams } from "../../types/admin-user-list-params.type";
 import { AuthUser } from "../../types/auth-user.type";
 import { CreateUserInput } from "../../types/create-user-input.type";
 
@@ -10,12 +12,12 @@ export interface UserRepository {
   findAuthByEmail(email: string): Promise<AuthUser | null>;
   create(data: CreateUserInput): Promise<UserEntity>;
   updatePassword(userId: string, hashedPassword: string): Promise<void>;
-  updateGoogleAccount(
-    userId: string,
+  updateGoogleAccount(userId: string,
     data: {
       googleId: string;
       imageUrl?: string | null;
       isVerified?: boolean;
-    },
-  ): Promise<UserEntity>;
+    }): Promise<UserEntity>;
+  findManyForAdmin(params: AdminUserListParams): Promise<PaginatedResult<UserEntity>>
+  updateStatus(userId: string, isActive: boolean): Promise<UserEntity>
 }

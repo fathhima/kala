@@ -4,6 +4,11 @@ api.ts
 base.ts
 common.ts
 configuration.ts
+docs/AdminUserDetailDto.md
+docs/AdminUserListItemDto.md
+docs/AdminUserResponseDto.md
+docs/AdminUserStatusDataDto.md
+docs/AdminUserStatusResponseDto.md
 docs/AuthDataDto.md
 docs/AuthResponseDto.md
 docs/AuthenticationApi.md
@@ -12,6 +17,9 @@ docs/GoogleSignInRequestDto.md
 docs/LoginDto.md
 docs/MeResponseDto.md
 docs/MessageResponseDto.md
+docs/PaginatedAdminUsersDataDto.md
+docs/PaginatedAdminUsersResponseDto.md
+docs/PaginationMetaDto.md
 docs/RegisterDto.md
 docs/RegisterPendingDataDto.md
 docs/RegisterResponseDto.md
@@ -21,6 +29,8 @@ docs/ResendOtpResponseDto.md
 docs/ResetPasswordDto.md
 docs/Role.md
 docs/SafeUserDto.md
+docs/UpdateUserStatusDto.md
+docs/UsersApi.md
 docs/ValidateResetTokenDto.md
 docs/VerifyOtpDto.md
 git_push.sh

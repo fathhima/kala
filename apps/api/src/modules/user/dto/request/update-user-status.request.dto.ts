@@ -1,8 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean } from 'class-validator';
 
 export class UpdateUserStatusDto {
-  @ApiProperty({ example: false })
+  @ApiProperty({
+    example: false,
+    description: 'Set false to block the user, true to unblock the user',
+  })
   @IsBoolean()
-  status!: boolean;
+  isActive!: boolean;
 }

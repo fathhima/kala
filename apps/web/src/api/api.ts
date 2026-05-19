@@ -23,6 +23,17 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface AdminUserDetailDto {
+    'id': string;
+    'name': string;
+    'email': string;
+    'roles': Array<Role>;
+    'imageUrl'?: string | null;
+    'isVerified': boolean;
+    'isActive': boolean;
+    'createdAt': string;
+    'updatedAt': string;
+}
 export interface AdminUserListItemDto {
     'id': string;
     'name': string;
@@ -32,6 +43,11 @@ export interface AdminUserListItemDto {
     'isVerified': boolean;
     'isActive': boolean;
     'createdAt': string;
+}
+export interface AdminUserResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': AdminUserDetailDto;
 }
 export interface AdminUserStatusDataDto {
     'id': string;
@@ -1028,6 +1044,40 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
     return {
         /**
          * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        userControllerGetAdminUserById: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('userControllerGetAdminUserById', 'id', id)
+            const localVarPath = `/api/users/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Get paginated users for admin management
          * @param {number} [page] 
          * @param {number} [limit] 
@@ -1131,6 +1181,19 @@ export const UsersApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async userControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminUserResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerGetAdminUserById(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerGetAdminUserById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Get paginated users for admin management
          * @param {number} [page] 
          * @param {number} [limit] 
@@ -1171,6 +1234,16 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
     return {
         /**
          * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        userControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<AdminUserResponseDto> {
+            return localVarFp.userControllerGetAdminUserById(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Get paginated users for admin management
          * @param {number} [page] 
          * @param {number} [limit] 
@@ -1201,6 +1274,17 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
  * UsersApi - object-oriented interface
  */
 export class UsersApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get a single user by id for admin management
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public userControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).userControllerGetAdminUserById(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary Get paginated users for admin management

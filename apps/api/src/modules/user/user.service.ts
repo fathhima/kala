@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Inject, Injectable, NotFoundExc
 import { USER_REPOSITORY } from "./repositories/interfaces/user.repository";
 import type { UserRepository } from "./repositories/interfaces/user.repository";
 import { UserQueryDto, UserStatusFilter } from "./dto/request/user-query.dto";
-import { AdminUserListItemDto, AdminUserStatusDataDto, PaginatedAdminUsersDataDto, PaginationMetaDto } from "./dto/response/user.response.dto";
+import { AdminUserDetailDto, AdminUserListItemDto, AdminUserStatusDataDto, PaginatedAdminUsersDataDto, PaginationMetaDto } from "./dto/response/user.response.dto";
 import { UpdateUserStatusDto } from "./dto/request/update-user-status.request.dto";
 import { Role } from "@prisma/client";
 import { RedisService } from "@/shared/redis/redis.service";
@@ -11,7 +11,7 @@ import { RedisService } from "@/shared/redis/redis.service";
 export class UserService {
     constructor(@Inject(USER_REPOSITORY)
     private readonly userRepository: UserRepository,
-    private readonly redisService: RedisService,
+        private readonly redisService: RedisService,
     ) { }
 
     async getAdminUsers(query: UserQueryDto): Promise<PaginatedAdminUsersDataDto> {
@@ -68,5 +68,15 @@ export class UserService {
         }
 
         return AdminUserStatusDataDto.fromEntity(updatedUser);
+    }
+
+    async getAdminUserById(id: string): Promise<AdminUserDetailDto> {
+        const user = await this.userRepository.findById(id);
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        return AdminUserDetailDto.fromEntity(user);
     }
 }

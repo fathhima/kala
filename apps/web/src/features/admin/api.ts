@@ -1,4 +1,5 @@
 import {
+    AdminUserResponseDto,
     Configuration,
     UpdateUserStatusDto,
     UsersApi,
@@ -32,6 +33,13 @@ export const getAdminUsers = async (query: AdminUsersQuery): Promise<PaginatedAd
     )
 
     return response.data.data
+}
+
+export const getAdminUserById = async (
+    id: string,
+): Promise<AdminUserResponseDto> => {
+    const response = await usersApi.userControllerGetAdminUserById(id)
+    return response.data
 }
 
 export const updateAdminUserStatus = async (params: { id: string; isActive: boolean }) => {

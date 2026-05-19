@@ -4,8 +4,62 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**userControllerGetAdminUserById**](#usercontrollergetadminuserbyid) | **GET** /api/users/{id} | Get a single user by id for admin management|
 |[**userControllerGetAdminUsers**](#usercontrollergetadminusers) | **GET** /api/users | Get paginated users for admin management|
 |[**userControllerUpdateAdminUserStatus**](#usercontrollerupdateadminuserstatus) | **PATCH** /api/users/{id}/status | Block or unblock a user|
+
+# **userControllerGetAdminUserById**
+> AdminUserResponseDto userControllerGetAdminUserById()
+
+
+### Example
+
+```typescript
+import {
+    UsersApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new UsersApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.userControllerGetAdminUserById(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**AdminUserResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**401** | Access token is missing or invalid |  -  |
+|**403** | Only admins can access this resource |  -  |
+|**404** | User not found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **userControllerGetAdminUsers**
 > PaginatedAdminUsersResponseDto userControllerGetAdminUsers()

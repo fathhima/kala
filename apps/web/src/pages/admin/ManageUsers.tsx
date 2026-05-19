@@ -4,7 +4,7 @@ import {
   UserControllerGetAdminUsersStatusEnum,
   type Role,
 } from '@/api'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
@@ -250,6 +250,12 @@ export function ManageUsers() {
 
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
+                        <Link to={`/admin/users/${user.id}`}>
+                          <Button variant="outline" size="sm">
+                            Details
+                          </Button>
+                        </Link>
+
                         {user.roles.includes('ADMIN') ? (
                           <Button variant="outline" size="sm" disabled>
                             Cannot block admin

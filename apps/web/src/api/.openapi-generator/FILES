@@ -4,7 +4,9 @@ api.ts
 base.ts
 common.ts
 configuration.ts
+docs/AdminUserDetailDto.md
 docs/AdminUserListItemDto.md
+docs/AdminUserResponseDto.md
 docs/AdminUserStatusDataDto.md
 docs/AdminUserStatusResponseDto.md
 docs/AuthDataDto.md

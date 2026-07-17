@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { UserRole } from "@/shared/enums/role.enum";
 
 export class CreateUserDto {
     name!: string;
@@ -7,6 +7,6 @@ export class CreateUserDto {
 
     password!: string
 
-    roles!: Role[] 
+    roles!: UserRole[] 
 
 }

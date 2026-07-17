@@ -21,6 +21,8 @@ import { ValidateResetTokenDto } from "../dto/request/validate-reset-token.dto";
 import { ResetPasswordDto } from "../dto/request/reset-password.dto";
 import { GoogleOAuthService } from "./google-oauth.service";
 import { GoogleSignInRequestDto } from "../dto/request/google-signin.dto";
+import { AuthResult, RefreshResult } from "../types/auth-result.type";
+import { UserRole } from "@/shared/enums/role.enum";
 
 @Injectable()
 export class AuthService {
@@ -87,18 +89,14 @@ export class AuthService {
         await this.mailerService.sendOtpEmail(email, otp, this.otpTtlSeconds)
 
         return {
-            success: true,
-            message: 'OTP sent successfully',
-            data: {
-                pendingSignupId,
-                maskedEmail: maskEmail(email),
-                expiresIn: this.otpTtlSeconds,
-                resendAfter: this.otpResendCooldownSeconds
-            }
+            pendingSignupId,
+            maskedEmail: maskEmail(email),
+            expiresIn: this.otpTtlSeconds,
+            resendAfter: this.otpResendCooldownSeconds
         }
     }
 
-    async verifyOtp(dto: VerifyOtpDto) {
+    async verifyOtp(dto: VerifyOtpDto): Promise<AuthResult> {
         const rawPendingSignup = await this.redisService.getPendingSignup(dto.pendingSignupId)
 
         if (!rawPendingSignup) {
@@ -136,7 +134,7 @@ export class AuthService {
             name: pendingSignup.name,
             email: pendingSignup.email,
             password: pendingSignup.hashedPassword,
-            roles: [Role.STUDENT],
+            roles: [UserRole.STUDENT],
             isVerified: true,
             isActive: true
         })
@@ -147,12 +145,8 @@ export class AuthService {
         const tokens = await this.generateTokens(user)
 
         return {
-            success: true,
-            message: 'Login successfull',
-            data: {
-                user,
-                accessToken: tokens.accessToken
-            },
+            user,
+            accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken
         }
     }
@@ -188,16 +182,12 @@ export class AuthService {
         await this.mailerService.sendOtpEmail(pendingSignup.email, otp, this.otpTtlSeconds)
 
         return {
-            success: true,
-            message: 'OTP resent successfully',
-            data: {
-                expiresIn: this.otpTtlSeconds,
-                resendAfter: this.otpResendCooldownSeconds
-            }
+            expiresIn: this.otpTtlSeconds,
+            resendAfter: this.otpResendCooldownSeconds
         }
     }
 
-    async login(dto: LoginDto) {
+    async login(dto: LoginDto): Promise<AuthResult> {
         const email = normalizeEmail(dto.email)
 
         const authUser = await this.userRepository.findAuthByEmail(email)
@@ -227,17 +217,13 @@ export class AuthService {
         const tokens = await this.generateTokens(safeUser)
 
         return {
-            success: true,
-            message: 'Login successful',
-            data: {
-                user: safeUser,
-                accessToken: tokens.accessToken
-            },
+            user: safeUser,
+            accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken
         }
     }
 
-    async refresh(refreshToken: string) {
+    async refresh(refreshToken: string): Promise<RefreshResult> {
         const payload = await this.jwtService.verifyRefreshToken(refreshToken)
 
         const session = await this.redisService.getRefreshSession(payload.sessionId)
@@ -268,13 +254,9 @@ export class AuthService {
         const tokens = await this.generateTokens(user)
 
         return {
-            success: true,
-            message: "Token refreshed successfully",
-            data: {
-                accessToken: tokens.accessToken
-            },
-            refreshToken: tokens.refreshToken,
-        };
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken
+        }
     }
 
     async me(userId: string) {
@@ -285,11 +267,8 @@ export class AuthService {
             throw new UnauthorizedException('User not found')
         }
 
-        return {
-            success: true,
-            message: 'User fetched successfully',
-            data: user
-        }
+        return user
+
     }
 
     async forgotPassword(dto: ForgotPasswordDto) {
@@ -297,13 +276,8 @@ export class AuthService {
 
         const user = await this.userRepository.findAuthByEmail(email)
 
-        const response = {
-            success: true,
-            message: 'if an account exists, a password reset link has been sent'
-        }
-
         if (!user || !user.password || !user.isActive || !user.isVerified) {
-            return response
+            return
         }
 
         const rawToken = this.generatePasswordResetToken()
@@ -318,8 +292,6 @@ export class AuthService {
             resetLink,
             this.passwordResetTtlSeconds
         )
-
-        return response
     }
 
     async validateResetToken(dto: ValidateResetTokenDto) {
@@ -331,11 +303,7 @@ export class AuthService {
         }
 
         return {
-            success: true,
-            message: 'Reset link is valid',
-            data: {
-                valid: true
-            }
+            valid: true
         }
     }
 
@@ -358,11 +326,6 @@ export class AuthService {
         await this.userRepository.updatePassword(user.id, hashedPassword);
         await this.redisService.deleteAllUserPasswordResetTokens(user.id);
         await this.redisService.deleteAllUserRefreshSessions(user.id);
-
-        return {
-            success: true,
-            message: "Password reset successfully",
-        };
     }
 
     async googleSignin(dto: GoogleSignInRequestDto) {
@@ -398,7 +361,7 @@ export class AuthService {
                 password: null,
                 googleId: googleProfile.googleId,
                 imageUrl: googleProfile.picture ?? null,
-                roles: [Role.STUDENT],
+                roles: [UserRole.STUDENT],
                 isVerified: true,
                 isActive: true,
             });
@@ -407,37 +370,21 @@ export class AuthService {
         const tokens = await this.generateTokens(safeUser);
 
         return {
-            success: true,
-            message: "Google sign-in successful",
-            data: {
-                user: safeUser,
-                accessToken: tokens.accessToken,
-            },
+            user: safeUser,
+            accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
         };
     }
 
     async logout(refreshToken?: string) {
         if (refreshToken) {
-            try {
-                const payload = await this.jwtService.verifyRefreshToken(refreshToken)
-                await this.redisService.deleteRefreshSession(payload.sessionId, payload.sub)
-            } catch {
-            }
-        }
-        return {
-            success: true,
-            message: 'Logged out successfully'
+            const payload = await this.jwtService.verifyRefreshToken(refreshToken)
+            await this.redisService.deleteRefreshSession(payload.sessionId, payload.sub)
         }
     }
 
     async logoutAll(userId: string) {
         await this.redisService.deleteAllUserRefreshSessions(userId)
-
-        return {
-            success: true,
-            message: 'Logged out from all devices successfully'
-        }
     }
 
     private async generateTokens(user: {
@@ -471,5 +418,4 @@ export class AuthService {
     private hashPasswordResetToken(token: string): string {
         return createHash("sha256").update(token).digest("hex");
     }
-
 }

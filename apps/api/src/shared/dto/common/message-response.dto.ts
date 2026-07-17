@@ -1,10 +1,16 @@
-import { ApiProperty } from "@nestjs/swagger"
-
+import { ApiProperty } from "@nestjs/swagger";
 
 export class MessageResponseDto {
-    @ApiProperty({ example: true })
-    success!: boolean
+  @ApiProperty()
+  success!: boolean;
 
-    @ApiProperty({ example: "OTP sent to email" })
-    message!: string
+  @ApiProperty()
+  message!: string;
+
+  static success(message: string): MessageResponseDto {
+    const dto = new MessageResponseDto();
+    dto.success = true;
+    dto.message = message;
+    return dto;
+  }
 }

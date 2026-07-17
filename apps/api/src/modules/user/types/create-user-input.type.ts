@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { UserRole } from "@/shared/enums/role.enum";
 
 export type CreateUserInput = {
     name: string;
@@ -6,7 +6,7 @@ export type CreateUserInput = {
     password: string | null;
     imageUrl?: string | null
     googleId?: string | null;
-    roles?: Role[]
+    roles?: UserRole[]
     isVerified?: boolean
     isActive?: boolean
 }

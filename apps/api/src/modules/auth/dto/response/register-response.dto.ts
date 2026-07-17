@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-class RegisterPendingDataDto {
+export class RegisterPendingDataDto {
   @ApiProperty()
   pendingSignupId!: string;
 
@@ -23,4 +23,25 @@ export class RegisterResponseDto {
 
   @ApiProperty({ type: RegisterPendingDataDto })
   data!: RegisterPendingDataDto;
+
+  static fromResult(params: {
+    message: string
+    pendingSignupId: string;
+    maskedEmail: string;
+    expiresIn: number;
+    resendAfter: number;
+  }): RegisterResponseDto {
+    const dto = new RegisterResponseDto();
+
+    dto.success = true;
+    dto.message = params.message
+    dto.data = {
+      pendingSignupId: params.pendingSignupId,
+      maskedEmail: params.maskedEmail,
+      expiresIn: params.expiresIn,
+      resendAfter: params.resendAfter,
+    };
+
+    return dto;
+  }
 }

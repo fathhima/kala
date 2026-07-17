@@ -19,6 +19,8 @@ import { ForgotPasswordDto } from "./dto/request/forgot-password.dto";
 import { ValidateResetTokenDto } from "./dto/request/validate-reset-token.dto";
 import { ResetPasswordDto } from "./dto/request/reset-password.dto";
 import { GoogleSignInRequestDto } from "./dto/request/google-signin.dto";
+import { RefreshResponseDto } from "./dto/response/refresh-response.dto";
+import { ValidateResetTokenResponseDto } from "./dto/response/validate-reset-token-response.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -33,8 +35,16 @@ export class AuthController {
     @ApiOperation({ summary: 'Register user and send OTP to email' })
     @ApiOkResponse({ type: RegisterResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid data or email already exists' })
-    register(@Body() dto: RegisterDto) {
-        return this.authService.register(dto)
+    async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
+        const result = await this.authService.register(dto)
+
+        return RegisterResponseDto.fromResult({
+            message: 'OTP sent successfully',
+            pendingSignupId: result.pendingSignupId,
+            maskedEmail: result.maskedEmail,
+            expiresIn: result.expiresIn,
+            resendAfter: result.resendAfter
+        })
     }
 
     @Public()
@@ -42,15 +52,15 @@ export class AuthController {
     @ApiOperation({ summary: 'Verify OTP and create account' })
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid OTP or expired registration' })
-    async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) response: Response) {
+    async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
         const result = await this.authService.verifyOtp(dto)
         this.setRefreshCookie(response, result.refreshToken)
 
-        return {
-            success: result.success,
-            message: result.message,
-            data: result.data
-        }
+        return AuthResponseDto.fromResult({
+            message: 'Account verified successfully',
+            user: result.user,
+            accessToken: result.accessToken
+        })
     }
 
     @Public()
@@ -58,8 +68,14 @@ export class AuthController {
     @ApiOperation({ summary: 'Resend OTP to email' })
     @ApiOkResponse({ type: ResendOtpResponseDto })
     @ApiBadRequestResponse({ description: 'Registration not found or already verified' })
-    resendOtp(@Body() dto: ResendOtpDto) {
-        return this.authService.resendOtp(dto)
+    async resendOtp(@Body() dto: ResendOtpDto): Promise<ResendOtpResponseDto> {
+        const result = await this.authService.resendOtp(dto)
+
+        return ResendOtpResponseDto.fromResult({
+            message: 'OTP resent successfully',
+            expiresIn: result.expiresIn,
+            resendAfter: result.resendAfter
+        })
     }
 
     @Public()
@@ -68,54 +84,67 @@ export class AuthController {
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
     @ApiForbiddenResponse({ description: 'Account not verified or blocked' })
-    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
         const result = await this.authService.login(dto)
         this.setRefreshCookie(response, result.refreshToken)
 
-        return {
-            success: result.success,
-            message: result.message,
-            data: result.data
-        }
+        return AuthResponseDto.fromResult({
+            message: 'Login successfull',
+            user: result.user,
+            accessToken: result.accessToken
+        })
     }
 
     @Public()
     @Post('refresh')
     @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
-    async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    @ApiOkResponse({ type: RefreshResponseDto })
+    async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<RefreshResponseDto> {
         const refreshToken = this.getRefreshTokenFromCookie(request)
+
         const result = await this.authService.refresh(refreshToken)
 
         this.setRefreshCookie(response, result.refreshToken)
 
-        return {
-            success: result.success,
-            message: result.message,
-            data: result.data
-        }
+        return RefreshResponseDto.fromResult({
+            message: 'Token refreshed successfully',
+            accessToken: result.accessToken
+        })
     }
 
     @Public()
     @Post("forgot-password")
     @ApiOperation({ summary: "Send password reset link to email" })
     @ApiOkResponse({ type: MessageResponseDto })
-    forgotPassword(@Body() dto: ForgotPasswordDto) {
-        return this.authService.forgotPassword(dto);
+    async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<MessageResponseDto> {
+        await this.authService.forgotPassword(dto);
+
+        return MessageResponseDto.success(
+            'if an account exists, a password reset link has been sent'
+        )
     }
 
     @Public()
     @Post("reset-password/validate")
     @ApiOperation({ summary: "Validate password reset token" })
-    validateResetToken(@Body() dto: ValidateResetTokenDto) {
-        return this.authService.validateResetToken(dto);
+    @ApiOkResponse({ type: ValidateResetTokenResponseDto })
+    async validateResetToken(@Body() dto: ValidateResetTokenDto): Promise<ValidateResetTokenResponseDto> {
+        const result = await this.authService.validateResetToken(dto);
+
+        return ValidateResetTokenResponseDto.fromResult({
+            message: 'Reset link is valid',
+            valid: result.valid
+        })
     }
 
     @Public()
     @Post("reset-password")
     @ApiOperation({ summary: "Reset password using reset token" })
     @ApiOkResponse({ type: MessageResponseDto })
-    resetPassword(@Body() dto: ResetPasswordDto) {
-        return this.authService.resetPassword(dto);
+    async resetPassword(@Body() dto: ResetPasswordDto): Promise<MessageResponseDto> {
+        await this.authService.resetPassword(dto);
+
+        return MessageResponseDto.success("Password reset successfully")
     }
 
     @Public()
@@ -124,43 +153,50 @@ export class AuthController {
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiUnauthorizedResponse({ description: "Invalid Google token" })
     @ApiForbiddenResponse({ description: "Account is blocked" })
-    async googleSignin(@Body() dto: GoogleSignInRequestDto, @Res({ passthrough: true }) response: Response,) {
+    async googleSignin(@Body() dto: GoogleSignInRequestDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
         const result = await this.authService.googleSignin(dto);
         this.setRefreshCookie(response, result.refreshToken);
 
-        return {
-            success: result.success,
-            message: result.message,
-            data: result.data,
-        };
+        return AuthResponseDto.fromResult({
+            message: 'Google sign-in successfull',
+            user: result.user,
+            accessToken: result.accessToken
+        })
     }
 
     @Post('logout')
     @ApiOperation({ summary: 'logout current session' })
-    async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    @ApiOkResponse({ type: MessageResponseDto })
+    async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<MessageResponseDto> {
         const refreshToken = request.cookies?.[this.getCookieName()]
-        const result = await this.authService.logout(refreshToken)
+        await this.authService.logout(refreshToken)
 
         response.clearCookie(this.getCookieName(), this.getCookieOptions())
 
-        return result
+        return MessageResponseDto.success('Logged out successfully')
     }
 
     @Post('logout-all')
     @ApiOperation({ summary: 'Logout all sessions of current user' })
-    async logoutAll(@UserId() userId: string, @Res({ passthrough: true }) response: Response) {
-        const result = await this.authService.logoutAll(userId)
+    @ApiOkResponse({ type: MessageResponseDto })
+    async logoutAll(@UserId() userId: string, @Res({ passthrough: true }) response: Response): Promise<MessageResponseDto> {
+        await this.authService.logoutAll(userId)
 
         response.clearCookie(this.getCookieName(), this.getCookieOptions())
 
-        return result
+        return MessageResponseDto.success('Logged out from all devices successfully')
     }
 
     @Get('me')
     @ApiOperation({ summary: 'Get current authenticated user' })
     @ApiOkResponse({ type: MeResponseDto })
-    me(@UserId() userId: string) {
-        return this.authService.me(userId)
+    async me(@UserId() userId: string): Promise<MeResponseDto> {
+        const user = await this.authService.me(userId)
+
+        return MeResponseDto.fromResult({
+            message: 'User fetched successfully',
+            user
+        })
     }
 
     private getRefreshTokenFromCookie(request: Request): string {
@@ -186,9 +222,7 @@ export class AuthController {
     }
 
     private getCookieOptions(): CookieOptions {
-        const sameSite = this.configService.getOrThrow<
-            "lax" | "strict" | "none"
-        >("COOKIE_SAME_SITE");
+        const sameSite = this.configService.getOrThrow<"lax" | "strict" | "none">("COOKIE_SAME_SITE");
 
         const domain = this.configService.get<string>("COOKIE_DOMAIN");
 

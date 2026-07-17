@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { UserRole } from "@/shared/enums/role.enum";
 
 export class UpdateUserDto {
 
@@ -10,7 +10,7 @@ export class UpdateUserDto {
 
   googleId?: string;
 
-  roles?: Role[];
+  roles?: UserRole[];
 
   isVerified?: boolean;
   

@@ -1,41 +1,20 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
-import { UserEntity } from '@/modules/user/entities/user.entity';
+import { UserEntity } from "@/modules/user/entities/user.entity";
+import { UserRole } from "@/shared/enums/role.enum";
 
-export class MeResponseDto {
-  @ApiProperty({ example: 'cuid1234' })
+export class MeUserDto {
   id!: string;
-
-  @ApiProperty({ example: 'John Doe' })
   name!: string;
-
-  @ApiProperty({ example: 'john@example.com' })
   email!: string;
-
-  @ApiProperty({ enum: Role, isArray: true, enumName: 'Role', example: [Role.STUDENT] })
-  roles!: Role[];
-
-  @ApiPropertyOptional({
-    type: String,
-    example: 'https://cdn.example.com/avatar.png',
-    nullable: true,
-  })
+  roles!: UserRole[];
   imageUrl?: string | null;
-
-  @ApiProperty({ example: true })
   isVerified!: boolean;
-
-  @ApiProperty({ example: true })
   isActive!: boolean;
+  createdAt!: Date;
+  updatedAt!: Date;
 
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  createdAt?: Date;
+  static fromEntity(user: UserEntity): MeUserDto {
+    const dto = new MeUserDto();
 
-  @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
-  updatedAt?: Date;
-
-  static fromEntity(user: UserEntity): MeResponseDto {
-    const dto = new MeResponseDto();
     dto.id = user.id;
     dto.name = user.name;
     dto.email = user.email;
@@ -45,6 +24,26 @@ export class MeResponseDto {
     dto.isActive = user.isActive;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;
+
+    return dto;
+  }
+}
+
+export class MeResponseDto {
+  success!: boolean;
+  message!: string;
+  data!: MeUserDto;
+
+  static fromResult(params: {
+    message: string;
+    user: UserEntity;
+  }): MeResponseDto {
+    const dto = new MeResponseDto();
+
+    dto.success = true;
+    dto.message = params.message;
+    dto.data = MeUserDto.fromEntity(params.user);
+
     return dto;
   }
 }

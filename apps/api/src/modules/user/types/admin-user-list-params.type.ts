@@ -1,9 +1,9 @@
-import { Role } from "@prisma/client";
+import { UserRole } from "@/shared/enums/role.enum";
 
 export type AdminUserListParams = {
     page: number;
     limit: number;
     search?: string;
-    role?: Role;
+    role?: UserRole;
     isActive?: boolean;
 };

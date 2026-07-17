@@ -1,20 +1,37 @@
-import { ApiProperty } from "@nestjs/swagger"
+import { ApiProperty } from "@nestjs/swagger";
 
-export class ResendOtpResponseDataDto {
+export class ResendOtpDataDto {
     @ApiProperty()
-    expiresIn!: number
+    expiresIn!: number;
 
     @ApiProperty()
-    resendAfter!: number
+    resendAfter!: number;
 }
 
 export class ResendOtpResponseDto {
     @ApiProperty()
-    success!: boolean
+    success!: boolean;
 
     @ApiProperty()
-    message!: string
+    message!: string;
 
-    @ApiProperty({ type: ResendOtpResponseDataDto })
-    data!: ResendOtpResponseDataDto
+    @ApiProperty({ type: ResendOtpDataDto })
+    data!: ResendOtpDataDto;
+
+    static fromResult(params: {
+        message: string;
+        expiresIn: number;
+        resendAfter: number;
+    }): ResendOtpResponseDto {
+        const dto = new ResendOtpResponseDto();
+
+        dto.success = true;
+        dto.message = params.message;
+        dto.data = {
+            expiresIn: params.expiresIn,
+            resendAfter: params.resendAfter,
+        };
+
+        return dto;
+    }
 }

@@ -7,7 +7,7 @@ import { PendingSignup } from "../types/pending-signup.type";
 import { RedisService } from "@/shared/redis/redis.service";
 import { MailerService } from "@/shared/mailer/mailer.service";
 import { VerifyOtpDto } from "../dto/request/verify-otp.dto";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { JwtService } from "@/shared/jwt/jwt.service";
 import { ConfigService } from "@nestjs/config";
 import { LoginDto } from "../dto/request/login.dto";
@@ -130,14 +130,29 @@ export class AuthService {
             throw new BadRequestException('User already exists')
         }
 
-        const user = await this.userRepository.create({
-            name: pendingSignup.name,
-            email: pendingSignup.email,
-            password: pendingSignup.hashedPassword,
-            roles: [UserRole.STUDENT],
-            isVerified: true,
-            isActive: true
-        })
+        let user;
+
+        try {
+            user = await this.userRepository.create({
+                name: pendingSignup.name,
+                email: pendingSignup.email,
+                password: pendingSignup.hashedPassword,
+                roles: [UserRole.STUDENT],
+                isVerified: true,
+                isActive: true
+            })
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                await this.redisService.deletePendingSignup(pendingSignup.id);
+                await this.redisService.deletePendingSignupEmailIndex(pendingSignup.email,);
+
+                throw new BadRequestException('User already exists');
+            }
+
+            throw error;
+        }
+
+
 
         await this.redisService.deletePendingSignup(pendingSignup.id)
         await this.redisService.deletePendingSignupEmailIndex(pendingSignup.email)
@@ -167,7 +182,15 @@ export class AuthService {
         }
 
         if (pendingSignup.resendCount >= 3) {
-            throw new BadRequestException('Resend limit raeched')
+            throw new BadRequestException('Resend limit reached')
+        }
+
+        const resendAfter = new Date(pendingSignup.resendAfter);
+
+        if (!Number.isNaN(resendAfter.getTime()) && resendAfter.getTime() > Date.now()) {
+            const retryAfter = Math.ceil((resendAfter.getTime() - Date.now()) / 1000,);
+
+            throw new BadRequestException(`Please wait ${retryAfter} seconds before requesting another OTP`,);
         }
 
         const otp = generateOtp()
@@ -175,6 +198,7 @@ export class AuthService {
         pendingSignup.otpAttempts = 0
         pendingSignup.resendCount += 1
         pendingSignup.otpExpiresAt = new Date(Date.now() + this.otpTtlSeconds * 1000).toISOString()
+        pendingSignup.resendAfter = new Date(Date.now() + this.otpResendCooldownSeconds * 1000).toISOString();
 
         await this.redisService.setPendingSignup(pendingSignup.id, JSON.stringify(pendingSignup), this.otpTtlSeconds)
         await this.redisService.setPendingSignupEmailIndex(pendingSignup.email, pendingSignup.id, this.otpTtlSeconds)
@@ -309,7 +333,7 @@ export class AuthService {
 
     async resetPassword(dto: ResetPasswordDto) {
         const tokenHash = this.hashPasswordResetToken(dto.token)
-        const record = await this.redisService.getPasswordResetToken(tokenHash)
+        const record = await this.redisService.consumePasswordResetToken(tokenHash)
 
         if (!record) {
             throw new BadRequestException('Reset link is invalid or expired')

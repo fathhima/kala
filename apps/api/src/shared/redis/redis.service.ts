@@ -127,9 +127,7 @@ export class RedisService implements OnModuleDestroy {
     await pipeline.exec()
   }
 
-  async getPasswordResetToken(
-    tokenHash: string,
-  ): Promise<PasswordResetRecord | null> {
+  async getPasswordResetToken(tokenHash: string,): Promise<PasswordResetRecord | null> {
     const raw = await this.client.get(this.passwordResetTokenKey(tokenHash));
 
     if (!raw) {
@@ -137,6 +135,20 @@ export class RedisService implements OnModuleDestroy {
     }
 
     return JSON.parse(raw) as PasswordResetRecord;
+  }
+
+  async consumePasswordResetToken(tokenHash: string,): Promise<PasswordResetRecord | null> {
+    const raw = (await this.client.call('GETDEL', this.passwordResetTokenKey(tokenHash),)) as string | null;
+
+    if (!raw) {
+      return null;
+    }
+
+    const record = JSON.parse(raw) as PasswordResetRecord;
+
+    await this.client.srem(this.userPasswordResetTokensKey(record.userId), tokenHash,);
+
+    return record;
   }
 
   async deletePasswordResetToken(tokenHash: string): Promise<void> {

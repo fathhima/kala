@@ -21,6 +21,7 @@ import { ResetPasswordDto } from "./dto/request/reset-password.dto";
 import { GoogleSignInRequestDto } from "./dto/request/google-signin.dto";
 import { RefreshResponseDto } from "./dto/response/refresh-response.dto";
 import { ValidateResetTokenResponseDto } from "./dto/response/validate-reset-token-response.dto";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -32,6 +33,7 @@ export class AuthController {
 
     @Public()
     @Post('register')
+    @Throttle({ default: { limit: 3, ttl: 60_000 } })
     @ApiOperation({ summary: 'Register user and send OTP to email' })
     @ApiOkResponse({ type: RegisterResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid data or email already exists' })
@@ -49,6 +51,7 @@ export class AuthController {
 
     @Public()
     @Post('verify-otp')
+    @Throttle({ default: { limit: 5, ttl: 60_000 } })
     @ApiOperation({ summary: 'Verify OTP and create account' })
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid OTP or expired registration' })
@@ -65,6 +68,7 @@ export class AuthController {
 
     @Public()
     @Post('resend-otp')
+    @Throttle({ default: { limit: 3, ttl: 60_000 } })
     @ApiOperation({ summary: 'Resend OTP to email' })
     @ApiOkResponse({ type: ResendOtpResponseDto })
     @ApiBadRequestResponse({ description: 'Registration not found or already verified' })
@@ -80,6 +84,7 @@ export class AuthController {
 
     @Public()
     @Post('login')
+    @Throttle({ default: { limit: 5, ttl: 60_000 } })
     @ApiOperation({ summary: 'Login with email and password' })
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
@@ -114,6 +119,7 @@ export class AuthController {
 
     @Public()
     @Post("forgot-password")
+    @Throttle({ default: { limit: 3, ttl: 60_000 } })
     @ApiOperation({ summary: "Send password reset link to email" })
     @ApiOkResponse({ type: MessageResponseDto })
     async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<MessageResponseDto> {

@@ -30,12 +30,16 @@ export class GoogleOAuthService {
             throw new UnauthorizedException("Google account data is incomplete");
         }
 
+        if (!payload.email_verified) {
+            throw new UnauthorizedException('Google account email is not verified',);
+        }
+
         return {
             googleId: payload.sub,
             email: payload.email,
             name: payload.name ?? payload.email.split("@")[0],
             picture: payload.picture ?? null,
-            emailVerified: payload.email_verified ?? false,
+            emailVerified: true,
         };
     }
 }

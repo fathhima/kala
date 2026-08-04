@@ -9,9 +9,19 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
 import { JwtModule } from './shared/jwt/jwt.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  imports: [JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule],
+  imports: [
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000,
+        limit: 60,
+      },
+    ]),
+    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule
+  ],
   providers: [{
     provide: APP_GUARD,
     useClass: JwtAuthGuard,

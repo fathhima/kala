@@ -14,6 +14,7 @@ import { AppModule } from '@/app.module';
 import { Logger } from '@/shared/logger/winston-logger';
 import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
+import helmet from 'helmet';
 
 export async function setupApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule, {
@@ -22,11 +23,17 @@ export async function setupApp(): Promise<INestApplication> {
 
   const configService = app.get(ConfigService);
 
+  app.use(helmet({
+    referrerPolicy: {
+      policy: 'strict-origin-when-cross-origin'
+    }
+  }))
+
   app.use(cookieParser());
 
   app.use(
     bodyParser.json({
-      limit: '50mb',
+      limit: '1mb',
       verify: (req: RawBodyRequest<Request>, _res, buf) => {
         req.rawBody = buf;
       },
@@ -35,7 +42,7 @@ export async function setupApp(): Promise<INestApplication> {
 
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-  const origins = configService.getOrThrow<string>('CORS_ORIGINS').split(',');
+  const origins = configService.getOrThrow<string>('CORS_ORIGINS').split(',').map((origin) => origin.trim());
 
   app.enableCors({
     origin: origins,
@@ -50,7 +57,7 @@ export async function setupApp(): Promise<INestApplication> {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );

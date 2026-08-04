@@ -1,5 +1,5 @@
-import { ApiEnvelope, refreshAuthApi } from "@/features/auth/api";
 import { useAuthStore } from "@/features/auth/store";
+import { ApiEnvelope } from "@/types/api-envelope";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 export const apiClient = axios.create({
@@ -58,10 +58,8 @@ apiClient.interceptors.response.use((response) => response, async (error: AxiosE
 
     try {
         if (!refreshPromise) {
-            refreshPromise = refreshAuthApi.authControllerRefresh().then((refreshResponse) => {
-                const payload = refreshResponse.data as unknown as ApiEnvelope<{ accessToken: string }>
-                return payload.data.accessToken
-            })
+            refreshPromise = refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/auth/refresh")
+                .then((response) => response.data.data.accessToken);
         }
 
         const newAccessToken = await refreshPromise

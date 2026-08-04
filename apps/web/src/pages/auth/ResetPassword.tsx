@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '@/features/auth/store'
 import { ResetPasswordFields, validateResetPasswordForm } from '@/utils/validation'
-import { useResetPasswordMutation, useValidateResetTokenQuery } from '@/features/auth/hooks'
+import { useResetPasswordMutation, useValidateResetTokenMutation, } from '@/features/auth/hooks'
 import { getApiErrorResponse } from '@/lib/api-error'
 import { Spinner } from '@/components/ui/Spinner'
 
@@ -16,7 +16,7 @@ export function ResetPassword() {
 
   const token = searchParams.get("token")?.trim() ?? "";
 
-  const validateTokenQuery = useValidateResetTokenQuery(token, Boolean(token));
+  const validateResetTokenMutation = useValidateResetTokenMutation()
   const resetPasswordMutation = useResetPasswordMutation();
 
   const [newPassword, setNewPassword] = useState("");
@@ -26,6 +26,13 @@ export function ResetPassword() {
   const [errors, setErrors] = useState<Partial<Record<ResetPasswordFields, string>>>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    if (!token) return;
+
+    validateResetTokenMutation.mutate({ token });
+  }, [token, validateResetTokenMutation]);
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -93,7 +100,7 @@ export function ResetPassword() {
     );
   }
 
-  if (validateTokenQuery.isPending) {
+  if (validateResetTokenMutation.isPending) {
     return (
       <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -113,7 +120,7 @@ export function ResetPassword() {
     );
   }
 
-  if (validateTokenQuery.isError) {
+  if (validateResetTokenMutation.isError) {
     return (
       <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
         <div className="w-full max-w-md">

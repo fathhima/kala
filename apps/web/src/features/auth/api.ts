@@ -1,19 +1,13 @@
 import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
 import { apiClient, refreshClient } from "@/lib/axios";
 import { AuthUser } from "./store";
+import { ApiEnvelope } from "@/types/api-envelope";
 
 const config = new Configuration({
     basePath: import.meta.env.VITE_API_URL
 })
 
 const authApi = new AuthenticationApi(config, undefined, apiClient)
-export const refreshAuthApi = new AuthenticationApi(config, undefined, refreshClient)
-
-export type ApiEnvelope<T> = {
-    success: boolean,
-    message: string,
-    data: T
-}
 
 const mapUser = (user: SafeUserDto | MeResponseDto): AuthUser => ({
     id: user.id,
@@ -23,7 +17,6 @@ const mapUser = (user: SafeUserDto | MeResponseDto): AuthUser => ({
     imageUrl: (user.imageUrl as string | null | undefined) ?? null,
     isActive: user.isActive,
     isVerified: user.isVerified
-
 })
 
 export const registerUser = async (payload: RegisterDto) => {
@@ -77,10 +70,10 @@ export const getMe = async () => {
 }
 
 export const refreshSession = async () => {
-    const response = await refreshAuthApi.authControllerRefresh()
-    const payload = response.data as unknown as ApiEnvelope<{ accessToken: string }>
-    return payload.data.accessToken
-}
+    const response = await refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/auth/refresh");
+
+    return response.data.data.accessToken;
+};
 
 export const googleSignin = async (payload: GoogleSignInRequestDto) => {
     const response = await authApi.authControllerGoogleSignin(payload);

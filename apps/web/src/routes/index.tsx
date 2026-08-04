@@ -9,7 +9,6 @@ import { Login } from "@/pages/auth/Login";
 import { PublicOnlyRoute } from "./public-only-route";
 import { ForgotPassword } from "@/pages/auth/ForgotPassword";
 import { ResetPassword } from "@/pages/auth/ResetPassword";
-import { AuthBootsrap } from "@/features/auth/AuthBootstrap";
 import { AdminRoute } from "./admin-route";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { AdminPublicOnlyRoute } from "./admin-public-only-route";
@@ -19,19 +18,15 @@ import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { UserDetails } from "@/pages/admin/UserDetails";
 
 const ProtectedApp = () => (
-  <AuthBootsrap>
-    <ProtectedRoute>
-      <StudentLayout />
-    </ProtectedRoute>
-  </AuthBootsrap>
+  <ProtectedRoute>
+    <StudentLayout />
+  </ProtectedRoute>
 );
 
 const ProtectedAdminApp = () => (
-  <AuthBootsrap>
-    <AdminRoute>
-      <AdminLayout />
-    </AdminRoute>
-  </AuthBootsrap>
+  <AdminRoute>
+    <AdminLayout />
+  </AdminRoute>
 );
 
 export const router = createBrowserRouter([
@@ -55,11 +50,9 @@ export const router = createBrowserRouter([
   {
     path: '/admin/login',
     element: (
-      <AuthBootsrap>
-        <AdminPublicOnlyRoute>
-          <AdminLogin />
-        </AdminPublicOnlyRoute>
-      </AuthBootsrap>
+      <AdminPublicOnlyRoute>
+        <AdminLogin />
+      </AdminPublicOnlyRoute>
     )
   },
   {

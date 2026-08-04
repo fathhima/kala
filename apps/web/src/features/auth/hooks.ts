@@ -31,15 +31,9 @@ export const useForgotPasswordMutation = () => {
     });
 };
 
-export const useValidateResetTokenQuery = (
-    token: string,
-    enabled: boolean,
-) => {
-    return useQuery({
-        queryKey: ["validate-reset-token", token],
-        queryFn: () => validateResetToken({ token }),
-        enabled: enabled && !!token,
-        retry: false,
+export const useValidateResetTokenMutation = () => {
+    return useMutation({
+        mutationFn: validateResetToken,
     });
 };
 

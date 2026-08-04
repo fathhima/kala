@@ -18,12 +18,20 @@ export const useAdminUserQuery = (id: string) => {
 }
 
 export const useUpdateAdminUserStatusMutation = () => {
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: updateAdminUserStatus,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+
+        onSuccess: async (_updatedUser, variables) => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ["admin-users"],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["admin-user", variables.id],
+                }),
+            ]);
         },
-    })
-}
+    });
+};

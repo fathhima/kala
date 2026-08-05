@@ -18,6 +18,4 @@ export interface UserRepository {
       imageUrl?: string | null;
       isVerified?: boolean;
     }): Promise<UserEntity>;
-  findManyForAdmin(params: AdminUserListParams): Promise<PaginatedResult<UserEntity>>
-  updateStatus(userId: string, isActive: boolean): Promise<UserEntity>
 }

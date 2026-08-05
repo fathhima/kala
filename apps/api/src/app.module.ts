@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
 import { JwtModule } from './shared/jwt/jwt.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
         limit: 60,
       },
     ]),
-    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule
+    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, AdminModule
   ],
   providers: [{
     provide: APP_GUARD,

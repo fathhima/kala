@@ -7,9 +7,10 @@ import { Injectable } from "@nestjs/common";
 import { UserEntity } from "../entities/user.entity";
 import { AdminUserListParams } from "../types/admin-user-list-params.type";
 import { PaginatedResult } from "@/shared/types";
+import { AdminRepository } from "@/modules/admin/repositories/interfaces/admin.repository";
 
 @Injectable()
-export class PrismaUserRepository implements UserRepository {
+export class PrismaUserRepository implements UserRepository, AdminRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async findByEmail(email: string) {

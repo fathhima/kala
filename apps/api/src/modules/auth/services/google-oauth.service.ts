@@ -9,8 +9,7 @@ export class GoogleOAuthService {
     private readonly googleClientId: string;
 
     constructor(private readonly configService: ConfigService) {
-        this.googleClientId =
-            this.configService.getOrThrow<string>("GOOGLE_CLIENT_ID");
+        this.googleClientId = this.configService.getOrThrow<string>("GOOGLE_CLIENT_ID");
         this.client = new OAuth2Client(this.googleClientId);
     }
 

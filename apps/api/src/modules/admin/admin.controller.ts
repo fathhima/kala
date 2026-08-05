@@ -1,25 +1,20 @@
 import { Body, Controller, Get, Param, Patch, Query, } from "@nestjs/common";
-
 import { ApiBadRequestResponse, ApiConflictResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse, } from "@nestjs/swagger";
-
 import { Roles } from "@/shared/decorators/roles.decorator";
 import { UserId } from "@/shared/decorators/user-id.decorator";
 import { UserRole } from "@/shared/enums/role.enum";
-
 import { UserQueryDto } from "@/modules/user/dto/request/user-query.dto";
 import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-status.request.dto";
-
 import { AdminUserResponseDto } from "@/modules/user/dto/response/admin-user-detail-response.dto";
 import { AdminUserStatusResponseDto } from "@/modules/user/dto/response/admin-user-status-response.dto";
 import { PaginatedAdminUsersResponseDto } from "@/modules/user/dto/response/admin-paginated-user-list.dto";
-import { AdminService } from "./admin.service";
+import { AdminUserService } from "./services/admin-user.service";
 
-
-@ApiTags("Users")
-@Controller("users")
+@ApiTags("Admin")
+@Controller("admin")
 @Roles(UserRole.ADMIN)
 export class AdminController {
-    constructor(private readonly adminUserService: AdminService,) { }
+    constructor(private readonly adminUserService: AdminUserService,) { }
 
     @Get()
     @ApiOperation({ summary: "Get paginated users for admin management", })

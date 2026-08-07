@@ -14,7 +14,16 @@
   "license": "ISC",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "@nestjs/core",
+      "@openapitools/openapi-generator-cli",
+      "@prisma/client",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "bcrypt",
+      "esbuild",
+      "inotify",
+      "prisma",
+      "unrs-resolver"
     ]
   }
 }

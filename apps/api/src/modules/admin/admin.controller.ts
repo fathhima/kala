@@ -16,7 +16,7 @@ import { AdminUserService } from "./services/admin-user.service";
 export class AdminController {
     constructor(private readonly adminUserService: AdminUserService,) { }
 
-    @Get()
+    @Get('users')
     @ApiOperation({ summary: "Get paginated users for admin management", })
     @ApiOkResponse({ type: PaginatedAdminUsersResponseDto })
     @ApiUnauthorizedResponse({ description: "Access token is missing or invalid", })
@@ -30,7 +30,7 @@ export class AdminController {
         });
     }
 
-    @Get(":id")
+    @Get("users/:id")
     @ApiOperation({ summary: "Get a single user by id for admin management", })
     @ApiOkResponse({ type: AdminUserResponseDto })
     @ApiUnauthorizedResponse({ description: "Access token is missing or invalid", })
@@ -45,7 +45,7 @@ export class AdminController {
         });
     }
 
-    @Patch(":id/status")
+    @Patch("users/:id/status")
     @ApiOperation({ summary: "Block or unblock a user", })
     @ApiOkResponse({ type: AdminUserStatusResponseDto })
     @ApiUnauthorizedResponse({ description: "Access token is missing or invalid", })

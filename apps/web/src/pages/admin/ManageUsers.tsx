@@ -1,24 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Role as RoleEnum,
-  UserControllerGetAdminUsersStatusEnum,
-  type Role,
-} from '@/api'
+import { AdminControllerGetAdminUsersStatusEnum, Role as RoleEnum, type Role, } from '@/api'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { getApiErrorResponse } from '@/lib/api-error'
-import {
-  useAdminUsersQuery,
-  useUpdateAdminUserStatusMutation,
-} from '@/features/admin/users/hooks'
+import { useAdminUsersQuery, useUpdateAdminUserStatusMutation, } from '@/features/admin/users/hooks'
 
 const PAGE_SIZE = 10
 
-type UserStatus =
-  (typeof UserControllerGetAdminUsersStatusEnum)[keyof typeof UserControllerGetAdminUsersStatusEnum]
+type UserStatus = (typeof AdminControllerGetAdminUsersStatusEnum)[keyof typeof AdminControllerGetAdminUsersStatusEnum]
 
 const getRoleBadgeVariant = (role: Role) => {
   if (role === 'ADMIN') return 'error'
@@ -39,7 +31,7 @@ export function ManageUsers() {
     : undefined
 
   const rawStatus = searchParams.get('status')
-  const status = Object.values(UserControllerGetAdminUsersStatusEnum).includes(
+  const status = Object.values(AdminControllerGetAdminUsersStatusEnum).includes(
     rawStatus as UserStatus,
   )
     ? (rawStatus as UserStatus)
@@ -187,8 +179,8 @@ export function ManageUsers() {
               className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 shadow-sm outline-none transition focus:border-kala-brown focus:ring-2 focus:ring-kala-brown/20"
             >
               <option value="">All statuses</option>
-              <option value={UserControllerGetAdminUsersStatusEnum.Active}>Active</option>
-              <option value={UserControllerGetAdminUsersStatusEnum.Blocked}>Blocked</option>
+              <option value={AdminControllerGetAdminUsersStatusEnum.Active}>Active</option>
+              <option value={AdminControllerGetAdminUsersStatusEnum.Blocked}>Blocked</option>
             </select>
           </label>
         </div>

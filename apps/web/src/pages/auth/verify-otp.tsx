@@ -3,22 +3,15 @@ import type { ClipboardEvent, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Palette, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import {
-  useResendOtpMutation,
-  useVerifyOtpMutation,
-} from "@/features/auth/hooks";
-import {
-  validateVerifyOtpForm,
-  type verifyOtpFields,
-} from "@/utils/validation";
+import { useResendOtpMutation, useVerifyOtpMutation, } from "@/features/auth/hooks";
+import { validateVerifyOtpForm, type verifyOtpFields, } from "@/utils/validation";
 import { useAuthStore } from "@/features/auth/store";
 import { getApiErrorResponse } from "@/lib/api-error";
 
 const PENDING_SIGNUP_ID_KEY = "pendingSignupId";
 const PENDING_SIGNUP_MASKED_EMAIL_KEY = "pendingSignupMaskedEmail";
 const PENDING_SIGNUP_EXPIRES_AT_KEY = "pendingSignupOtpExpiresAt";
-const PENDING_SIGNUP_RESEND_AVAILABLE_AT_KEY =
-  "pendingSignupResendAvailableAt";
+const PENDING_SIGNUP_RESEND_AVAILABLE_AT_KEY = "pendingSignupResendAvailableAt";
 
 const getRemainingSeconds = (key: string) => {
   const stored = sessionStorage.getItem(key);
@@ -41,25 +34,15 @@ export function VerifyOtp() {
   const verifyOtpMutation = useVerifyOtpMutation();
   const resendOtpMutation = useResendOtpMutation();
 
-  const [pendingSignupId] = useState(
-    () => sessionStorage.getItem(PENDING_SIGNUP_ID_KEY) ?? "",
-  );
-  const [maskedEmail] = useState(
-    () => sessionStorage.getItem(PENDING_SIGNUP_MASKED_EMAIL_KEY) ?? "",
-  );
+  const [pendingSignupId] = useState(() => sessionStorage.getItem(PENDING_SIGNUP_ID_KEY) ?? "",);
+  const [maskedEmail] = useState(() => sessionStorage.getItem(PENDING_SIGNUP_MASKED_EMAIL_KEY) ?? "",);
 
   const [otp, setOtp] = useState("");
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
-  const [errors, setErrors] = useState<
-    Partial<Record<verifyOtpFields, string>>
-  >({});
+  const [errors, setErrors] = useState<Partial<Record<verifyOtpFields, string>>>({});
   const [errorMessage, setErrorMessage] = useState("");
-  const [otpExpiresIn, setOtpExpiresIn] = useState<number>(
-    getOtpExpiryRemaining,
-  );
-  const [resendCooldown, setResendCooldown] = useState<number>(
-    getResendCooldownRemaining,
-  );
+  const [otpExpiresIn, setOtpExpiresIn] = useState<number>(getOtpExpiryRemaining,);
+  const [resendCooldown, setResendCooldown] = useState<number>(getResendCooldownRemaining,);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 

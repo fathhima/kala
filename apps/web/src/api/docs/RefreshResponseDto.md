@@ -1,4 +1,4 @@
-# ResendOtpResponseDto
+# RefreshResponseDto
 
 
 ## Properties
@@ -7,14 +7,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **success** | **boolean** |  | [default to undefined]
 **message** | **string** |  | [default to undefined]
-**data** | [**ResendOtpDataDto**](ResendOtpDataDto.md) |  | [default to undefined]
+**data** | [**RefreshDataDto**](RefreshDataDto.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ResendOtpResponseDto } from './api';
+import { RefreshResponseDto } from './api';
 
-const instance: ResendOtpResponseDto = {
+const instance: RefreshResponseDto = {
     success,
     message,
     data,

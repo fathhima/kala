@@ -175,7 +175,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerLogout**
-> authControllerLogout()
+> MessageResponseDto authControllerLogout()
 
 
 ### Example
@@ -198,7 +198,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
+**MessageResponseDto**
 
 ### Authorization
 
@@ -207,18 +207,18 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** |  |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerLogoutAll**
-> authControllerLogoutAll()
+> MessageResponseDto authControllerLogoutAll()
 
 
 ### Example
@@ -241,7 +241,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
+**MessageResponseDto**
 
 ### Authorization
 
@@ -250,18 +250,18 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** |  |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerMe**
-> MeResponseDto authControllerMe()
+> object authControllerMe()
 
 
 ### Example
@@ -284,7 +284,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**MeResponseDto**
+**object**
 
 ### Authorization
 
@@ -304,7 +304,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerRefresh**
-> authControllerRefresh()
+> RefreshResponseDto authControllerRefresh()
 
 
 ### Example
@@ -327,7 +327,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
+**RefreshResponseDto**
 
 ### Authorization
 
@@ -336,13 +336,13 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** |  |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -502,7 +502,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerValidateResetToken**
-> authControllerValidateResetToken(validateResetTokenDto)
+> ValidateResetTokenResponseDto authControllerValidateResetToken(validateResetTokenDto)
 
 
 ### Example
@@ -533,7 +533,7 @@ const { status, data } = await apiInstance.authControllerValidateResetToken(
 
 ### Return type
 
-void (empty response body)
+**ValidateResetTokenResponseDto**
 
 ### Authorization
 
@@ -542,13 +542,13 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** |  |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

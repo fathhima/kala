@@ -1,4 +1,4 @@
-# ResendOtpResponseDto
+# ValidateResetTokenResponseDto
 
 
 ## Properties
@@ -7,14 +7,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **success** | **boolean** |  | [default to undefined]
 **message** | **string** |  | [default to undefined]
-**data** | [**ResendOtpDataDto**](ResendOtpDataDto.md) |  | [default to undefined]
+**data** | [**ValidateResetTokenDataDto**](ValidateResetTokenDataDto.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ResendOtpResponseDto } from './api';
+import { ValidateResetTokenResponseDto } from './api';
 
-const instance: ResendOtpResponseDto = {
+const instance: ValidateResetTokenResponseDto = {
     success,
     message,
     data,

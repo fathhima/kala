@@ -16,7 +16,7 @@ export function ResetPassword() {
 
   const token = searchParams.get("token")?.trim() ?? "";
 
-  const validateResetTokenMutation = useValidateResetTokenMutation()
+  const { mutate: validateResetToken, isPending: isValidatingResetToken, isError: isResetTokenInvalid, } = useValidateResetTokenMutation()
   const resetPasswordMutation = useResetPasswordMutation();
 
   const [newPassword, setNewPassword] = useState("");
@@ -29,9 +29,8 @@ export function ResetPassword() {
 
   useEffect(() => {
     if (!token) return;
-
-    validateResetTokenMutation.mutate({ token });
-  }, [token, validateResetTokenMutation]);
+    validateResetToken({ token });
+  }, [token, validateResetToken]);
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -100,7 +99,7 @@ export function ResetPassword() {
     );
   }
 
-  if (validateResetTokenMutation.isPending) {
+  if (isValidatingResetToken) {
     return (
       <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -120,7 +119,7 @@ export function ResetPassword() {
     );
   }
 
-  if (validateResetTokenMutation.isError) {
+  if (isResetTokenInvalid) {
     return (
       <div className="min-h-screen bg-kala-cream flex items-center justify-center p-4">
         <div className="w-full max-w-md">

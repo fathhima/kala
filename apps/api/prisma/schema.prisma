@@ -15,6 +15,36 @@ enum Role {
   ADMIN
 }
 
+enum InstructorProfileStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum InstructorApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+  CANCELLED
+}
+
+enum OfferingStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -30,5 +60,124 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  instructorProfile InstructorProfile?
+
   @@map("users")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id          String   @id @default(cuid())
+  categoryId  String
+  name        String
+  slug        String
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category  Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  offerings InstructorOffering[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId, isActive])
+  @@map("subcategories")
+}
+
+model InstructorProfile {
+  id        String                  @id @default(cuid())
+  userId    String                  @unique
+  bio       String?
+  location  String?
+  status    InstructorProfileStatus @default(DRAFT)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications InstructorApplication[]
+  offerings    InstructorOffering[]
+
+  @@index([status])
+  @@map("instructor_profiles")
+}
+
+model InstructorApplication {
+  id          String                      @id @default(cuid())
+  profileId   String
+  status      InstructorApplicationStatus @default(PENDING)
+  submittedAt DateTime                    @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNote  String?
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+
+  profile   InstructorProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  offerings InstructorOffering[]
+
+  @@index([profileId, status])
+  @@index([status, submittedAt])
+  @@map("instructor_applications")
+}
+
+model InstructorOffering {
+  id              String         @id @default(cuid())
+  profileId       String
+  applicationId   String?
+  subcategoryId   String
+  title           String?
+  description     String?
+  hourlyRate      Decimal        @db.Decimal(10, 2)
+  currency        String         @default("INR")
+  experienceYears Int?
+  status          OfferingStatus @default(DRAFT)
+  reviewNote      String?
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  profile     InstructorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  application InstructorApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  subcategory Subcategory            @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
+  media       OfferingMedia[]
+
+  @@index([profileId, status])
+  @@index([subcategoryId, status])
+  @@index([applicationId])
+  @@map("instructor_offerings")
+}
+
+model OfferingMedia {
+  id         String    @id @default(cuid())
+  offeringId String
+  type       MediaType
+  storageKey String    @unique
+  url        String
+  mimeType   String
+  sizeBytes  Int
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+
+  @@index([offeringId, type, sortOrder])
+  @@map("offering_media")
 }

@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createAdminCategory, createAdminSubcategory, getAdminCategories, getCategoryImageViewUrl, getSubcategoryImageViewUrl, removeCategoryImage, removeSubcategoryImage, updateAdminCategory, updateAdminSubcategory, uploadCategoryImage, uploadSubcategoryImage, } from './api'
+import { AdminCategoriesQuery } from './types/category-query.type'
 
 export const adminCategoriesQueryKey = ['admin-categories']
 
-export const useAdminCategoriesQuery = () => {
+export const useAdminCategoriesQuery = (query: AdminCategoriesQuery) => {
     return useQuery({
-        queryKey: adminCategoriesQueryKey,
-        queryFn: getAdminCategories,
+        queryKey: ['admin-categories', query],
+        queryFn: () => getAdminCategories(query),
+        placeholderData: (previousData) => previousData,
     })
 }
-
 export const useCategoryImageViewUrlQuery = (categoryId: string, enabled: boolean,) => {
     return useQuery({
         queryKey: ['admin-category-image-view-url', categoryId],

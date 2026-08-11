@@ -19,7 +19,6 @@ docs/CategoryImageUploadDataDto.md
 docs/CategoryImageUploadResponseDto.md
 docs/CategoryImageViewDataDto.md
 docs/CategoryImageViewResponseDto.md
-docs/CategoryListResponseDto.md
 docs/CategoryResponseDto.md
 docs/ConfirmCategoryImageUploadDto.md
 docs/CreateCategoryDto.md
@@ -30,6 +29,8 @@ docs/LoginDto.md
 docs/MessageResponseDto.md
 docs/PaginatedAdminUsersDataDto.md
 docs/PaginatedAdminUsersResponseDto.md
+docs/PaginatedCategoryDataDto.md
+docs/PaginatedCategoryResponseDto.md
 docs/PaginationMetaDto.md
 docs/RefreshDataDto.md
 docs/RefreshResponseDto.md

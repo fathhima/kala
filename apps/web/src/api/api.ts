@@ -100,11 +100,6 @@ export interface CategoryImageViewResponseDto {
     'message': string;
     'data': CategoryImageViewDataDto;
 }
-export interface CategoryListResponseDto {
-    'success': boolean;
-    'message': string;
-    'data': Array<CategoryDto>;
-}
 export interface CategoryResponseDto {
     'success': boolean;
     'message': string;
@@ -183,6 +178,15 @@ export interface PaginatedAdminUsersResponseDto {
     'success': boolean;
     'message': string;
     'data': PaginatedAdminUsersDataDto;
+}
+export interface PaginatedCategoryDataDto {
+    'items': Array<CategoryDto>;
+    'meta': PaginationMetaDto;
+}
+export interface PaginatedCategoryResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PaginatedCategoryDataDto;
 }
 export interface PaginationMetaDto {
     'page': number;
@@ -930,11 +934,15 @@ export const AdminCategoriesApiAxiosParamCreator = function (configuration?: Con
         },
         /**
          * 
-         * @summary Get all categories and subcategories for admin management
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        categoryControllerFindAll: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        categoryControllerFindAll: async (page?: number, limit?: number, search?: string, isActive?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/admin/categories`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -946,6 +954,22 @@ export const AdminCategoriesApiAxiosParamCreator = function (configuration?: Con
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (isActive !== undefined) {
+                localVarQueryParameter['isActive'] = isActive;
+            }
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -1314,12 +1338,16 @@ export const AdminCategoriesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Get all categories and subcategories for admin management
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async categoryControllerFindAll(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryListResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindAll(options);
+        async categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedCategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindAll(page, limit, search, isActive, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerFindAll']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1498,12 +1526,16 @@ export const AdminCategoriesApiFactory = function (configuration?: Configuration
         },
         /**
          * 
-         * @summary Get all categories and subcategories for admin management
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        categoryControllerFindAll(options?: RawAxiosRequestConfig): AxiosPromise<CategoryListResponseDto> {
-            return localVarFp.categoryControllerFindAll(options).then((request) => request(axios, basePath));
+        categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedCategoryResponseDto> {
+            return localVarFp.categoryControllerFindAll(page, limit, search, isActive, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1662,12 +1694,16 @@ export class AdminCategoriesApi extends BaseAPI {
 
     /**
      * 
-     * @summary Get all categories and subcategories for admin management
+     * @summary Get paginated categories and subcategories for admin management
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {string} [search] 
+     * @param {string} [isActive] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public categoryControllerFindAll(options?: RawAxiosRequestConfig) {
-        return AdminCategoriesApiFp(this.configuration).categoryControllerFindAll(options).then((request) => request(this.axios, this.basePath));
+    public categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerFindAll(page, limit, search, isActive, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

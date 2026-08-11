@@ -1,5 +1,5 @@
 import {
-    AdminCategoriesApi, Configuration, RequestCategoryImageUploadDtoMimeTypeEnum, type CategoryDto, type CategoryImageUploadDataDto, type ConfirmCategoryImageUploadDto,
+    AdminCategoriesApi, Configuration, PaginatedCategoryDataDto, RequestCategoryImageUploadDtoMimeTypeEnum, type CategoryDto, type CategoryImageUploadDataDto, type ConfirmCategoryImageUploadDto,
     type CreateCategoryDto, type CreateSubcategoryDto, type SubcategoryDto, type SubcategoryImageUploadDataDto, type UpdateCategoryDto,
     type UpdateSubcategoryDto
 } from '@/api'
@@ -8,6 +8,7 @@ import { CategoryFormValues } from './types/create-category-form-values.type'
 import { UpdateCategoryFormValues } from './types/update-category-form-values.type'
 import { SubcategoryFormValues } from './types/create-subcategory-form-values.type'
 import { UpdateSubcategoryFormValues } from './types/update-subcategory-form-values.type'
+import { AdminCategoriesQuery } from './types/category-query.type'
 
 const config = new Configuration({ basePath: import.meta.env.VITE_API_URL, })
 
@@ -51,8 +52,14 @@ const toUpdateSubcategoryPayload = (values: UpdateSubcategoryFormValues,): Updat
     sortOrder: values.sortOrder,
 })
 
-export const getAdminCategories = async (): Promise<CategoryDto[]> => {
-    const response = await adminCategoriesApi.categoryControllerFindAll()
+export const getAdminCategories = async (query: AdminCategoriesQuery,): Promise<PaginatedCategoryDataDto> => {
+    const response = await adminCategoriesApi.categoryControllerFindAll(
+        query.page,
+        query.limit,
+        query.search,
+        toBooleanString(query.isActive),
+    )
+
     return response.data.data
 }
 
@@ -166,4 +173,9 @@ export const removeSubcategoryImage = async (params: { categoryId: string, subca
     )
 
     return response.data.data
+}
+
+const toBooleanString = (value?: boolean): string | undefined => {
+    if (typeof value !== 'boolean') return undefined
+    return value ? 'true' : 'false'
 }

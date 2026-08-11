@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -12,6 +12,10 @@ import { CategoryFormValues } from '@/features/admin/categories/types/create-cat
 import { SubcategoryFormValues } from '@/features/admin/categories/types/create-subcategory-form-values.type'
 import { getApiErrorResponse } from '@/lib/api-error'
 import { Badge } from '@/components/ui/Badge'
+import { useSearchParams } from 'react-router-dom'
+import { Pagination } from '@/components/ui/Pagination'
+
+const PAGE_SIZE = 10
 
 type CategoryModalState =
   | { mode: 'create'; category?: never }
@@ -244,7 +248,53 @@ function SubcategoryFormModal({ state, onClose, }: {
 }
 
 export function ManageSkills() {
-  const { data: categories = [], isLoading, isError, error } = useAdminCategoriesQuery()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const page = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
+  const committedSearch = searchParams.get('search')?.trim() ?? ''
+
+  const rawIsActive = searchParams.get('isActive')
+  const isActive = rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined
+
+  const [searchInput, setSearchInput] = useState(committedSearch)
+
+  useEffect(() => {
+    setSearchInput(committedSearch)
+  }, [committedSearch])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const nextSearch = searchInput.trim()
+
+      if (nextSearch === committedSearch) return
+
+      const nextParams = new URLSearchParams(searchParams)
+
+      if (nextSearch) {
+        nextParams.set('search', nextSearch)
+      } else {
+        nextParams.delete('search')
+      }
+
+      nextParams.set('page', '1')
+      setSearchParams(nextParams, { replace: true })
+    }, 400)
+
+    return () => window.clearTimeout(timeout)
+  }, [searchInput, committedSearch, searchParams, setSearchParams])
+
+  const query = useMemo(() => ({
+    page,
+    limit: PAGE_SIZE,
+    search: committedSearch || undefined,
+    isActive,
+  }),
+    [page, committedSearch, isActive],
+  )
+
+  const { data, isLoading, isError, error, isFetching } = useAdminCategoriesQuery(query)
+
+  const categories = data?.items ?? []
   const createCategoryModal = useState<CategoryModalState>(null)
   const createSubcategoryModal = useState<SubcategoryModalState>(null)
 
@@ -293,6 +343,19 @@ export function ManageSkills() {
     })
   }
 
+  const handleStatusChange = (value: string) => {
+    const nextParams = new URLSearchParams(searchParams)
+
+    if (value) {
+      nextParams.set('isActive', value)
+    } else {
+      nextParams.delete('isActive')
+    }
+
+    nextParams.set('page', '1')
+    setSearchParams(nextParams)
+  }
+
   if (isLoading) {
     return <div className="text-sm text-stone-500">Loading categories...</div>
   }
@@ -318,6 +381,31 @@ export function ManageSkills() {
           <Plus size={16} />
           Add Category
         </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-stone-500">Search</span>
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search by name, slug, or description..."
+            className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 shadow-sm outline-none transition focus:border-kala-brown focus:ring-2 focus:ring-kala-brown/20"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-stone-500">Status</span>
+          <select
+            value={rawIsActive ?? ''}
+            onChange={(event) => handleStatusChange(event.target.value)}
+            className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 shadow-sm outline-none transition focus:border-kala-brown focus:ring-2 focus:ring-kala-brown/20"
+          >
+            <option value="">All statuses</option>
+            <option value="true">Active</option>
+            <option value="false">Hidden</option>
+          </select>
+        </label>
       </div>
 
       {imageError && (
@@ -514,6 +602,21 @@ export function ManageSkills() {
           </Card>
         )}
       </div>
+
+      {data && (
+        <Pagination
+          page={data.meta.page}
+          limit={data.meta.limit}
+          total={data.meta.total}
+          hasNextPage={data.meta.hasNextPage}
+          hasPrevPage={data.meta.hasPrevPage}
+          onPageChange={(nextPage) => {
+            const nextParams = new URLSearchParams(searchParams)
+            nextParams.set('page', String(nextPage))
+            setSearchParams(nextParams)
+          }}
+        />
+      )}
 
       <CategoryFormModal state={categoryModal} onClose={() => setCategoryModal(null)} />
       <SubcategoryFormModal state={subcategoryModal} onClose={() => setSubcategoryModal(null)} />

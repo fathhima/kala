@@ -67,6 +67,88 @@ export interface AuthResponseDto {
     'message': string;
     'data': AuthDataDto;
 }
+export interface CategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+    'description'?: object | null;
+    'imageUrl'?: object | null;
+    'imageStorageKey'?: object | null;
+    'isActive': boolean;
+    'sortOrder': number;
+    'createdAt': string;
+    'updatedAt': string;
+    'subcategories': Array<SubcategoryDto>;
+}
+export interface CategoryImageUploadDataDto {
+    'storageKey': string;
+    'uploadUrl': string;
+    'expiresInSeconds': number;
+}
+export interface CategoryImageUploadResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': CategoryImageUploadDataDto;
+}
+export interface CategoryImageViewDataDto {
+    'storageKey': string;
+    'viewUrl': string;
+    'expiresInSeconds': number;
+}
+export interface CategoryImageViewResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': CategoryImageViewDataDto;
+}
+export interface CategoryListResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': Array<CategoryDto>;
+}
+export interface CategoryResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': CategoryDto;
+}
+export interface ConfirmCategoryImageUploadDto {
+    'storageKey': string;
+}
+export interface CreateCategoryDto {
+    /**
+     * Name of the category.
+     */
+    'name': string;
+    /**
+     * Optional URL-safe identifier for the category. Generated from the name when omitted.
+     */
+    'slug'?: string;
+    /**
+     * Optional description of the category.
+     */
+    'description'?: string;
+    /**
+     * Optional display order of the category. Lower values appear before higher values.
+     */
+    'sortOrder'?: number;
+}
+export interface CreateSubcategoryDto {
+    /**
+     * Name of the subcategory.
+     */
+    'name': string;
+    /**
+     * Optional URL-safe identifier for the subcategory. Generated from the name when omitted.
+     */
+    'slug'?: string;
+    /**
+     * Optional description of the subcategory.
+     */
+    'description'?: string;
+    /**
+     * Optional display order of the subcategory. Lower values appear before higher values.
+     */
+    'sortOrder'?: number;
+}
 export interface ForgotPasswordDto {
     /**
      * The email address of the user trying to log in
@@ -142,6 +224,22 @@ export interface RegisterResponseDto {
     'message': string;
     'data': RegisterPendingDataDto;
 }
+export interface RequestCategoryImageUploadDto {
+    'mimeType': RequestCategoryImageUploadDtoMimeTypeEnum;
+    /**
+     * Image size in bytes; maximum 5 MB.
+     */
+    'sizeBytes': number;
+}
+
+export const RequestCategoryImageUploadDtoMimeTypeEnum = {
+    ImageJpeg: 'image/jpeg',
+    ImagePng: 'image/png',
+    ImageWebp: 'image/webp'
+} as const;
+
+export type RequestCategoryImageUploadDtoMimeTypeEnum = typeof RequestCategoryImageUploadDtoMimeTypeEnum[keyof typeof RequestCategoryImageUploadDtoMimeTypeEnum];
+
 export interface ResendOtpDataDto {
     'expiresIn': number;
     'resendAfter': number;
@@ -185,6 +283,93 @@ export interface SafeUserDto {
     'imageUrl': object | null;
     'isVerified': boolean;
     'isActive': boolean;
+}
+export interface SubcategoryDto {
+    'id': string;
+    'categoryId': string;
+    'name': string;
+    'slug': string;
+    'description'?: object | null;
+    'imageUrl'?: object | null;
+    'imageStorageKey'?: object | null;
+    'isActive': boolean;
+    'sortOrder': number;
+    'createdAt': string;
+    'updatedAt': string;
+}
+export interface SubcategoryImageUploadDataDto {
+    'storageKey': string;
+    'uploadUrl': string;
+    'expiresInSeconds': number;
+}
+export interface SubcategoryImageUploadResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': SubcategoryImageUploadDataDto;
+}
+export interface SubcategoryImageViewDataDto {
+    'storageKey': string;
+    'viewUrl': string;
+    'expiresInSeconds': number;
+}
+export interface SubcategoryImageViewResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': SubcategoryImageViewDataDto;
+}
+export interface SubcategoryListResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': Array<SubcategoryDto>;
+}
+export interface SubcategoryResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': SubcategoryDto;
+}
+export interface UpdateCategoryDto {
+    /**
+     * Updated name of the category.
+     */
+    'name'?: string;
+    /**
+     * Updated URL-safe identifier for the category.
+     */
+    'slug'?: string;
+    /**
+     * Updated description of the category. Can be set to null to remove the description.
+     */
+    'description'?: object | null;
+    /**
+     * Whether the category is active and available for use.
+     */
+    'isActive'?: boolean;
+    /**
+     * Updated display order of the category. Lower values appear before higher values.
+     */
+    'sortOrder'?: number;
+}
+export interface UpdateSubcategoryDto {
+    /**
+     * Updated name of the subcategory.
+     */
+    'name'?: string;
+    /**
+     * Updated URL-safe identifier for the subcategory.
+     */
+    'slug'?: string;
+    /**
+     * Updated description of the subcategory. Can be set to null to remove the description.
+     */
+    'description'?: object | null;
+    /**
+     * Whether the subcategory is active and available for use.
+     */
+    'isActive'?: boolean;
+    /**
+     * Updated display order of the subcategory. Lower values appear before higher values.
+     */
+    'sortOrder'?: number;
 }
 export interface UpdateUserStatusDto {
     /**
@@ -498,6 +683,1076 @@ export const AdminControllerGetAdminUsersStatusEnum = {
     Blocked: 'blocked'
 } as const;
 export type AdminControllerGetAdminUsersStatusEnum = typeof AdminControllerGetAdminUsersStatusEnum[keyof typeof AdminControllerGetAdminUsersStatusEnum];
+
+
+/**
+ * AdminCategoriesApi - axios parameter creator
+ */
+export const AdminCategoriesApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Confirm and attach an uploaded category image
+         * @param {string} categoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerConfirmCategoryImageUpload: async (categoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerConfirmCategoryImageUpload', 'categoryId', categoryId)
+            // verify required parameter 'confirmCategoryImageUploadDto' is not null or undefined
+            assertParamExists('categoryControllerConfirmCategoryImageUpload', 'confirmCategoryImageUploadDto', confirmCategoryImageUploadDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/image/confirm`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(confirmCategoryImageUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Confirm and attach an uploaded subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerConfirmSubcategoryImageUpload: async (categoryId: string, subcategoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerConfirmSubcategoryImageUpload', 'categoryId', categoryId)
+            // verify required parameter 'subcategoryId' is not null or undefined
+            assertParamExists('categoryControllerConfirmSubcategoryImageUpload', 'subcategoryId', subcategoryId)
+            // verify required parameter 'confirmCategoryImageUploadDto' is not null or undefined
+            assertParamExists('categoryControllerConfirmSubcategoryImageUpload', 'confirmCategoryImageUploadDto', confirmCategoryImageUploadDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/confirm`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)))
+                .replace(`{${"subcategoryId"}}`, encodeURIComponent(String(subcategoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(confirmCategoryImageUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a category
+         * @param {CreateCategoryDto} createCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateCategory: async (createCategoryDto: CreateCategoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createCategoryDto' is not null or undefined
+            assertParamExists('categoryControllerCreateCategory', 'createCategoryDto', createCategoryDto)
+            const localVarPath = `/api/admin/categories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createCategoryDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a category image
+         * @param {string} categoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateCategoryImageUploadUrl: async (categoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerCreateCategoryImageUploadUrl', 'categoryId', categoryId)
+            // verify required parameter 'requestCategoryImageUploadDto' is not null or undefined
+            assertParamExists('categoryControllerCreateCategoryImageUploadUrl', 'requestCategoryImageUploadDto', requestCategoryImageUploadDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/image/upload-url`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(requestCategoryImageUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a subcategory within a category
+         * @param {string} categoryId 
+         * @param {CreateSubcategoryDto} createSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateSubcategory: async (categoryId: string, createSubcategoryDto: CreateSubcategoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerCreateSubcategory', 'categoryId', categoryId)
+            // verify required parameter 'createSubcategoryDto' is not null or undefined
+            assertParamExists('categoryControllerCreateSubcategory', 'createSubcategoryDto', createSubcategoryDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createSubcategoryDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateSubcategoryImageUploadUrl: async (categoryId: string, subcategoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerCreateSubcategoryImageUploadUrl', 'categoryId', categoryId)
+            // verify required parameter 'subcategoryId' is not null or undefined
+            assertParamExists('categoryControllerCreateSubcategoryImageUploadUrl', 'subcategoryId', subcategoryId)
+            // verify required parameter 'requestCategoryImageUploadDto' is not null or undefined
+            assertParamExists('categoryControllerCreateSubcategoryImageUploadUrl', 'requestCategoryImageUploadDto', requestCategoryImageUploadDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/upload-url`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)))
+                .replace(`{${"subcategoryId"}}`, encodeURIComponent(String(subcategoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(requestCategoryImageUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get all categories and subcategories for admin management
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerFindAll: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/categories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get subcategories in a category
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerFindSubcategories: async (categoryId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerFindSubcategories', 'categoryId', categoryId)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a category image
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerGetCategoryImageViewUrl: async (categoryId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerGetCategoryImageViewUrl', 'categoryId', categoryId)
+            const localVarPath = `/api/admin/categories/{categoryId}/image/view-url`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerGetSubcategoryImageViewUrl: async (categoryId: string, subcategoryId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerGetSubcategoryImageViewUrl', 'categoryId', categoryId)
+            // verify required parameter 'subcategoryId' is not null or undefined
+            assertParamExists('categoryControllerGetSubcategoryImageViewUrl', 'subcategoryId', subcategoryId)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/view-url`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)))
+                .replace(`{${"subcategoryId"}}`, encodeURIComponent(String(subcategoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Remove the image from a category and S3
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerRemoveCategoryImage: async (categoryId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerRemoveCategoryImage', 'categoryId', categoryId)
+            const localVarPath = `/api/admin/categories/{categoryId}/image`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Remove a subcategory image from the record and S3
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerRemoveSubcategoryImage: async (categoryId: string, subcategoryId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerRemoveSubcategoryImage', 'categoryId', categoryId)
+            // verify required parameter 'subcategoryId' is not null or undefined
+            assertParamExists('categoryControllerRemoveSubcategoryImage', 'subcategoryId', subcategoryId)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)))
+                .replace(`{${"subcategoryId"}}`, encodeURIComponent(String(subcategoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update or archive a category
+         * @param {string} categoryId 
+         * @param {UpdateCategoryDto} updateCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerUpdateCategory: async (categoryId: string, updateCategoryDto: UpdateCategoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerUpdateCategory', 'categoryId', categoryId)
+            // verify required parameter 'updateCategoryDto' is not null or undefined
+            assertParamExists('categoryControllerUpdateCategory', 'updateCategoryDto', updateCategoryDto)
+            const localVarPath = `/api/admin/categories/{categoryId}`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateCategoryDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update or archive a subcategory
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {UpdateSubcategoryDto} updateSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerUpdateSubcategory: async (categoryId: string, subcategoryId: string, updateSubcategoryDto: UpdateSubcategoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'categoryId' is not null or undefined
+            assertParamExists('categoryControllerUpdateSubcategory', 'categoryId', categoryId)
+            // verify required parameter 'subcategoryId' is not null or undefined
+            assertParamExists('categoryControllerUpdateSubcategory', 'subcategoryId', subcategoryId)
+            // verify required parameter 'updateSubcategoryDto' is not null or undefined
+            assertParamExists('categoryControllerUpdateSubcategory', 'updateSubcategoryDto', updateSubcategoryDto)
+            const localVarPath = `/api/admin/categories/{categoryId}/subcategories/{subcategoryId}`
+                .replace(`{${"categoryId"}}`, encodeURIComponent(String(categoryId)))
+                .replace(`{${"subcategoryId"}}`, encodeURIComponent(String(subcategoryId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateSubcategoryDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminCategoriesApi - functional programming interface
+ */
+export const AdminCategoriesApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminCategoriesApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Confirm and attach an uploaded category image
+         * @param {string} categoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerConfirmCategoryImageUpload(categoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerConfirmCategoryImageUpload(categoryId, confirmCategoryImageUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerConfirmCategoryImageUpload']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Confirm and attach an uploaded subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerConfirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerConfirmSubcategoryImageUpload(categoryId, subcategoryId, confirmCategoryImageUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerConfirmSubcategoryImageUpload']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a category
+         * @param {CreateCategoryDto} createCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerCreateCategory(createCategoryDto: CreateCategoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerCreateCategory(createCategoryDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerCreateCategory']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a category image
+         * @param {string} categoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerCreateCategoryImageUploadUrl(categoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryImageUploadResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerCreateCategoryImageUploadUrl(categoryId, requestCategoryImageUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerCreateCategoryImageUploadUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a subcategory within a category
+         * @param {string} categoryId 
+         * @param {CreateSubcategoryDto} createSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerCreateSubcategory(categoryId: string, createSubcategoryDto: CreateSubcategoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerCreateSubcategory(categoryId, createSubcategoryDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerCreateSubcategory']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerCreateSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryImageUploadResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerCreateSubcategoryImageUploadUrl(categoryId, subcategoryId, requestCategoryImageUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerCreateSubcategoryImageUploadUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get all categories and subcategories for admin management
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerFindAll(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindAll(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerFindAll']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get subcategories in a category
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerFindSubcategories(categoryId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindSubcategories(categoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerFindSubcategories']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a category image
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerGetCategoryImageViewUrl(categoryId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryImageViewResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerGetCategoryImageViewUrl(categoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerGetCategoryImageViewUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerGetSubcategoryImageViewUrl(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryImageViewResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerGetSubcategoryImageViewUrl(categoryId, subcategoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerGetSubcategoryImageViewUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Remove the image from a category and S3
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerRemoveCategoryImage(categoryId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerRemoveCategoryImage(categoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerRemoveCategoryImage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Remove a subcategory image from the record and S3
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerRemoveSubcategoryImage(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerRemoveSubcategoryImage(categoryId, subcategoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerRemoveSubcategoryImage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update or archive a category
+         * @param {string} categoryId 
+         * @param {UpdateCategoryDto} updateCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerUpdateCategory(categoryId: string, updateCategoryDto: UpdateCategoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerUpdateCategory(categoryId, updateCategoryDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerUpdateCategory']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update or archive a subcategory
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {UpdateSubcategoryDto} updateSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async categoryControllerUpdateSubcategory(categoryId: string, subcategoryId: string, updateSubcategoryDto: UpdateSubcategoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SubcategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerUpdateSubcategory(categoryId, subcategoryId, updateSubcategoryDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerUpdateSubcategory']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminCategoriesApi - factory interface
+ */
+export const AdminCategoriesApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminCategoriesApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Confirm and attach an uploaded category image
+         * @param {string} categoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerConfirmCategoryImageUpload(categoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<CategoryResponseDto> {
+            return localVarFp.categoryControllerConfirmCategoryImageUpload(categoryId, confirmCategoryImageUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Confirm and attach an uploaded subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerConfirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryResponseDto> {
+            return localVarFp.categoryControllerConfirmSubcategoryImageUpload(categoryId, subcategoryId, confirmCategoryImageUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a category
+         * @param {CreateCategoryDto} createCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateCategory(createCategoryDto: CreateCategoryDto, options?: RawAxiosRequestConfig): AxiosPromise<CategoryResponseDto> {
+            return localVarFp.categoryControllerCreateCategory(createCategoryDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a category image
+         * @param {string} categoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateCategoryImageUploadUrl(categoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<CategoryImageUploadResponseDto> {
+            return localVarFp.categoryControllerCreateCategoryImageUploadUrl(categoryId, requestCategoryImageUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a subcategory within a category
+         * @param {string} categoryId 
+         * @param {CreateSubcategoryDto} createSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateSubcategory(categoryId: string, createSubcategoryDto: CreateSubcategoryDto, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryResponseDto> {
+            return localVarFp.categoryControllerCreateSubcategory(categoryId, createSubcategoryDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a temporary S3 upload URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerCreateSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryImageUploadResponseDto> {
+            return localVarFp.categoryControllerCreateSubcategoryImageUploadUrl(categoryId, subcategoryId, requestCategoryImageUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get all categories and subcategories for admin management
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerFindAll(options?: RawAxiosRequestConfig): AxiosPromise<CategoryListResponseDto> {
+            return localVarFp.categoryControllerFindAll(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get subcategories in a category
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerFindSubcategories(categoryId: string, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryListResponseDto> {
+            return localVarFp.categoryControllerFindSubcategories(categoryId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a category image
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerGetCategoryImageViewUrl(categoryId: string, options?: RawAxiosRequestConfig): AxiosPromise<CategoryImageViewResponseDto> {
+            return localVarFp.categoryControllerGetCategoryImageViewUrl(categoryId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a temporary private S3 view URL for a subcategory image
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerGetSubcategoryImageViewUrl(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryImageViewResponseDto> {
+            return localVarFp.categoryControllerGetSubcategoryImageViewUrl(categoryId, subcategoryId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Remove the image from a category and S3
+         * @param {string} categoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerRemoveCategoryImage(categoryId: string, options?: RawAxiosRequestConfig): AxiosPromise<CategoryResponseDto> {
+            return localVarFp.categoryControllerRemoveCategoryImage(categoryId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Remove a subcategory image from the record and S3
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerRemoveSubcategoryImage(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryResponseDto> {
+            return localVarFp.categoryControllerRemoveSubcategoryImage(categoryId, subcategoryId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update or archive a category
+         * @param {string} categoryId 
+         * @param {UpdateCategoryDto} updateCategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerUpdateCategory(categoryId: string, updateCategoryDto: UpdateCategoryDto, options?: RawAxiosRequestConfig): AxiosPromise<CategoryResponseDto> {
+            return localVarFp.categoryControllerUpdateCategory(categoryId, updateCategoryDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update or archive a subcategory
+         * @param {string} categoryId 
+         * @param {string} subcategoryId 
+         * @param {UpdateSubcategoryDto} updateSubcategoryDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        categoryControllerUpdateSubcategory(categoryId: string, subcategoryId: string, updateSubcategoryDto: UpdateSubcategoryDto, options?: RawAxiosRequestConfig): AxiosPromise<SubcategoryResponseDto> {
+            return localVarFp.categoryControllerUpdateSubcategory(categoryId, subcategoryId, updateSubcategoryDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminCategoriesApi - object-oriented interface
+ */
+export class AdminCategoriesApi extends BaseAPI {
+    /**
+     * 
+     * @summary Confirm and attach an uploaded category image
+     * @param {string} categoryId 
+     * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerConfirmCategoryImageUpload(categoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerConfirmCategoryImageUpload(categoryId, confirmCategoryImageUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Confirm and attach an uploaded subcategory image
+     * @param {string} categoryId 
+     * @param {string} subcategoryId 
+     * @param {ConfirmCategoryImageUploadDto} confirmCategoryImageUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerConfirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerConfirmSubcategoryImageUpload(categoryId, subcategoryId, confirmCategoryImageUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a category
+     * @param {CreateCategoryDto} createCategoryDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerCreateCategory(createCategoryDto: CreateCategoryDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerCreateCategory(createCategoryDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a temporary S3 upload URL for a category image
+     * @param {string} categoryId 
+     * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerCreateCategoryImageUploadUrl(categoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerCreateCategoryImageUploadUrl(categoryId, requestCategoryImageUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a subcategory within a category
+     * @param {string} categoryId 
+     * @param {CreateSubcategoryDto} createSubcategoryDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerCreateSubcategory(categoryId: string, createSubcategoryDto: CreateSubcategoryDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerCreateSubcategory(categoryId, createSubcategoryDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a temporary S3 upload URL for a subcategory image
+     * @param {string} categoryId 
+     * @param {string} subcategoryId 
+     * @param {RequestCategoryImageUploadDto} requestCategoryImageUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerCreateSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, requestCategoryImageUploadDto: RequestCategoryImageUploadDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerCreateSubcategoryImageUploadUrl(categoryId, subcategoryId, requestCategoryImageUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get all categories and subcategories for admin management
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerFindAll(options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerFindAll(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get subcategories in a category
+     * @param {string} categoryId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerFindSubcategories(categoryId: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerFindSubcategories(categoryId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a temporary private S3 view URL for a category image
+     * @param {string} categoryId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerGetCategoryImageViewUrl(categoryId: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerGetCategoryImageViewUrl(categoryId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a temporary private S3 view URL for a subcategory image
+     * @param {string} categoryId 
+     * @param {string} subcategoryId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerGetSubcategoryImageViewUrl(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerGetSubcategoryImageViewUrl(categoryId, subcategoryId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Remove the image from a category and S3
+     * @param {string} categoryId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerRemoveCategoryImage(categoryId: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerRemoveCategoryImage(categoryId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Remove a subcategory image from the record and S3
+     * @param {string} categoryId 
+     * @param {string} subcategoryId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerRemoveSubcategoryImage(categoryId: string, subcategoryId: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerRemoveSubcategoryImage(categoryId, subcategoryId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update or archive a category
+     * @param {string} categoryId 
+     * @param {UpdateCategoryDto} updateCategoryDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerUpdateCategory(categoryId: string, updateCategoryDto: UpdateCategoryDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerUpdateCategory(categoryId, updateCategoryDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update or archive a subcategory
+     * @param {string} categoryId 
+     * @param {string} subcategoryId 
+     * @param {UpdateSubcategoryDto} updateSubcategoryDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public categoryControllerUpdateSubcategory(categoryId: string, subcategoryId: string, updateSubcategoryDto: UpdateSubcategoryDto, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerUpdateSubcategory(categoryId, subcategoryId, updateSubcategoryDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
 
 
 /**

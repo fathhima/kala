@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AdminUsersQuery, getAdminUserById, getAdminUsers, updateAdminUserStatus } from '../api'
+import { getAdminUserById, getAdminUsers, updateAdminUserStatus } from './api'
+import { AdminUsersQuery } from './types/admin-users.query.type'
 
 export const useAdminUsersQuery = (query: AdminUsersQuery) => {
     return useQuery({

@@ -31,9 +31,7 @@ export function ManageUsers() {
     : undefined
 
   const rawStatus = searchParams.get('status')
-  const status = Object.values(AdminControllerGetAdminUsersStatusEnum).includes(
-    rawStatus as UserStatus,
-  )
+  const status = Object.values(AdminControllerGetAdminUsersStatusEnum).includes(rawStatus as UserStatus,)
     ? (rawStatus as UserStatus)
     : undefined
 
@@ -66,14 +64,13 @@ export function ManageUsers() {
     return () => window.clearTimeout(timeout)
   }, [searchInput, committedSearch, searchParams, setSearchParams])
 
-  const query = useMemo(
-    () => ({
-      page,
-      limit: PAGE_SIZE,
-      search: committedSearch || undefined,
-      role,
-      status,
-    }),
+  const query = useMemo(() => ({
+    page,
+    limit: PAGE_SIZE,
+    search: committedSearch || undefined,
+    role,
+    status,
+  }),
     [page, committedSearch, role, status],
   )
 
@@ -201,9 +198,7 @@ export function ManageUsers() {
 
             <tbody>
               {data.items.map((user) => {
-                const rowUpdating =
-                  statusMutation.isPending &&
-                  statusMutation.variables?.id === user.id
+                const rowUpdating = statusMutation.isPending && statusMutation.variables?.id === user.id
 
                 return (
                   <tr

@@ -1,27 +1,10 @@
-import {
-    AdminApi,
-    AdminControllerGetAdminUsersStatusEnum,
-    AdminUserResponseDto,
-    Configuration,
-    UpdateUserStatusDto,
-    type PaginatedAdminUsersDataDto,
-    type Role,
-} from '@/api'
+import { AdminApi, AdminControllerGetAdminUsersStatusEnum, AdminUserResponseDto, Configuration, UpdateUserStatusDto, type PaginatedAdminUsersDataDto, type Role, } from '@/api'
 import { apiClient } from '@/lib/axios'
+import { AdminUsersQuery } from './types/admin-users.query.type'
 
-const config = new Configuration({
-    basePath: import.meta.env.VITE_API_URL,
-})
+const config = new Configuration({ basePath: import.meta.env.VITE_API_URL, })
 
 const adminApi = new AdminApi(config, undefined, apiClient)
-
-export type AdminUsersQuery = {
-    page: number
-    limit: number
-    search?: string
-    role?: Role
-    status?: AdminControllerGetAdminUsersStatusEnum
-}
 
 export const getAdminUsers = async (query: AdminUsersQuery): Promise<PaginatedAdminUsersDataDto> => {
     const response = await adminApi.adminControllerGetAdminUsers(
@@ -35,9 +18,7 @@ export const getAdminUsers = async (query: AdminUsersQuery): Promise<PaginatedAd
     return response.data.data
 }
 
-export const getAdminUserById = async (
-    id: string,
-): Promise<AdminUserResponseDto> => {
+export const getAdminUserById = async (id: string,): Promise<AdminUserResponseDto> => {
     const response = await adminApi.adminControllerGetAdminUserById(id)
     return response.data
 }

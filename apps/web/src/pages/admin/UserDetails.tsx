@@ -6,10 +6,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { getApiErrorResponse } from '@/lib/api-error'
-import {
-  useAdminUserQuery,
-  useUpdateAdminUserStatusMutation,
-} from '@/features/admin/users/hooks'
+import { useAdminUserQuery, useUpdateAdminUserStatusMutation, } from '@/features/admin/users/hooks'
 
 const getRoleBadgeVariant = (role: Role) => {
   if (role === 'ADMIN') return 'error'

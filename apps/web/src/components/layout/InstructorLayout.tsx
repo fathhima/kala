@@ -1,9 +1,10 @@
-import { Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, Image, Sparkles, Star, Settings, Menu, LogOut, Clock, CreditCard } from 'lucide-react'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, CalendarDays, Image, Sparkles, Star, Settings, Menu, LogOut, Clock, CreditCard, ArrowLeftRight } from 'lucide-react'
 import { DashboardSidebar } from './DashboardSidebar'
-import { useAuthStore } from '../../stores/authStore'
 import { Avatar } from '../ui/Avatar'
-import { useUIStore } from '../../stores/uiStore'
+import { useAuthStore } from '@/features/auth/store'
+import { useUIStore } from '@/lib/uiStore'
+import { useLogoutMutation } from '@/features/auth/hooks'
 
 const navItems = [
   { label: 'Overview', path: '/instructor', icon: <LayoutDashboard size={18} /> },
@@ -17,9 +18,20 @@ const navItems = [
 ]
 
 export function InstructorLayout() {
-  const { user, logout } = useAuthStore()
+  const user = useAuthStore((state) => state.user)
+  const clearAuth = useAuthStore((state) => state.clearAuth)
+  const logoutMutation = useLogoutMutation()
   const { toggleSidebar } = useUIStore()
   const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync()
+    } finally {
+      clearAuth()
+      navigate('/login', { replace: true })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -30,11 +42,16 @@ export function InstructorLayout() {
             <Menu size={20} />
           </button>
           <div className="ml-auto flex items-center gap-3">
+            <Link to="/dashboard" className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-800 sm:inline-flex">
+              <ArrowLeftRight size={16} />
+              Student mode
+            </Link>
+
             {user && (
               <>
                 <span className="text-sm text-stone-600 hidden sm:block">{user.name}</span>
-                <Avatar name={user.name} src={user.avatarUrl} size="sm" />
-                <button onClick={() => { logout(); navigate('/login') }} className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-red-500 transition-colors" title="Logout">
+                <Avatar name={user.name} src={user.imageUrl ?? undefined} size="sm" />
+                <button type="button" onClick={handleLogout} disabled={logoutMutation.isPending} className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-red-500" title="Logout" aria-label="Logout">
                   <LogOut size={16} />
                 </button>
               </>

@@ -35,16 +35,6 @@ export class UpdateSubcategoryDto {
     description?: string | null;
 
     @ApiPropertyOptional({
-        example: 'https://cdn.example.com/subcategory-updated.jpg',
-        description: 'Updated image URL for the subcategory. Can be set to null to remove the image.',
-        nullable: true,
-    })
-    @IsOptional()
-    @IsUrl()
-    @MaxLength(2_000)
-    imageUrl?: string | null;
-
-    @ApiPropertyOptional({
         example: true,
         description: 'Whether the subcategory is active and available for use.',
     })

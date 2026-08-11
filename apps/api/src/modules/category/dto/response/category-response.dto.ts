@@ -21,6 +21,9 @@ export class SubcategoryDto {
     @ApiPropertyOptional({ nullable: true })
     imageUrl?: string | null;
 
+    @ApiPropertyOptional({ nullable: true })
+    imageStorageKey?: string | null;
+
     @ApiProperty()
     isActive!: boolean;
 
@@ -41,6 +44,7 @@ export class SubcategoryDto {
             slug: entity.slug,
             description: entity.description,
             imageUrl: entity.imageUrl,
+            imageStorageKey: entity.imageStorageKey,
             isActive: entity.isActive,
             sortOrder: entity.sortOrder,
             createdAt: entity.createdAt,
@@ -65,6 +69,9 @@ export class CategoryDto {
     @ApiPropertyOptional({ nullable: true })
     imageUrl?: string | null;
 
+    @ApiPropertyOptional({ nullable: true })
+    imageStorageKey?: string | null;
+
     @ApiProperty()
     isActive!: boolean;
 
@@ -87,6 +94,7 @@ export class CategoryDto {
             slug: entity.slug,
             description: entity.description,
             imageUrl: entity.imageUrl,
+            imageStorageKey: entity.imageStorageKey,
             isActive: entity.isActive,
             sortOrder: entity.sortOrder,
             createdAt: entity.createdAt,

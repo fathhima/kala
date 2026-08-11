@@ -3,6 +3,7 @@ export type UpdateCategoryInput = {
     slug?: string;
     description?: string | null;
     imageUrl?: string | null;
+    imageStorageKey?: string | null;
     isActive?: boolean;
     sortOrder?: number;
 };

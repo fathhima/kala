@@ -5,6 +5,7 @@ export class SubcategoryEntity {
     slug!: string;
     description?: string | null;
     imageUrl?: string | null;
+    imageStorageKey?: string | null;
     isActive!: boolean;
     sortOrder!: number;
     createdAt!: Date;

@@ -33,15 +33,6 @@ export class CreateCategoryDto {
     description?: string;
 
     @ApiPropertyOptional({
-        example: 'https://cdn.example.com/category.jpg',
-        description: 'Optional URL of the image representing the category.',
-    })
-    @IsOptional()
-    @IsUrl()
-    @MaxLength(2_000)
-    imageUrl?: string;
-
-    @ApiPropertyOptional({
         example: 1,
         description: 'Optional display order of the category. Lower values appear before higher values.',
     })

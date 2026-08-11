@@ -66,15 +66,16 @@ model User {
 }
 
 model Category {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  imageUrl    String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  imageUrl        String?
+  imageStorageKey String?
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   subcategories Subcategory[]
 
@@ -88,6 +89,7 @@ model Subcategory {
   slug        String
   description String?
   imageUrl    String?
+  imageStorageKey String?
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())

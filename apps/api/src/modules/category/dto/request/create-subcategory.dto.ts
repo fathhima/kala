@@ -33,15 +33,6 @@ export class CreateSubcategoryDto {
     description?: string;
 
     @ApiPropertyOptional({
-        example: 'https://cdn.example.com/subcategory.jpg',
-        description: 'Optional URL of the image representing the subcategory.',
-    })
-    @IsOptional()
-    @IsUrl()
-    @MaxLength(2_000)
-    imageUrl?: string;
-
-    @ApiPropertyOptional({
         example: 1,
         description: 'Optional display order of the subcategory. Lower values appear before higher values.',
     })

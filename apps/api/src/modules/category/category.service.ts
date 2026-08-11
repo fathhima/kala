@@ -10,6 +10,8 @@ import { StorageService } from '@/shared/storage/storage.service';
 import { CATEGORY_IMAGE_MIME_TYPES, RequestCategoryImageUploadDto } from './dto/request/create-category-image-upload.dto';
 import { randomUUID } from 'crypto';
 import { ConfirmCategoryImageUploadDto } from './dto/request/confirm-category-image-upload.dto';
+import { CategoryQueryDto } from './dto/request/category-query.dto';
+import { PaginatedResult } from '@/shared/types/paginated-result';
 
 @Injectable()
 export class CategoryService {
@@ -20,6 +22,20 @@ export class CategoryService {
         private readonly categoryRepository: CategoryRepository,
         private readonly storageService: StorageService
     ) { }
+
+    async findManyForAdmin(query: CategoryQueryDto): Promise<PaginatedResult<CategoryEntity>> {
+        return this.categoryRepository.findManyForAdmin({
+            page: query.page ?? 1,
+            limit: query.limit ?? 10,
+            search: query.search,
+            isActive:
+                query.isActive === 'true'
+                    ? true
+                    : query.isActive === 'false'
+                        ? false
+                        : undefined,
+        })
+    }
 
     async findAll(): Promise<CategoryEntity[]> {
         return this.categoryRepository.findAll();

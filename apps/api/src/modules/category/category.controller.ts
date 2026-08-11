@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, } from '@nestjs/common';
 import { ApiConflictResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse, } from '@nestjs/swagger';
 import { Roles } from '@/shared/decorators/roles.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
 import { CategoryService } from './category.service';
-import { CategoryListResponseDto, CategoryResponseDto } from './dto/response/category-response.dto';
+import { CategoryListResponseDto, CategoryResponseDto, PaginatedCategoryResponseDto } from './dto/response/category-response.dto';
 import { CreateCategoryDto } from './dto/request/create-category.dto';
 import { UpdateCategoryDto } from './dto/request/update-category.dto';
 import { SubcategoryListResponseDto, SubcategoryResponseDto } from './dto/response/subcategory-response.dto';
@@ -15,6 +15,7 @@ import { ConfirmCategoryImageUploadDto } from './dto/request/confirm-category-im
 import { CategoryImageViewResponseDto } from './dto/response/category-image-view-response.dto';
 import { SubcategoryImageUploadResponseDto } from './dto/response/subcategory-image-upload-response.dto';
 import { SubcategoryImageViewResponseDto } from './dto/response/subcategory-image-view-response.dto';
+import { CategoryQueryDto } from './dto/request/category-query.dto';
 
 @ApiTags('Admin Categories')
 @Controller('admin/categories')
@@ -25,14 +26,12 @@ export class CategoryController {
     ) { }
 
     @Get()
-    @ApiOperation({ summary: 'Get all categories and subcategories for admin management', })
-    @ApiOkResponse({ type: CategoryListResponseDto })
-    @ApiUnauthorizedResponse({ description: 'Access token is missing or invalid', })
-    @ApiForbiddenResponse({ description: 'Only admins can access this resource', })
-    async findAll(): Promise<CategoryListResponseDto> {
-        const categories = await this.categoryService.findAll();
+    @ApiOperation({ summary: 'Get paginated categories and subcategories for admin management' })
+    @ApiOkResponse({ type: PaginatedCategoryResponseDto })
+    async findAll(@Query() query: CategoryQueryDto): Promise<PaginatedCategoryResponseDto> {
+        const result = await this.categoryService.findManyForAdmin(query)
 
-        return CategoryListResponseDto.fromEntities('Categories fetched successfully', categories,);
+        return PaginatedCategoryResponseDto.fromResult('Categories fetched successfully', result,)
     }
 
     @Post()

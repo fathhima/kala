@@ -9,6 +9,8 @@ import { CreateSubcategoryInput } from '../types/create-subcategory-input.type';
 import { UpdateCategoryInput } from '../types/update-category-input.type';
 import { UpdateSubcategoryInput } from '../types/update-subcategory-input.type';
 import { CategoryRepository } from './interfaces/category.repository';
+import { CategoryListParams } from '../types/category-list-params.type';
+import { PaginatedResult } from '@/shared/types/paginated-result';
 
 const categoryWithSubcategories = {
     subcategories: {
@@ -19,6 +21,41 @@ const categoryWithSubcategories = {
 @Injectable()
 export class PrismaCategoryRepository implements CategoryRepository {
     constructor(private readonly prisma: PrismaService) { }
+
+    async findManyForAdmin(params: CategoryListParams): Promise<PaginatedResult<CategoryEntity>> {
+        const skip = (params.page - 1) * params.limit
+        const where: Prisma.CategoryWhereInput = {}
+
+        if (params.search) {
+            where.OR = [
+                { name: { contains: params.search, mode: 'insensitive' } },
+                { slug: { contains: params.search, mode: 'insensitive' } },
+                { description: { contains: params.search, mode: 'insensitive' } },
+            ]
+        }
+
+        if (typeof params.isActive === 'boolean') {
+            where.isActive = params.isActive
+        }
+
+        const [categories, total] = await this.prisma.$transaction([
+            this.prisma.category.findMany({
+                where,
+                skip,
+                take: params.limit,
+                include: categoryWithSubcategories,
+                orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+            }),
+            this.prisma.category.count({ where }),
+        ])
+
+        return {
+            items: categories.map(CategoryMapper.toCategoryEntity),
+            total,
+            page: params.page,
+            limit: params.limit,
+        }
+    }
 
     async findAll(): Promise<CategoryEntity[]> {
         const categories = await this.prisma.category.findMany({

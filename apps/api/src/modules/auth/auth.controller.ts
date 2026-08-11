@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiForbiddenResponse, ApiOkResponse, ApiOperatio
 import { RegisterDto } from "./dto/request/register.dto";
 import { AuthService } from "./services/auth.service";
 import { Public } from "@/shared/decorators/public.decorator";
-import { MessageResponseDto } from "../../shared/dto/common/message-response.dto";
+import { MessageResponseDto } from "../../shared/dto/response/message-response.dto";
 import { AuthResponseDto } from "./dto/response/auth-response.dto";
 import { VerifyOtpDto } from "./dto/request/verify-otp.dto";
 import { LoginDto } from "./dto/request/login.dto";

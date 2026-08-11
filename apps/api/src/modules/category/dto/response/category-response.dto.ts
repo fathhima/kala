@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CategoryEntity } from "../../entities/category.entity";
 import { SubcategoryEntity } from "../../entities/subcategory.entity";
+import { PaginationMetaDto } from "@/shared/dto/response/pagination-meta.dto";
+import { PaginatedResult } from "@/shared/types/paginated-result";
 
 export class SubcategoryDto {
     @ApiProperty()
@@ -139,5 +141,35 @@ export class CategoryListResponseDto {
             message,
             data: entities.map(CategoryDto.fromEntity),
         };
+    }
+}
+
+export class PaginatedCategoryDataDto {
+    @ApiProperty({ type: [CategoryDto] })
+    items!: CategoryDto[]
+
+    @ApiProperty({ type: PaginationMetaDto })
+    meta!: PaginationMetaDto
+}
+
+export class PaginatedCategoryResponseDto {
+    @ApiProperty()
+    success!: boolean
+
+    @ApiProperty()
+    message!: string
+
+    @ApiProperty({ type: PaginatedCategoryDataDto })
+    data!: PaginatedCategoryDataDto
+
+    static fromResult(message: string, result: PaginatedResult<CategoryEntity>,): PaginatedCategoryResponseDto {
+        return {
+            success: true,
+            message,
+            data: {
+                items: result.items.map(CategoryDto.fromEntity),
+                meta: PaginationMetaDto.create(result.page, result.limit, result.total),
+            },
+        }
     }
 }

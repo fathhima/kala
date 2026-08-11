@@ -14,6 +14,7 @@ import { getApiErrorResponse } from '@/lib/api-error'
 import { Badge } from '@/components/ui/Badge'
 import { useSearchParams } from 'react-router-dom'
 import { Pagination } from '@/components/ui/Pagination'
+import { CategoryFormFields, validateCategoryForm, validateSubcategoryForm } from '@/features/admin/categories/validation'
 
 const PAGE_SIZE = 10
 
@@ -109,6 +110,8 @@ function CategoryFormModal({ state, onClose, }: {
   const [description, setDescription] = useState(state?.mode === 'edit' ? toText(state.category.description) : '',)
   const [sortOrder, setSortOrder] = useState(state?.mode === 'edit' ? String(state.category.sortOrder) : '0',)
 
+  const [errors, setErrors] = useState<Partial<Record<CategoryFormFields, string>>>({})
+
   if (!state) return null
 
   const isEdit = state.mode === 'edit'
@@ -116,6 +119,18 @@ function CategoryFormModal({ state, onClose, }: {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+
+    const validationErrors = validateCategoryForm({
+      name,
+      slug,
+      description,
+      sortOrder,
+    })
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
 
     const values: CategoryFormValues = {
       name,
@@ -143,19 +158,38 @@ function CategoryFormModal({ state, onClose, }: {
       title={isEdit ? 'Edit category' : 'Add category'}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Name" value={name} onChange={(event) => setName(event.target.value)} required />
-        <Input label="Slug" value={slug} onChange={(event) => setSlug(event.target.value)} />
+        <Input label="Name" value={name} onChange={(event) => {
+          setName(event.target.value)
+          setErrors((prev) => ({ ...prev, name: '' }))
+        }}
+          error={errors.name}
+          required
+        />
+        <Input label="Slug" value={slug} onChange={(event) => {
+          setSlug(event.target.value)
+          setErrors((prev) => ({ ...prev, slug: '' }))
+        }}
+          error={errors.slug}
+        />
         <Textarea
           label="Description"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={(event) => {
+            setDescription(event.target.value)
+            setErrors((prev) => ({ ...prev, description: '' }))
+          }}
+          error={errors.description}
           rows={3}
         />
         <Input
           label="Sort order"
           type="number"
           value={sortOrder}
-          onChange={(event) => setSortOrder(event.target.value)}
+          onChange={(event) => {
+            setSortOrder(event.target.value)
+            setErrors((prev) => ({ ...prev, sortOrder: '' }))
+          }}
+          error={errors.sortOrder}
         />
         <div className="flex gap-3">
           <Button type="submit" loading={isPending} className="flex-1">
@@ -182,6 +216,8 @@ function SubcategoryFormModal({ state, onClose, }: {
   const [description, setDescription] = useState(state?.mode === 'edit' ? toText(state.subcategory.description) : '',)
   const [sortOrder, setSortOrder] = useState(state?.mode === 'edit' ? String(state.subcategory.sortOrder) : '0',)
 
+  const [errors, setErrors] = useState<Partial<Record<CategoryFormFields, string>>>({})
+
   if (!state) return null
 
   const isEdit = state.mode === 'edit'
@@ -189,6 +225,18 @@ function SubcategoryFormModal({ state, onClose, }: {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+
+    const validationErrors = validateSubcategoryForm({
+      name,
+      slug,
+      description,
+      sortOrder,
+    })
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
 
     const values: SubcategoryFormValues = {
       name,
@@ -220,19 +268,38 @@ function SubcategoryFormModal({ state, onClose, }: {
       title={isEdit ? 'Edit subcategory' : `Add subcategory to ${state.category.name}`}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Name" value={name} onChange={(event) => setName(event.target.value)} required />
-        <Input label="Slug" value={slug} onChange={(event) => setSlug(event.target.value)} />
+        <Input label="Name" value={name} onChange={(event) => {
+          setName(event.target.value)
+          setErrors((prev) => ({ ...prev, name: '' }))
+        }}
+          error={errors.name}
+          required
+        />
+        <Input label="Slug" value={slug} onChange={(event) => {
+          setSlug(event.target.value)
+          setErrors((prev) => ({ ...prev, slug: '' }))
+        }}
+          error={errors.slug}
+        />
         <Textarea
           label="Description"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={(event) => {
+            setDescription(event.target.value)
+            setErrors((prev) => ({ ...prev, description: '' }))
+          }}
+          error={errors.description}
           rows={3}
         />
         <Input
           label="Sort order"
           type="number"
           value={sortOrder}
-          onChange={(event) => setSortOrder(event.target.value)}
+          onChange={(event) => {
+            setSortOrder(event.target.value)
+            setErrors((prev) => ({ ...prev, sortOrder: '' }))
+          }}
+          error={errors.sortOrder}
         />
         <div className="flex gap-3">
           <Button type="submit" loading={isPending} className="flex-1">

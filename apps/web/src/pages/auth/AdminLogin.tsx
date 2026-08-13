@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { useLoginMutation, useLogoutMutation } from '@/features/auth/hooks'
 import { useAuthStore } from '@/features/auth/store'
 import { getApiErrorResponse } from '@/lib/api-error'
-import { type Loginfields, validateLoginForm } from '@/utils/validation'
+import { type Loginfields, validateLoginForm } from '@/features/auth/validation'
 
 export function AdminLogin() {
   const navigate = useNavigate()

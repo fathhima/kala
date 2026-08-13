@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Palette, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useResendOtpMutation, useVerifyOtpMutation, } from "@/features/auth/hooks";
-import { validateVerifyOtpForm, type verifyOtpFields, } from "@/utils/validation";
+import { validateVerifyOtpForm, type verifyOtpFields, } from "@/features/auth/validation";
 import { useAuthStore } from "@/features/auth/store";
 import { getApiErrorResponse } from "@/lib/api-error";
 

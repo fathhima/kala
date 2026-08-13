@@ -20,7 +20,7 @@ export function Landing() {
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-kala-brown leading-tight mb-6">
               Learn the Art of
-              <span className="text-kala-terracotta">Making</span>
+              <span className="text-kala-terracotta"> Making</span>
             </h1>
             <p className="text-lg text-stone-600 leading-relaxed mb-8 max-w-xl">
               Connect with passionate artisans and learn creative skills — mehendi, painting, calligraphy, resin art, and more — in live one-on-one sessions.

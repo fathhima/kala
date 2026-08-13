@@ -4,7 +4,7 @@ import { Palette, ArrowLeft, Mail } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { useForgotPasswordMutation } from '@/features/auth/hooks'
-import { ForgotPasswordFields, validateForgotPasswordForm } from '@/utils/validation'
+import { ForgotPasswordFields, validateForgotPasswordForm } from '@/features/auth/validation'
 import { getApiErrorResponse } from '@/lib/api-error'
 
 export function ForgotPassword() {

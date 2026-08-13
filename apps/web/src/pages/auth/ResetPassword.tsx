@@ -4,7 +4,7 @@ import { Palette, Eye, EyeOff, KeyRound, CheckCircle2, AlertTriangle } from 'luc
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '@/features/auth/store'
-import { ResetPasswordFields, validateResetPasswordForm } from '@/utils/validation'
+import { ResetPasswordFields, validateResetPasswordForm } from '@/features/auth/validation'
 import { useResetPasswordMutation, useValidateResetTokenMutation, } from '@/features/auth/hooks'
 import { getApiErrorResponse } from '@/lib/api-error'
 import { Spinner } from '@/components/ui/Spinner'

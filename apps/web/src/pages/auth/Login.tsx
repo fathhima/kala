@@ -6,9 +6,9 @@ import { Button } from '../../components/ui/Button'
 import { useGoogleSigninMutation, useLoginMutation } from '@/features/auth/hooks'
 import { useAuthStore } from '@/features/auth/store'
 import type { LoginDto } from '@/api'
-import { type Loginfields, validateLoginForm } from '@/utils/validation'
 import { getApiErrorResponse } from '@/lib/api-error'
 import { GoogleLogin } from '@react-oauth/google'
+import { Loginfields, validateLoginForm } from '@/features/auth/validation'
 
 export function Login() {
   const navigate = useNavigate()

@@ -1,16 +1,35 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, } from '@nestjs/swagger';
+import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../../entities/instructor-profile.entity';
 import { PaginationMetaDto } from '@/shared/dto/response/pagination-meta.dto';
 import { PaginatedResult } from '@/shared/types';
-import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../../entities/instructor-profile.entity';
+
+const MEDIA_TYPES = ['IMAGE', 'VIDEO'] as const;
+const OFFERING_STATUSES = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'CHANGES_REQUESTED', 'ARCHIVED',] as const;
 
 export class OfferingMediaDto {
-    @ApiProperty() id!: string;
-    @ApiProperty() type!: string;
-    @ApiProperty() storageKey!: string;
-    @ApiProperty() mimeType!: string;
-    @ApiProperty() sizeBytes!: number;
-    @ApiProperty() sortOrder!: number;
-    @ApiProperty() createdAt!: Date;
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty({ enum: MEDIA_TYPES })
+    type!: (typeof MEDIA_TYPES)[number];
+
+    @ApiProperty()
+    storageKey!: string;
+
+    @ApiProperty()
+    mimeType!: string;
+
+    @ApiProperty()
+    sizeBytes!: number;
+
+    @ApiProperty()
+    sortOrder!: number;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    createdAt!: Date;
 
     static fromEntity(entity: OfferingMediaEntity): OfferingMediaDto {
         return {
@@ -25,22 +44,98 @@ export class OfferingMediaDto {
     }
 }
 
-export class InstructorOfferingDto {
-    @ApiProperty() id!: string;
-    @ApiProperty() subcategoryId!: string;
-    @ApiPropertyOptional() title?: string | null;
-    @ApiPropertyOptional() description?: string | null;
-    @ApiProperty() hourlyRate!: string;
-    @ApiProperty() currency!: string;
-    @ApiPropertyOptional() experienceYears?: number | null;
-    @ApiProperty() status!: string;
-    @ApiPropertyOptional() reviewNote?: string | null;
-    @ApiProperty({ type: [OfferingMediaDto] }) media!: OfferingMediaDto[];
-    @ApiProperty() subcategory!: object;
+export class InstructorOfferingCategoryDto {
+    @ApiProperty()
+    id!: string;
 
-    static fromEntity(entity: InstructorOfferingEntity): InstructorOfferingDto {
+    @ApiProperty()
+    name!: string;
+
+    @ApiProperty()
+    slug!: string;
+}
+
+export class InstructorOfferingSubcategoryDto {
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    name!: string;
+
+    @ApiProperty()
+    slug!: string;
+
+    @ApiProperty({ type: InstructorOfferingCategoryDto, })
+    category!: InstructorOfferingCategoryDto;
+}
+
+export class InstructorOfferingDto {
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    profileId!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    applicationId?: string | null;
+
+    @ApiProperty()
+    subcategoryId!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    title?: string | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    description?: string | null;
+
+    @ApiProperty()
+    hourlyRate!: string;
+
+    @ApiProperty()
+    currency!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    experienceYears?: number | null;
+
+    @ApiProperty({ enum: OFFERING_STATUSES })
+    status!: (typeof OFFERING_STATUSES)[number];
+
+    @ApiPropertyOptional({ nullable: true })
+    reviewNote?: string | null;
+
+    @ApiPropertyOptional({
+        type: String,
+        format: 'date-time',
+        nullable: true,
+    })
+    reviewedAt?: Date | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    reviewedBy?: string | null;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    createdAt!: Date;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    updatedAt!: Date;
+
+    @ApiProperty({ type: InstructorOfferingSubcategoryDto, })
+    subcategory!: InstructorOfferingSubcategoryDto;
+
+    @ApiProperty({ type: [OfferingMediaDto], })
+    media!: OfferingMediaDto[];
+
+    static fromEntity(entity: InstructorOfferingEntity,): InstructorOfferingDto {
         return {
             id: entity.id,
+            profileId: entity.profileId,
+            applicationId: entity.applicationId,
             subcategoryId: entity.subcategoryId,
             title: entity.title,
             description: entity.description,
@@ -49,65 +144,210 @@ export class InstructorOfferingDto {
             experienceYears: entity.experienceYears,
             status: entity.status,
             reviewNote: entity.reviewNote,
+            reviewedAt: entity.reviewedAt,
+            reviewedBy: entity.reviewedBy,
+            createdAt: entity.createdAt,
+            updatedAt: entity.updatedAt,
+            subcategory: {
+                id: entity.subcategory.id,
+                name: entity.subcategory.name,
+                slug: entity.subcategory.slug,
+                category: {
+                    id: entity.subcategory.category.id,
+                    name: entity.subcategory.category.name,
+                    slug: entity.subcategory.category.slug,
+                },
+            },
             media: entity.media.map(OfferingMediaDto.fromEntity),
-            subcategory: entity.subcategory,
+        };
+    }
+}
+
+export class InstructorApplicantUserDto {
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    name!: string;
+
+    @ApiProperty()
+    email!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    imageUrl?: string | null;
+
+    @ApiProperty({
+        type: [String],
+        example: ['STUDENT'],
+    })
+    roles!: string[];
+}
+
+export class InstructorApplicationProfileDto {
+    @ApiProperty()
+    id!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    bio?: string | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    location?: string | null;
+
+    @ApiProperty()
+    status!: string;
+
+    @ApiProperty({ type: InstructorApplicantUserDto, })
+    user!: InstructorApplicantUserDto;
+
+    static fromEntity(entity: NonNullable<InstructorApplicationEntity['profile']>,): InstructorApplicationProfileDto {
+        return {
+            id: entity.id,
+            bio: entity.bio,
+            location: entity.location,
+            status: entity.status,
+            user: {
+                id: entity.user.id,
+                name: entity.user.name,
+                email: entity.user.email,
+                imageUrl: entity.user.imageUrl,
+                roles: entity.user.roles,
+            },
         };
     }
 }
 
 export class InstructorApplicationDto {
-    @ApiProperty() id!: string;
-    @ApiProperty() status!: string;
-    @ApiProperty() submittedAt!: Date;
-    @ApiPropertyOptional() reviewedAt?: Date | null;
-    @ApiPropertyOptional() reviewedBy?: string | null;
-    @ApiProperty({ type: [InstructorOfferingDto] })
-    offerings!: InstructorOfferingDto[];
-    @ApiPropertyOptional() profile?: object;
+    @ApiProperty()
+    id!: string;
 
-    static fromEntity(entity: InstructorApplicationEntity): InstructorApplicationDto {
+    @ApiProperty()
+    profileId!: string;
+
+    @ApiProperty()
+    status!: string;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    submittedAt!: Date;
+
+    @ApiPropertyOptional({
+        type: String,
+        format: 'date-time',
+        nullable: true,
+    })
+    reviewedAt?: Date | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    reviewedBy?: string | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    reviewNote?: string | null;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    createdAt!: Date;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    updatedAt!: Date;
+
+    @ApiProperty({ type: [InstructorOfferingDto], })
+    offerings!: InstructorOfferingDto[];
+
+    @ApiPropertyOptional({
+        type: InstructorApplicationProfileDto,
+        nullable: true,
+    })
+    profile?: InstructorApplicationProfileDto;
+
+    static fromEntity(entity: InstructorApplicationEntity,): InstructorApplicationDto {
         return {
             id: entity.id,
+            profileId: entity.profileId,
             status: entity.status,
             submittedAt: entity.submittedAt,
             reviewedAt: entity.reviewedAt,
             reviewedBy: entity.reviewedBy,
-            offerings: entity.offerings.map(InstructorOfferingDto.fromEntity),
-            profile: entity.profile,
+            reviewNote: entity.reviewNote,
+            createdAt: entity.createdAt,
+            updatedAt: entity.updatedAt,
+            offerings: entity.offerings.map(InstructorOfferingDto.fromEntity,),
+            profile: entity.profile
+                ? InstructorApplicationProfileDto.fromEntity(entity.profile)
+                : undefined,
         };
     }
 }
 
 export class InstructorProfileDto {
-    @ApiProperty() id!: string;
-    @ApiProperty() userId!: string;
-    @ApiPropertyOptional() bio?: string | null;
-    @ApiPropertyOptional() location?: string | null;
-    @ApiProperty() status!: string;
-    @ApiProperty({ type: [InstructorOfferingDto] })
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    userId!: string;
+
+    @ApiPropertyOptional({ nullable: true })
+    bio?: string | null;
+
+    @ApiPropertyOptional({ nullable: true })
+    location?: string | null;
+
+    @ApiProperty()
+    status!: string;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    createdAt!: Date;
+
+    @ApiProperty({
+        type: String,
+        format: 'date-time',
+    })
+    updatedAt!: Date;
+
+    @ApiProperty({ type: [InstructorOfferingDto], })
     offerings!: InstructorOfferingDto[];
-    @ApiPropertyOptional({ type: InstructorApplicationDto })
+
+    @ApiPropertyOptional({
+        type: InstructorApplicationDto,
+        nullable: true,
+    })
     latestApplication?: InstructorApplicationDto | null;
 
-    static fromEntity(entity: InstructorProfileEntity): InstructorProfileDto {
+    static fromEntity(entity: InstructorProfileEntity,): InstructorProfileDto {
         return {
             id: entity.id,
             userId: entity.userId,
             bio: entity.bio,
             location: entity.location,
             status: entity.status,
-            offerings: entity.offerings.map(InstructorOfferingDto.fromEntity),
-            latestApplication: entity.latestApplication
-                ? InstructorApplicationDto.fromEntity(entity.latestApplication)
-                : null,
+            createdAt: entity.createdAt,
+            updatedAt: entity.updatedAt,
+            offerings: entity.offerings.map(InstructorOfferingDto.fromEntity,),
+            latestApplication: entity.latestApplication ? InstructorApplicationDto.fromEntity(entity.latestApplication,) : null,
         };
     }
 }
 
 export class InstructorProfileResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiPropertyOptional({ type: InstructorProfileDto })
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiPropertyOptional({
+        type: InstructorProfileDto,
+        nullable: true,
+    })
     data!: InstructorProfileDto | null;
 
     static fromEntity(message: string, entity: InstructorProfileEntity | null,): InstructorProfileResponseDto {
@@ -120,29 +360,52 @@ export class InstructorProfileResponseDto {
 }
 
 export class InstructorOfferingResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty({ type: InstructorOfferingDto }) data!: InstructorOfferingDto;
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: InstructorOfferingDto, })
+    data!: InstructorOfferingDto;
 
     static fromEntity(message: string, entity: InstructorOfferingEntity,): InstructorOfferingResponseDto {
-        return { success: true, message, data: InstructorOfferingDto.fromEntity(entity) };
+        return {
+            success: true,
+            message,
+            data: InstructorOfferingDto.fromEntity(entity),
+        };
     }
 }
 
 export class OfferingMediaResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty({ type: OfferingMediaDto }) data!: OfferingMediaDto;
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: OfferingMediaDto, })
+    data!: OfferingMediaDto;
 
     static fromEntity(message: string, entity: OfferingMediaEntity,): OfferingMediaResponseDto {
-        return { success: true, message, data: OfferingMediaDto.fromEntity(entity) };
+        return {
+            success: true,
+            message,
+            data: OfferingMediaDto.fromEntity(entity),
+        };
     }
 }
 
 export class InstructorApplicationResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty({ type: InstructorApplicationDto }) data!: InstructorApplicationDto;
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: InstructorApplicationDto, })
+    data!: InstructorApplicationDto;
 
     static fromEntity(message: string, entity: InstructorApplicationEntity,): InstructorApplicationResponseDto {
         return {
@@ -153,35 +416,60 @@ export class InstructorApplicationResponseDto {
     }
 }
 
-export class PaginatedInstructorApplicationsResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty() data!: {
-        items: InstructorApplicationDto[];
-        meta: PaginationMetaDto;
-    };
+export class PaginatedInstructorApplicationsDataDto {
+    @ApiProperty({ type: [InstructorApplicationDto], })
+    items!: InstructorApplicationDto[];
 
-    static fromResult(message: string, result: PaginatedResult<InstructorApplicationEntity>,)
-        : PaginatedInstructorApplicationsResponseDto {
+    @ApiProperty({ type: PaginationMetaDto, })
+    meta!: PaginationMetaDto;
+}
+
+export class PaginatedInstructorApplicationsResponseDto {
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: PaginatedInstructorApplicationsDataDto, })
+    data!: PaginatedInstructorApplicationsDataDto;
+
+    static fromResult(message: string, result: PaginatedResult<InstructorApplicationEntity>,): PaginatedInstructorApplicationsResponseDto {
         return {
             success: true,
             message,
             data: {
-                items: result.items.map(InstructorApplicationDto.fromEntity),
-                meta: PaginationMetaDto.create(result.page, result.limit, result.total),
+                items: result.items.map(InstructorApplicationDto.fromEntity,),
+                meta: PaginationMetaDto.create(
+                    result.page,
+                    result.limit,
+                    result.total,
+                ),
             },
         };
     }
 }
 
+export class PresignedUploadDataDto {
+    @ApiProperty()
+    storageKey!: string;
+
+    @ApiProperty()
+    uploadUrl!: string;
+
+    @ApiProperty()
+    expiresInSeconds!: number;
+}
+
 export class PresignedUploadResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty() data!: {
-        storageKey: string;
-        uploadUrl: string;
-        expiresInSeconds: number;
-    };
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: PresignedUploadDataDto, })
+    data!: PresignedUploadDataDto;
 
     static create(upload: {
         key: string;
@@ -200,14 +488,26 @@ export class PresignedUploadResponseDto {
     }
 }
 
+export class PresignedDownloadDataDto {
+    @ApiProperty()
+    storageKey!: string;
+
+    @ApiProperty()
+    viewUrl!: string;
+
+    @ApiProperty()
+    expiresInSeconds!: number;
+}
+
 export class PresignedDownloadResponseDto {
-    @ApiProperty() success!: boolean;
-    @ApiProperty() message!: string;
-    @ApiProperty() data!: {
-        storageKey: string;
-        viewUrl: string;
-        expiresInSeconds: number;
-    };
+    @ApiProperty()
+    success!: boolean;
+
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty({ type: PresignedDownloadDataDto, })
+    data!: PresignedDownloadDataDto;
 
     static create(download: {
         key: string;

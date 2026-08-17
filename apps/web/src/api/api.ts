@@ -108,6 +108,19 @@ export interface CategoryResponseDto {
 export interface ConfirmCategoryImageUploadDto {
     'storageKey': string;
 }
+export interface ConfirmOfferingMediaUploadDto {
+    'type': ConfirmOfferingMediaUploadDtoTypeEnum;
+    'storageKey': string;
+    'sortOrder': number;
+}
+
+export const ConfirmOfferingMediaUploadDtoTypeEnum = {
+    Image: 'IMAGE',
+    Video: 'VIDEO'
+} as const;
+
+export type ConfirmOfferingMediaUploadDtoTypeEnum = typeof ConfirmOfferingMediaUploadDtoTypeEnum[keyof typeof ConfirmOfferingMediaUploadDtoTypeEnum];
+
 export interface CreateCategoryDto {
     /**
      * Name of the category.
@@ -125,6 +138,14 @@ export interface CreateCategoryDto {
      * Optional display order of the category. Lower values appear before higher values.
      */
     'sortOrder'?: number;
+}
+export interface CreateOfferingDto {
+    'subcategoryId': string;
+    'title'?: string;
+    'description'?: string;
+    'hourlyRate': number;
+    'currency'?: string;
+    'experienceYears'?: number;
 }
 export interface CreateSubcategoryDto {
     /**
@@ -156,6 +177,101 @@ export interface GoogleSignInRequestDto {
      */
     'idToken': string;
 }
+export interface InstructorApplicantUserDto {
+    'id': string;
+    'name': string;
+    'email': string;
+    'imageUrl'?: object | null;
+    'roles': Array<string>;
+}
+export interface InstructorApplicationDto {
+    'id': string;
+    'profileId': string;
+    'status': string;
+    'submittedAt': string;
+    'reviewedAt'?: string | null;
+    'reviewedBy'?: object | null;
+    'reviewNote'?: object | null;
+    'createdAt': string;
+    'updatedAt': string;
+    'offerings': Array<InstructorOfferingDto>;
+    'profile'?: InstructorApplicationProfileDto | null;
+}
+export interface InstructorApplicationProfileDto {
+    'id': string;
+    'bio'?: object | null;
+    'location'?: object | null;
+    'status': string;
+    'user': InstructorApplicantUserDto;
+}
+export interface InstructorApplicationResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': InstructorApplicationDto;
+}
+export interface InstructorOfferingCategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+}
+export interface InstructorOfferingDto {
+    'id': string;
+    'profileId': string;
+    'applicationId'?: object | null;
+    'subcategoryId': string;
+    'title'?: object | null;
+    'description'?: object | null;
+    'hourlyRate': string;
+    'currency': string;
+    'experienceYears'?: object | null;
+    'status': InstructorOfferingDtoStatusEnum;
+    'reviewNote'?: object | null;
+    'reviewedAt'?: string | null;
+    'reviewedBy'?: object | null;
+    'createdAt': string;
+    'updatedAt': string;
+    'subcategory': InstructorOfferingSubcategoryDto;
+    'media': Array<OfferingMediaDto>;
+}
+
+export const InstructorOfferingDtoStatusEnum = {
+    Draft: 'DRAFT',
+    Pending: 'PENDING',
+    Approved: 'APPROVED',
+    Rejected: 'REJECTED',
+    ChangesRequested: 'CHANGES_REQUESTED',
+    Archived: 'ARCHIVED'
+} as const;
+
+export type InstructorOfferingDtoStatusEnum = typeof InstructorOfferingDtoStatusEnum[keyof typeof InstructorOfferingDtoStatusEnum];
+
+export interface InstructorOfferingResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': InstructorOfferingDto;
+}
+export interface InstructorOfferingSubcategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+    'category': InstructorOfferingCategoryDto;
+}
+export interface InstructorProfileDto {
+    'id': string;
+    'userId': string;
+    'bio'?: object | null;
+    'location'?: object | null;
+    'status': string;
+    'createdAt': string;
+    'updatedAt': string;
+    'offerings': Array<InstructorOfferingDto>;
+    'latestApplication'?: InstructorApplicationDto | null;
+}
+export interface InstructorProfileResponseDto {
+    'success': boolean;
+    'message': string;
+    'data'?: InstructorProfileDto | null;
+}
 export interface LoginDto {
     /**
      * The email address of the user trying to log in
@@ -169,6 +285,28 @@ export interface LoginDto {
 export interface MessageResponseDto {
     'success': boolean;
     'message': string;
+}
+export interface OfferingMediaDto {
+    'id': string;
+    'type': OfferingMediaDtoTypeEnum;
+    'storageKey': string;
+    'mimeType': string;
+    'sizeBytes': number;
+    'sortOrder': number;
+    'createdAt': string;
+}
+
+export const OfferingMediaDtoTypeEnum = {
+    Image: 'IMAGE',
+    Video: 'VIDEO'
+} as const;
+
+export type OfferingMediaDtoTypeEnum = typeof OfferingMediaDtoTypeEnum[keyof typeof OfferingMediaDtoTypeEnum];
+
+export interface OfferingMediaResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': OfferingMediaDto;
 }
 export interface PaginatedAdminUsersDataDto {
     'items': Array<AdminUserListItemDto>;
@@ -188,12 +326,41 @@ export interface PaginatedCategoryResponseDto {
     'message': string;
     'data': PaginatedCategoryDataDto;
 }
+export interface PaginatedInstructorApplicationsDataDto {
+    'items': Array<InstructorApplicationDto>;
+    'meta': PaginationMetaDto;
+}
+export interface PaginatedInstructorApplicationsResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PaginatedInstructorApplicationsDataDto;
+}
 export interface PaginationMetaDto {
     'page': number;
     'limit': number;
     'total': number;
     'hasNextPage': boolean;
     'hasPrevPage': boolean;
+}
+export interface PresignedDownloadDataDto {
+    'storageKey': string;
+    'viewUrl': string;
+    'expiresInSeconds': number;
+}
+export interface PresignedDownloadResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PresignedDownloadDataDto;
+}
+export interface PresignedUploadDataDto {
+    'storageKey': string;
+    'uploadUrl': string;
+    'expiresInSeconds': number;
+}
+export interface PresignedUploadResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PresignedUploadDataDto;
 }
 export interface RefreshDataDto {
     'accessToken': string;
@@ -244,6 +411,29 @@ export const RequestCategoryImageUploadDtoMimeTypeEnum = {
 
 export type RequestCategoryImageUploadDtoMimeTypeEnum = typeof RequestCategoryImageUploadDtoMimeTypeEnum[keyof typeof RequestCategoryImageUploadDtoMimeTypeEnum];
 
+export interface RequestOfferingMediaUploadDto {
+    'type': RequestOfferingMediaUploadDtoTypeEnum;
+    'mimeType': RequestOfferingMediaUploadDtoMimeTypeEnum;
+    'sizeBytes': number;
+    'sortOrder': number;
+}
+
+export const RequestOfferingMediaUploadDtoTypeEnum = {
+    Image: 'IMAGE',
+    Video: 'VIDEO'
+} as const;
+
+export type RequestOfferingMediaUploadDtoTypeEnum = typeof RequestOfferingMediaUploadDtoTypeEnum[keyof typeof RequestOfferingMediaUploadDtoTypeEnum];
+export const RequestOfferingMediaUploadDtoMimeTypeEnum = {
+    ImageJpeg: 'image/jpeg',
+    ImagePng: 'image/png',
+    ImageWebp: 'image/webp',
+    VideoMp4: 'video/mp4',
+    VideoWebm: 'video/webm'
+} as const;
+
+export type RequestOfferingMediaUploadDtoMimeTypeEnum = typeof RequestOfferingMediaUploadDtoMimeTypeEnum[keyof typeof RequestOfferingMediaUploadDtoMimeTypeEnum];
+
 export interface ResendOtpDataDto {
     'expiresIn': number;
     'resendAfter': number;
@@ -269,6 +459,19 @@ export interface ResetPasswordDto {
      */
     'newPassword': string;
 }
+export interface ReviewOfferingDto {
+    'decision': ReviewOfferingDtoDecisionEnum;
+    'reviewNote'?: string;
+}
+
+export const ReviewOfferingDtoDecisionEnum = {
+    Approved: 'APPROVED',
+    Rejected: 'REJECTED',
+    ChangesRequested: 'CHANGES_REQUESTED'
+} as const;
+
+export type ReviewOfferingDtoDecisionEnum = typeof ReviewOfferingDtoDecisionEnum[keyof typeof ReviewOfferingDtoDecisionEnum];
+
 
 export const Role = {
     Student: 'STUDENT',
@@ -353,6 +556,18 @@ export interface UpdateCategoryDto {
      */
     'sortOrder'?: number;
 }
+export interface UpdateInstructorProfileDto {
+    'bio'?: string;
+    'location'?: string;
+}
+export interface UpdateOfferingDto {
+    'subcategoryId'?: string;
+    'title'?: string;
+    'description'?: string;
+    'hourlyRate'?: number;
+    'currency'?: string;
+    'experienceYears'?: number;
+}
 export interface UpdateSubcategoryDto {
     /**
      * Updated name of the subcategory.
@@ -405,289 +620,6 @@ export interface VerifyOtpDto {
      */
     'otp': string;
 }
-
-/**
- * AdminApi - axios parameter creator
- */
-export const AdminApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @summary Get a single user by id for admin management
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerGetAdminUserById: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('adminControllerGetAdminUserById', 'id', id)
-            const localVarPath = `/api/admin/users/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get paginated users for admin management
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {Role} [role] Filter by role
-         * @param {AdminControllerGetAdminUsersStatusEnum} [status] Filter by account status
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerGetAdminUsers: async (page?: number, limit?: number, search?: string, role?: Role, status?: AdminControllerGetAdminUsersStatusEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/admin/users`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
-
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
-            }
-
-            if (search !== undefined) {
-                localVarQueryParameter['search'] = search;
-            }
-
-            if (role !== undefined) {
-                localVarQueryParameter['role'] = role;
-            }
-
-            if (status !== undefined) {
-                localVarQueryParameter['status'] = status;
-            }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Block or unblock a user
-         * @param {string} id 
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerUpdateAdminUserStatus: async (id: string, updateUserStatusDto: UpdateUserStatusDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('adminControllerUpdateAdminUserStatus', 'id', id)
-            // verify required parameter 'updateUserStatusDto' is not null or undefined
-            assertParamExists('adminControllerUpdateAdminUserStatus', 'updateUserStatusDto', updateUserStatusDto)
-            const localVarPath = `/api/admin/users/{id}/status`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateUserStatusDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * AdminApi - functional programming interface
- */
-export const AdminApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = AdminApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @summary Get a single user by id for admin management
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminUserResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminControllerGetAdminUserById(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminApi.adminControllerGetAdminUserById']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get paginated users for admin management
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {Role} [role] Filter by role
-         * @param {AdminControllerGetAdminUsersStatusEnum} [status] Filter by account status
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedAdminUsersResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminControllerGetAdminUsers(page, limit, search, role, status, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminApi.adminControllerGetAdminUsers']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Block or unblock a user
-         * @param {string} id 
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminUserStatusResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminControllerUpdateAdminUserStatus(id, updateUserStatusDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminApi.adminControllerUpdateAdminUserStatus']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * AdminApi - factory interface
- */
-export const AdminApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = AdminApiFp(configuration)
-    return {
-        /**
-         * 
-         * @summary Get a single user by id for admin management
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<AdminUserResponseDto> {
-            return localVarFp.adminControllerGetAdminUserById(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get paginated users for admin management
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {string} [search] Search by name or email
-         * @param {Role} [role] Filter by role
-         * @param {AdminControllerGetAdminUsersStatusEnum} [status] Filter by account status
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedAdminUsersResponseDto> {
-            return localVarFp.adminControllerGetAdminUsers(page, limit, search, role, status, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Block or unblock a user
-         * @param {string} id 
-         * @param {UpdateUserStatusDto} updateUserStatusDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): AxiosPromise<AdminUserStatusResponseDto> {
-            return localVarFp.adminControllerUpdateAdminUserStatus(id, updateUserStatusDto, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * AdminApi - object-oriented interface
- */
-export class AdminApi extends BaseAPI {
-    /**
-     * 
-     * @summary Get a single user by id for admin management
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig) {
-        return AdminApiFp(this.configuration).adminControllerGetAdminUserById(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get paginated users for admin management
-     * @param {number} [page] 
-     * @param {number} [limit] 
-     * @param {string} [search] Search by name or email
-     * @param {Role} [role] Filter by role
-     * @param {AdminControllerGetAdminUsersStatusEnum} [status] Filter by account status
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig) {
-        return AdminApiFp(this.configuration).adminControllerGetAdminUsers(page, limit, search, role, status, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Block or unblock a user
-     * @param {string} id 
-     * @param {UpdateUserStatusDto} updateUserStatusDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig) {
-        return AdminApiFp(this.configuration).adminControllerUpdateAdminUserStatus(id, updateUserStatusDto, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-export const AdminControllerGetAdminUsersStatusEnum = {
-    Active: 'active',
-    Blocked: 'blocked'
-} as const;
-export type AdminControllerGetAdminUsersStatusEnum = typeof AdminControllerGetAdminUsersStatusEnum[keyof typeof AdminControllerGetAdminUsersStatusEnum];
-
 
 /**
  * AdminCategoriesApi - axios parameter creator
@@ -1792,6 +1724,826 @@ export class AdminCategoriesApi extends BaseAPI {
 
 
 /**
+ * AdminInstructorManagementApi - axios parameter creator
+ */
+export const AdminInstructorManagementApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List instructor applications for admin review
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminInstructorControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerFindAll: async (page?: number, limit?: number, status?: AdminInstructorControllerFindAllStatusEnum, search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/instructor-applications`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get an instructor application for review
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerFindOne: async (applicationId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('adminInstructorControllerFindOne', 'applicationId', applicationId)
+            const localVarPath = `/api/admin/instructor-applications/{applicationId}`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Approve, reject, or request changes for an offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerReviewOffering: async (applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('adminInstructorControllerReviewOffering', 'applicationId', applicationId)
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('adminInstructorControllerReviewOffering', 'offeringId', offeringId)
+            // verify required parameter 'reviewOfferingDto' is not null or undefined
+            assertParamExists('adminInstructorControllerReviewOffering', 'reviewOfferingDto', reviewOfferingDto)
+            const localVarPath = `/api/admin/instructor-applications/{applicationId}/offerings/{offeringId}/review`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)))
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(reviewOfferingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminInstructorManagementApi - functional programming interface
+ */
+export const AdminInstructorManagementApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminInstructorManagementApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List instructor applications for admin review
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminInstructorControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminInstructorControllerFindAll(page?: number, limit?: number, status?: AdminInstructorControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedInstructorApplicationsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminInstructorControllerFindAll(page, limit, status, search, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminInstructorManagementApi.adminInstructorControllerFindAll']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get an instructor application for review
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminInstructorControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminInstructorControllerFindOne(applicationId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminInstructorManagementApi.adminInstructorControllerFindOne']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Approve, reject, or request changes for an offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminInstructorControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminInstructorControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminInstructorManagementApi.adminInstructorControllerReviewOffering']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminInstructorManagementApi - factory interface
+ */
+export const AdminInstructorManagementApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminInstructorManagementApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List instructor applications for admin review
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminInstructorControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerFindAll(page?: number, limit?: number, status?: AdminInstructorControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedInstructorApplicationsResponseDto> {
+            return localVarFp.adminInstructorControllerFindAll(page, limit, status, search, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get an instructor application for review
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
+            return localVarFp.adminInstructorControllerFindOne(applicationId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Approve, reject, or request changes for an offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
+            return localVarFp.adminInstructorControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminInstructorManagementApi - object-oriented interface
+ */
+export class AdminInstructorManagementApi extends BaseAPI {
+    /**
+     * 
+     * @summary List instructor applications for admin review
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {AdminInstructorControllerFindAllStatusEnum} [status] 
+     * @param {string} [search] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminInstructorControllerFindAll(page?: number, limit?: number, status?: AdminInstructorControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig) {
+        return AdminInstructorManagementApiFp(this.configuration).adminInstructorControllerFindAll(page, limit, status, search, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get an instructor application for review
+     * @param {string} applicationId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminInstructorControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig) {
+        return AdminInstructorManagementApiFp(this.configuration).adminInstructorControllerFindOne(applicationId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Approve, reject, or request changes for an offering
+     * @param {string} applicationId 
+     * @param {string} offeringId 
+     * @param {ReviewOfferingDto} reviewOfferingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminInstructorControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig) {
+        return AdminInstructorManagementApiFp(this.configuration).adminInstructorControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const AdminInstructorControllerFindAllStatusEnum = {
+    Pending: 'PENDING',
+    Approved: 'APPROVED',
+    Rejected: 'REJECTED',
+    ChangesRequested: 'CHANGES_REQUESTED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type AdminInstructorControllerFindAllStatusEnum = typeof AdminInstructorControllerFindAllStatusEnum[keyof typeof AdminInstructorControllerFindAllStatusEnum];
+
+
+/**
+ * AdminUserManagementApi - axios parameter creator
+ */
+export const AdminUserManagementApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get instructor applications
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminUserControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerFindAll: async (page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get instructor application by ID
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerFindOne: async (applicationId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('adminUserControllerFindOne', 'applicationId', applicationId)
+            const localVarPath = `/api/admin/{applicationId}`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerGetAdminUserById: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('adminUserControllerGetAdminUserById', 'id', id)
+            const localVarPath = `/api/admin/users/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get paginated users for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] Search by name or email
+         * @param {Role} [role] Filter by role
+         * @param {AdminUserControllerGetAdminUsersStatusEnum} [status] Filter by account status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerGetAdminUsers: async (page?: number, limit?: number, search?: string, role?: Role, status?: AdminUserControllerGetAdminUsersStatusEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/users`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (role !== undefined) {
+                localVarQueryParameter['role'] = role;
+            }
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Review instructor offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerReviewOffering: async (applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('adminUserControllerReviewOffering', 'applicationId', applicationId)
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('adminUserControllerReviewOffering', 'offeringId', offeringId)
+            // verify required parameter 'reviewOfferingDto' is not null or undefined
+            assertParamExists('adminUserControllerReviewOffering', 'reviewOfferingDto', reviewOfferingDto)
+            const localVarPath = `/api/admin/{applicationId}/offerings/{offeringId}/review`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)))
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(reviewOfferingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Block or unblock a user
+         * @param {string} id 
+         * @param {UpdateUserStatusDto} updateUserStatusDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerUpdateAdminUserStatus: async (id: string, updateUserStatusDto: UpdateUserStatusDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('adminUserControllerUpdateAdminUserStatus', 'id', id)
+            // verify required parameter 'updateUserStatusDto' is not null or undefined
+            assertParamExists('adminUserControllerUpdateAdminUserStatus', 'updateUserStatusDto', updateUserStatusDto)
+            const localVarPath = `/api/admin/users/{id}/status`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateUserStatusDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminUserManagementApi - functional programming interface
+ */
+export const AdminUserManagementApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminUserManagementApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get instructor applications
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminUserControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedInstructorApplicationsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerFindAll(page, limit, status, search, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerFindAll']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get instructor application by ID
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerFindOne(applicationId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerFindOne']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminUserResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerGetAdminUserById(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerGetAdminUserById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get paginated users for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] Search by name or email
+         * @param {Role} [role] Filter by role
+         * @param {AdminUserControllerGetAdminUsersStatusEnum} [status] Filter by account status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminUserControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedAdminUsersResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerGetAdminUsers(page, limit, search, role, status, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerGetAdminUsers']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Review instructor offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerReviewOffering']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Block or unblock a user
+         * @param {string} id 
+         * @param {UpdateUserStatusDto} updateUserStatusDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminUserControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminUserStatusResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerUpdateAdminUserStatus(id, updateUserStatusDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerUpdateAdminUserStatus']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminUserManagementApi - factory interface
+ */
+export const AdminUserManagementApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminUserManagementApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get instructor applications
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {AdminUserControllerFindAllStatusEnum} [status] 
+         * @param {string} [search] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedInstructorApplicationsResponseDto> {
+            return localVarFp.adminUserControllerFindAll(page, limit, status, search, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get instructor application by ID
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
+            return localVarFp.adminUserControllerFindOne(applicationId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a single user by id for admin management
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<AdminUserResponseDto> {
+            return localVarFp.adminUserControllerGetAdminUserById(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get paginated users for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] Search by name or email
+         * @param {Role} [role] Filter by role
+         * @param {AdminUserControllerGetAdminUsersStatusEnum} [status] Filter by account status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminUserControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedAdminUsersResponseDto> {
+            return localVarFp.adminUserControllerGetAdminUsers(page, limit, search, role, status, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Review instructor offering
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {ReviewOfferingDto} reviewOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
+            return localVarFp.adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Block or unblock a user
+         * @param {string} id 
+         * @param {UpdateUserStatusDto} updateUserStatusDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminUserControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig): AxiosPromise<AdminUserStatusResponseDto> {
+            return localVarFp.adminUserControllerUpdateAdminUserStatus(id, updateUserStatusDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminUserManagementApi - object-oriented interface
+ */
+export class AdminUserManagementApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get instructor applications
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {AdminUserControllerFindAllStatusEnum} [status] 
+     * @param {string} [search] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerFindAll(page, limit, status, search, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get instructor application by ID
+     * @param {string} applicationId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerFindOne(applicationId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a single user by id for admin management
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerGetAdminUserById(id: string, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerGetAdminUserById(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get paginated users for admin management
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {string} [search] Search by name or email
+     * @param {Role} [role] Filter by role
+     * @param {AdminUserControllerGetAdminUsersStatusEnum} [status] Filter by account status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerGetAdminUsers(page?: number, limit?: number, search?: string, role?: Role, status?: AdminUserControllerGetAdminUsersStatusEnum, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerGetAdminUsers(page, limit, search, role, status, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Review instructor offering
+     * @param {string} applicationId 
+     * @param {string} offeringId 
+     * @param {ReviewOfferingDto} reviewOfferingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Block or unblock a user
+     * @param {string} id 
+     * @param {UpdateUserStatusDto} updateUserStatusDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminUserControllerUpdateAdminUserStatus(id: string, updateUserStatusDto: UpdateUserStatusDto, options?: RawAxiosRequestConfig) {
+        return AdminUserManagementApiFp(this.configuration).adminUserControllerUpdateAdminUserStatus(id, updateUserStatusDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const AdminUserControllerFindAllStatusEnum = {
+    Pending: 'PENDING',
+    Approved: 'APPROVED',
+    Rejected: 'REJECTED',
+    ChangesRequested: 'CHANGES_REQUESTED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type AdminUserControllerFindAllStatusEnum = typeof AdminUserControllerFindAllStatusEnum[keyof typeof AdminUserControllerFindAllStatusEnum];
+export const AdminUserControllerGetAdminUsersStatusEnum = {
+    Active: 'active',
+    Blocked: 'blocked'
+} as const;
+export type AdminUserControllerGetAdminUsersStatusEnum = typeof AdminUserControllerGetAdminUsersStatusEnum[keyof typeof AdminUserControllerGetAdminUsersStatusEnum];
+
+
+/**
  * AuthenticationApi - axios parameter creator
  */
 export const AuthenticationApiAxiosParamCreator = function (configuration?: Configuration) {
@@ -2615,6 +3367,745 @@ export class AuthenticationApi extends BaseAPI {
      */
     public authControllerVerifyOtp(verifyOtpDto: VerifyOtpDto, options?: RawAxiosRequestConfig) {
         return AuthenticationApiFp(this.configuration).authControllerVerifyOtp(verifyOtpDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * InstructorOnboardingApi - axios parameter creator
+ */
+export const InstructorOnboardingApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Create an instructor offering
+         * @param {CreateOfferingDto} createOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerAddOffering: async (createOfferingDto: CreateOfferingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createOfferingDto' is not null or undefined
+            assertParamExists('instructorControllerAddOffering', 'createOfferingDto', createOfferingDto)
+            const localVarPath = `/api/instructor/onboarding/offerings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createOfferingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Confirm offering media upload
+         * @param {string} offeringId 
+         * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerConfirmMediaUpload: async (offeringId: string, confirmOfferingMediaUploadDto: ConfirmOfferingMediaUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerConfirmMediaUpload', 'offeringId', offeringId)
+            // verify required parameter 'confirmOfferingMediaUploadDto' is not null or undefined
+            assertParamExists('instructorControllerConfirmMediaUpload', 'confirmOfferingMediaUploadDto', confirmOfferingMediaUploadDto)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}/media/confirm`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(confirmOfferingMediaUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create offering media upload URL
+         * @param {string} offeringId 
+         * @param {RequestOfferingMediaUploadDto} requestOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerCreateMediaUploadUrl: async (offeringId: string, requestOfferingMediaUploadDto: RequestOfferingMediaUploadDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerCreateMediaUploadUrl', 'offeringId', offeringId)
+            // verify required parameter 'requestOfferingMediaUploadDto' is not null or undefined
+            assertParamExists('instructorControllerCreateMediaUploadUrl', 'requestOfferingMediaUploadDto', requestOfferingMediaUploadDto)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}/media/upload-url`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(requestOfferingMediaUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get offering media view URL
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetMediaViewUrl: async (offeringId: string, mediaId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerGetMediaViewUrl', 'offeringId', offeringId)
+            // verify required parameter 'mediaId' is not null or undefined
+            assertParamExists('instructorControllerGetMediaViewUrl', 'mediaId', mediaId)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}/media/{mediaId}/view-url`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)))
+                .replace(`{${"mediaId"}}`, encodeURIComponent(String(mediaId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get instructor onboarding workspace
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetWorkspace: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructor/onboarding`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Remove offering media
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerRemoveMedia: async (offeringId: string, mediaId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerRemoveMedia', 'offeringId', offeringId)
+            // verify required parameter 'mediaId' is not null or undefined
+            assertParamExists('instructorControllerRemoveMedia', 'mediaId', mediaId)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}/media/{mediaId}`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)))
+                .replace(`{${"mediaId"}}`, encodeURIComponent(String(mediaId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Remove an instructor offering
+         * @param {string} offeringId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerRemoveOffering: async (offeringId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerRemoveOffering', 'offeringId', offeringId)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create or update instructor profile
+         * @param {UpdateInstructorProfileDto} updateInstructorProfileDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerSaveProfile: async (updateInstructorProfileDto: UpdateInstructorProfileDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'updateInstructorProfileDto' is not null or undefined
+            assertParamExists('instructorControllerSaveProfile', 'updateInstructorProfileDto', updateInstructorProfileDto)
+            const localVarPath = `/api/instructor/onboarding/profile`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateInstructorProfileDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Submit instructor application
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerSubmitApplication: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructor/onboarding/submit`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update an instructor offering
+         * @param {string} offeringId 
+         * @param {UpdateOfferingDto} updateOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerUpdateOffering: async (offeringId: string, updateOfferingDto: UpdateOfferingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('instructorControllerUpdateOffering', 'offeringId', offeringId)
+            // verify required parameter 'updateOfferingDto' is not null or undefined
+            assertParamExists('instructorControllerUpdateOffering', 'updateOfferingDto', updateOfferingDto)
+            const localVarPath = `/api/instructor/onboarding/offerings/{offeringId}`
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateOfferingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * InstructorOnboardingApi - functional programming interface
+ */
+export const InstructorOnboardingApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = InstructorOnboardingApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Create an instructor offering
+         * @param {CreateOfferingDto} createOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerAddOffering(createOfferingDto: CreateOfferingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorOfferingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerAddOffering(createOfferingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerAddOffering']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Confirm offering media upload
+         * @param {string} offeringId 
+         * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerConfirmMediaUpload(offeringId: string, confirmOfferingMediaUploadDto: ConfirmOfferingMediaUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OfferingMediaResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerConfirmMediaUpload(offeringId, confirmOfferingMediaUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerConfirmMediaUpload']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create offering media upload URL
+         * @param {string} offeringId 
+         * @param {RequestOfferingMediaUploadDto} requestOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerCreateMediaUploadUrl(offeringId: string, requestOfferingMediaUploadDto: RequestOfferingMediaUploadDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PresignedUploadResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerCreateMediaUploadUrl(offeringId, requestOfferingMediaUploadDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerCreateMediaUploadUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get offering media view URL
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerGetMediaViewUrl(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PresignedDownloadResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerGetMediaViewUrl(offeringId, mediaId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerGetMediaViewUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get instructor onboarding workspace
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerGetWorkspace(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorProfileResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerGetWorkspace(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerGetWorkspace']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Remove offering media
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerRemoveMedia(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerRemoveMedia(offeringId, mediaId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerRemoveMedia']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Remove an instructor offering
+         * @param {string} offeringId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerRemoveOffering(offeringId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerRemoveOffering(offeringId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerRemoveOffering']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create or update instructor profile
+         * @param {UpdateInstructorProfileDto} updateInstructorProfileDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerSaveProfile(updateInstructorProfileDto: UpdateInstructorProfileDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorProfileResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerSaveProfile(updateInstructorProfileDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerSaveProfile']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Submit instructor application
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerSubmitApplication(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerSubmitApplication(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerSubmitApplication']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update an instructor offering
+         * @param {string} offeringId 
+         * @param {UpdateOfferingDto} updateOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerUpdateOffering(offeringId: string, updateOfferingDto: UpdateOfferingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorOfferingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerUpdateOffering(offeringId, updateOfferingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerUpdateOffering']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * InstructorOnboardingApi - factory interface
+ */
+export const InstructorOnboardingApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = InstructorOnboardingApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Create an instructor offering
+         * @param {CreateOfferingDto} createOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerAddOffering(createOfferingDto: CreateOfferingDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorOfferingResponseDto> {
+            return localVarFp.instructorControllerAddOffering(createOfferingDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Confirm offering media upload
+         * @param {string} offeringId 
+         * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerConfirmMediaUpload(offeringId: string, confirmOfferingMediaUploadDto: ConfirmOfferingMediaUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<OfferingMediaResponseDto> {
+            return localVarFp.instructorControllerConfirmMediaUpload(offeringId, confirmOfferingMediaUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create offering media upload URL
+         * @param {string} offeringId 
+         * @param {RequestOfferingMediaUploadDto} requestOfferingMediaUploadDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerCreateMediaUploadUrl(offeringId: string, requestOfferingMediaUploadDto: RequestOfferingMediaUploadDto, options?: RawAxiosRequestConfig): AxiosPromise<PresignedUploadResponseDto> {
+            return localVarFp.instructorControllerCreateMediaUploadUrl(offeringId, requestOfferingMediaUploadDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get offering media view URL
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetMediaViewUrl(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): AxiosPromise<PresignedDownloadResponseDto> {
+            return localVarFp.instructorControllerGetMediaViewUrl(offeringId, mediaId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get instructor onboarding workspace
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetWorkspace(options?: RawAxiosRequestConfig): AxiosPromise<InstructorProfileResponseDto> {
+            return localVarFp.instructorControllerGetWorkspace(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Remove offering media
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerRemoveMedia(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.instructorControllerRemoveMedia(offeringId, mediaId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Remove an instructor offering
+         * @param {string} offeringId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerRemoveOffering(offeringId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.instructorControllerRemoveOffering(offeringId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create or update instructor profile
+         * @param {UpdateInstructorProfileDto} updateInstructorProfileDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerSaveProfile(updateInstructorProfileDto: UpdateInstructorProfileDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorProfileResponseDto> {
+            return localVarFp.instructorControllerSaveProfile(updateInstructorProfileDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Submit instructor application
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerSubmitApplication(options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
+            return localVarFp.instructorControllerSubmitApplication(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update an instructor offering
+         * @param {string} offeringId 
+         * @param {UpdateOfferingDto} updateOfferingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerUpdateOffering(offeringId: string, updateOfferingDto: UpdateOfferingDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorOfferingResponseDto> {
+            return localVarFp.instructorControllerUpdateOffering(offeringId, updateOfferingDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * InstructorOnboardingApi - object-oriented interface
+ */
+export class InstructorOnboardingApi extends BaseAPI {
+    /**
+     * 
+     * @summary Create an instructor offering
+     * @param {CreateOfferingDto} createOfferingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerAddOffering(createOfferingDto: CreateOfferingDto, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerAddOffering(createOfferingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Confirm offering media upload
+     * @param {string} offeringId 
+     * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerConfirmMediaUpload(offeringId: string, confirmOfferingMediaUploadDto: ConfirmOfferingMediaUploadDto, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerConfirmMediaUpload(offeringId, confirmOfferingMediaUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create offering media upload URL
+     * @param {string} offeringId 
+     * @param {RequestOfferingMediaUploadDto} requestOfferingMediaUploadDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerCreateMediaUploadUrl(offeringId: string, requestOfferingMediaUploadDto: RequestOfferingMediaUploadDto, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerCreateMediaUploadUrl(offeringId, requestOfferingMediaUploadDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get offering media view URL
+     * @param {string} offeringId 
+     * @param {string} mediaId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerGetMediaViewUrl(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerGetMediaViewUrl(offeringId, mediaId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get instructor onboarding workspace
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerGetWorkspace(options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerGetWorkspace(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Remove offering media
+     * @param {string} offeringId 
+     * @param {string} mediaId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerRemoveMedia(offeringId: string, mediaId: string, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerRemoveMedia(offeringId, mediaId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Remove an instructor offering
+     * @param {string} offeringId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerRemoveOffering(offeringId: string, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerRemoveOffering(offeringId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create or update instructor profile
+     * @param {UpdateInstructorProfileDto} updateInstructorProfileDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerSaveProfile(updateInstructorProfileDto: UpdateInstructorProfileDto, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerSaveProfile(updateInstructorProfileDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Submit instructor application
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerSubmitApplication(options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerSubmitApplication(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update an instructor offering
+     * @param {string} offeringId 
+     * @param {UpdateOfferingDto} updateOfferingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerUpdateOffering(offeringId: string, updateOfferingDto: UpdateOfferingDto, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerUpdateOffering(offeringId, updateOfferingDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AdminControllerGetAdminUsersStatusEnum, Role as RoleEnum, type Role, } from '@/api'
+import { AdminUserControllerGetAdminUsersStatusEnum, Role as RoleEnum, type Role, } from '@/api'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Avatar } from '@/components/ui/Avatar'
@@ -10,7 +10,7 @@ import { useAdminUsersQuery, useUpdateAdminUserStatusMutation, } from '@/feature
 
 const PAGE_SIZE = 10
 
-type UserStatus = (typeof AdminControllerGetAdminUsersStatusEnum)[keyof typeof AdminControllerGetAdminUsersStatusEnum]
+type UserStatus = (typeof AdminUserControllerGetAdminUsersStatusEnum)[keyof typeof AdminUserControllerGetAdminUsersStatusEnum]
 
 const getRoleBadgeVariant = (role: Role) => {
   if (role === 'ADMIN') return 'error'
@@ -31,7 +31,7 @@ export function ManageUsers() {
     : undefined
 
   const rawStatus = searchParams.get('status')
-  const status = Object.values(AdminControllerGetAdminUsersStatusEnum).includes(rawStatus as UserStatus,)
+  const status = Object.values(AdminUserControllerGetAdminUsersStatusEnum).includes(rawStatus as UserStatus,)
     ? (rawStatus as UserStatus)
     : undefined
 
@@ -176,8 +176,8 @@ export function ManageUsers() {
               className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 shadow-sm outline-none transition focus:border-kala-brown focus:ring-2 focus:ring-kala-brown/20"
             >
               <option value="">All statuses</option>
-              <option value={AdminControllerGetAdminUsersStatusEnum.Active}>Active</option>
-              <option value={AdminControllerGetAdminUsersStatusEnum.Blocked}>Blocked</option>
+              <option value={AdminUserControllerGetAdminUsersStatusEnum.Active}>Active</option>
+              <option value={AdminUserControllerGetAdminUsersStatusEnum.Blocked}>Blocked</option>
             </select>
           </label>
         </div>

@@ -12,6 +12,7 @@ import { JwtModule } from './shared/jwt/jwt.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
+import { InstructorModule } from './modules/instructor/instructor.module';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { CategoryModule } from './modules/category/category.module';
         limit: 60,
       },
     ]),
-    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, AdminModule, CategoryModule,
+    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, AdminModule, CategoryModule, InstructorModule
   ],
   providers: [{
     provide: APP_GUARD,

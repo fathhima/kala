@@ -20,6 +20,7 @@ enum InstructorProfileStatus {
   PENDING
   APPROVED
   REJECTED
+  CHANGES_REQUESTED
   SUSPENDED
 }
 
@@ -83,17 +84,17 @@ model Category {
 }
 
 model Subcategory {
-  id          String   @id @default(cuid())
-  categoryId  String
-  name        String
-  slug        String
-  description String?
-  imageUrl    String?
+  id              String   @id @default(cuid())
+  categoryId      String
+  name            String
+  slug            String
+  description     String?
+  imageUrl        String?
   imageStorageKey String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   category  Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   offerings InstructorOffering[]

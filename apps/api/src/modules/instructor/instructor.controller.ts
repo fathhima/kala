@@ -1,0 +1,113 @@
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserId } from '@/shared/decorators/user-id.decorator';
+import { MessageResponseDto } from '@/shared/dto/response/message-response.dto';
+import { InstructorService } from './instructor.service';
+import { UpdateInstructorProfileDto } from './dto/request/update-instructor-profile.dto';
+import { CreateOfferingDto } from './dto/request/create-offering.dto';
+import { UpdateOfferingDto } from './dto/request/update-offering.dto';
+import { RequestOfferingMediaUploadDto } from './dto/request/request-offering-media-upload.dto';
+import { ConfirmOfferingMediaUploadDto } from './dto/request/confirm-offering-media-upload.dto';
+import { InstructorApplicationResponseDto, InstructorOfferingResponseDto, InstructorProfileResponseDto, OfferingMediaResponseDto, PresignedDownloadResponseDto, PresignedUploadResponseDto } from './dto/response/instructor-response.dto';
+
+@ApiTags('Instructor onboarding')
+@Controller('instructor/onboarding')
+export class InstructorController {
+    constructor(private readonly instructorService: InstructorService) { }
+
+    @Get()
+    @ApiOperation({ summary: 'Get instructor onboarding workspace', })
+    @ApiOkResponse({ type: InstructorProfileResponseDto, })
+    async getWorkspace(@UserId() userId: string,): Promise<InstructorProfileResponseDto> {
+        const profile = await this.instructorService.getWorkspace(userId);
+
+        return InstructorProfileResponseDto.fromEntity('Instructor onboarding fetched successfully', profile,);
+    }
+
+    @Patch('profile')
+    @ApiOperation({ summary: 'Create or update instructor profile', })
+    @ApiOkResponse({ type: InstructorProfileResponseDto, })
+    async saveProfile(@UserId() userId: string, @Body() dto: UpdateInstructorProfileDto,): Promise<InstructorProfileResponseDto> {
+        const profile = await this.instructorService.saveProfile(userId, dto);
+
+        return InstructorProfileResponseDto.fromEntity('Instructor profile saved successfully', profile,);
+    }
+
+    @Post('offerings')
+    @ApiOperation({ summary: 'Create an instructor offering', })
+    @ApiOkResponse({ type: InstructorOfferingResponseDto, })
+    async addOffering(@UserId() userId: string, @Body() dto: CreateOfferingDto,): Promise<InstructorOfferingResponseDto> {
+        const offering = await this.instructorService.addOffering(userId, dto,);
+
+        return InstructorOfferingResponseDto.fromEntity('Offering created successfully', offering,);
+    }
+
+    @Patch('offerings/:offeringId')
+    @ApiOperation({ summary: 'Update an instructor offering', })
+    @ApiOkResponse({ type: InstructorOfferingResponseDto, })
+    async updateOffering(@UserId() userId: string, @Param('offeringId') offeringId: string, @Body() dto: UpdateOfferingDto,
+    ): Promise<InstructorOfferingResponseDto> {
+        const offering = await this.instructorService.updateOffering(userId, offeringId, dto,);
+
+        return InstructorOfferingResponseDto.fromEntity('Offering updated successfully', offering,);
+    }
+
+    @Delete('offerings/:offeringId')
+    @ApiOperation({ summary: 'Remove an instructor offering', })
+    @ApiOkResponse({ type: MessageResponseDto, })
+    async removeOffering(@UserId() userId: string, @Param('offeringId') offeringId: string,): Promise<MessageResponseDto> {
+        await this.instructorService.removeOffering(userId, offeringId);
+
+        return MessageResponseDto.success('Offering removed successfully',);
+    }
+
+    @Post('offerings/:offeringId/media/upload-url')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Create offering media upload URL', })
+    @ApiOkResponse({ type: PresignedUploadResponseDto, })
+    async createMediaUploadUrl(@UserId() userId: string, @Param('offeringId') offeringId: string,
+        @Body() dto: RequestOfferingMediaUploadDto,): Promise<PresignedUploadResponseDto> {
+        const upload = await this.instructorService.createMediaUploadUrl(userId, offeringId, dto,);
+
+        return PresignedUploadResponseDto.create(upload);
+    }
+
+    @Post('offerings/:offeringId/media/confirm')
+    @ApiOperation({ summary: 'Confirm offering media upload', })
+    @ApiOkResponse({ type: OfferingMediaResponseDto, })
+    async confirmMediaUpload(@UserId() userId: string, @Param('offeringId') offeringId: string,
+        @Body() dto: ConfirmOfferingMediaUploadDto,): Promise<OfferingMediaResponseDto> {
+        const media = await this.instructorService.confirmMediaUpload(userId, offeringId, dto,);
+
+        return OfferingMediaResponseDto.fromEntity('Offering media attached successfully', media,);
+    }
+
+    @Get('offerings/:offeringId/media/:mediaId/view-url')
+    @ApiOperation({ summary: 'Get offering media view URL', })
+    @ApiOkResponse({ type: PresignedDownloadResponseDto, })
+    async getMediaViewUrl(@UserId() userId: string, @Param('offeringId') offeringId: string, @Param('mediaId') mediaId: string,
+    ): Promise<PresignedDownloadResponseDto> {
+        const view = await this.instructorService.getMediaViewUrl(userId, offeringId, mediaId,);
+
+        return PresignedDownloadResponseDto.create(view);
+    }
+
+    @Delete('offerings/:offeringId/media/:mediaId')
+    @ApiOperation({ summary: 'Remove offering media', })
+    @ApiOkResponse({ type: MessageResponseDto, })
+    async removeMedia(@UserId() userId: string, @Param('offeringId') offeringId: string, @Param('mediaId') mediaId: string,
+    ): Promise<MessageResponseDto> {
+        await this.instructorService.removeMedia(userId, offeringId, mediaId,);
+
+        return MessageResponseDto.success('Offering media removed successfully',);
+    }
+
+    @Post('submit')
+    @ApiOperation({ summary: 'Submit instructor application', })
+    @ApiOkResponse({ type: InstructorApplicationResponseDto, })
+    async submitApplication(@UserId() userId: string,): Promise<InstructorApplicationResponseDto> {
+        const application = await this.instructorService.submitApplication(userId);
+
+        return InstructorApplicationResponseDto.fromEntity('Instructor application submitted successfully', application,);
+    }
+}

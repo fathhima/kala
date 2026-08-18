@@ -6,7 +6,7 @@ import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-stat
 import { UserEntity } from "@/modules/user/entities/user.entity";
 import { UserRole } from "@/shared/enums/role.enum";
 import { PaginatedResult } from "@/shared/types";
-import { ADMIN_USER_REPOSITORY, type AdminUserRepository } from "../repositories/interfaces/admin-user.repository";
+import { ADMIN_USER_REPOSITORY, type AdminUserRepository } from "../../user/repositories/interfaces/admin-user.repository";
 
 @Injectable()
 export class AdminUserService {

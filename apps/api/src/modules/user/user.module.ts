@@ -3,7 +3,7 @@ import { UserController } from './user.controller';
 import { PrismaUserRepository } from './repositories/prisma-user.repository';
 import { USER_REPOSITORY } from './repositories/interfaces/user.repository';
 import { UserService } from './user.service';
-import { ADMIN_USER_REPOSITORY } from '../admin/repositories/interfaces/admin-user.repository';
+import { ADMIN_USER_REPOSITORY } from './repositories/interfaces/admin-user.repository';
 
 @Module({
   controllers: [UserController],

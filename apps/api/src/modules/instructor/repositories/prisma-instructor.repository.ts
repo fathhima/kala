@@ -6,7 +6,7 @@ import { InstructorMapper } from '../mappers/instructor.mapper';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
 import { InstructorRepository } from './interfaces/instructor.repository';
 import { ReviewableOfferingStatus } from '../types/offering-status.type';
-import { InstructorReviewRepository } from './interfaces/instructor-review.repositoty';
+import { AdminInstructorRepository } from './interfaces/admin-instructor.repositoty';
 
 const offeringInclude = {
     media: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
@@ -38,7 +38,7 @@ const applicationInclude = {
 } satisfies Prisma.InstructorApplicationInclude;
 
 @Injectable()
-export class PrismaInstructorRepository implements InstructorRepository, InstructorReviewRepository {
+export class PrismaInstructorRepository implements InstructorRepository, AdminInstructorRepository {
     constructor(private readonly prisma: PrismaService) { }
 
     async findWorkspaceByUserId(userId: string,): Promise<InstructorProfileEntity | null> {

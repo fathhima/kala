@@ -1,6 +1,6 @@
 import { InstructorApplicationQueryDto } from "@/modules/instructor/dto/request/instructor-application-query.dto";
 import { InstructorApplicationEntity } from "@/modules/instructor/entities/instructor-profile.entity";
-import { INSTRUCTOR_REVIEW_REPOSITORY, type InstructorReviewRepository } from "@/modules/instructor/repositories/interfaces/instructor-review.repositoty";
+import { ADMIN_INSTRUCTOR_REPOSITORY, type AdminInstructorRepository } from "@/modules/instructor/repositories/interfaces/admin-instructor.repositoty";
 import { ReviewableOfferingStatus } from "@/modules/instructor/types/offering-status.type";
 import { PaginatedResult } from "@/shared/types";
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
@@ -8,8 +8,8 @@ import { BadRequestException, ConflictException, Inject, Injectable, NotFoundExc
 @Injectable()
 export class AdminInstructorService {
 
-    constructor(@Inject(INSTRUCTOR_REVIEW_REPOSITORY)
-    private readonly instructorReviewRepository: InstructorReviewRepository) { }
+    constructor(@Inject(ADMIN_INSTRUCTOR_REPOSITORY)
+    private readonly instructorReviewRepository: AdminInstructorRepository) { }
 
     async getApplicationsForAdmin(query: InstructorApplicationQueryDto,): Promise<PaginatedResult<InstructorApplicationEntity>> {
         return this.instructorReviewRepository.findApplicationsForAdmin({

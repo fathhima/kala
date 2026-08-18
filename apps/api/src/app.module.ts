@@ -23,7 +23,7 @@ import { InstructorModule } from './modules/instructor/instructor.module';
         limit: 60,
       },
     ]),
-    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, AdminModule, CategoryModule, InstructorModule
+    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, CategoryModule, AdminModule, InstructorModule
   ],
   providers: [{
     provide: APP_GUARD,

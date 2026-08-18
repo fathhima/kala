@@ -7,7 +7,7 @@ import { Injectable } from "@nestjs/common";
 import { UserEntity } from "../entities/user.entity";
 import { AdminUserListParams } from "../types/admin-user-list-params.type";
 import { PaginatedResult } from "@/shared/types";
-import { AdminUserRepository } from "@/modules/admin/repositories/interfaces/admin-user.repository";
+import { AdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.repository";
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository, AdminUserRepository {

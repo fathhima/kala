@@ -3,9 +3,9 @@ import { PaginatedResult } from '@/shared/types';
 import { InstructorApplicationEntity } from '../../entities/instructor-profile.entity';
 import type { ReviewableOfferingStatus } from '../../types/offering-status.type';
 
-export const INSTRUCTOR_REVIEW_REPOSITORY = Symbol('INSTRUCTOR_REVIEW_REPOSITORY',);
+export const ADMIN_INSTRUCTOR_REPOSITORY = Symbol('ADMIN_INSTRUCTOR_REPOSITORY',);
 
-export interface InstructorReviewRepository {
+export interface AdminInstructorRepository {
     findApplicationsForAdmin(input: {
         page: number;
         limit: number;

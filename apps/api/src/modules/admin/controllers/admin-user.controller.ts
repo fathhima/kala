@@ -9,9 +9,6 @@ import { AdminUserResponseDto } from "@/modules/user/dto/response/admin-user-det
 import { AdminUserStatusResponseDto } from "@/modules/user/dto/response/admin-user-status-response.dto";
 import { PaginatedAdminUsersResponseDto } from "@/modules/user/dto/response/admin-paginated-user-list.dto";
 import { AdminUserService } from "../services/admin-user.service";
-import { InstructorApplicationQueryDto } from "../../instructor/dto/request/instructor-application-query.dto";
-import { InstructorApplicationResponseDto, PaginatedInstructorApplicationsResponseDto } from "../../instructor/dto/response/instructor-response.dto";
-import { ReviewOfferingDto } from "../../instructor/dto/request/review-offering.dto";
 import { AdminInstructorService } from "../services/admin-instructor.service";
 
 @ApiTags("Admin user management")
@@ -71,39 +68,5 @@ export class AdminUserController {
                 : "User blocked successfully",
             user,
         });
-    }
-
-    @Get()
-    @ApiOperation({ summary: 'Get instructor applications', })
-    @ApiOkResponse({ type: PaginatedInstructorApplicationsResponseDto, })
-    async findAll(@Query() query: InstructorApplicationQueryDto,): Promise<PaginatedInstructorApplicationsResponseDto> {
-        const result = await this.adminInstructorService.getApplicationsForAdmin(query);
-
-        return PaginatedInstructorApplicationsResponseDto.fromResult('Instructor applications fetched successfully', result,);
-    }
-
-    @Get(':applicationId')
-    @ApiOperation({ summary: 'Get instructor application by ID', })
-    @ApiOkResponse({ type: InstructorApplicationResponseDto, })
-    async findOne(@Param('applicationId') applicationId: string,): Promise<InstructorApplicationResponseDto> {
-        const application = await this.adminInstructorService.getApplicationForAdmin(applicationId);
-
-        return InstructorApplicationResponseDto.fromEntity('Instructor application fetched successfully', application,);
-    }
-
-    @Patch(':applicationId/offerings/:offeringId/review')
-    @ApiOperation({ summary: 'Review instructor offering', })
-    @ApiOkResponse({ type: InstructorApplicationResponseDto, })
-    async reviewOffering(@Param('applicationId') applicationId: string, @Param('offeringId') offeringId: string,
-        @UserId() adminUserId: string, @Body() dto: ReviewOfferingDto,): Promise<InstructorApplicationResponseDto> {
-        const application = await this.adminInstructorService.reviewOffering(
-            applicationId,
-            offeringId,
-            adminUserId,
-            dto.decision,
-            dto.reviewNote,
-        );
-
-        return InstructorApplicationResponseDto.fromEntity('Offering review saved successfully', application,);
     }
 }

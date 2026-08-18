@@ -66,6 +66,31 @@ export class PrismaCategoryRepository implements CategoryRepository {
         return categories.map(CategoryMapper.toCategoryEntity);
     }
 
+    async findSelectable(): Promise<CategoryEntity[]> {
+        const categories = await this.prisma.category.findMany({
+            where: {
+                isActive: true,
+            },
+            include: {
+                subcategories: {
+                    where: {
+                        isActive: true,
+                    },
+                    orderBy: [
+                        { sortOrder: 'asc' },
+                        { name: 'asc' },
+                    ],
+                },
+            },
+            orderBy: [
+                { sortOrder: 'asc' },
+                { name: 'asc' },
+            ],
+        })
+
+        return categories.map(CategoryMapper.toCategoryEntity)
+    }
+
     async findById(categoryId: string): Promise<CategoryEntity | null> {
         const category = await this.prisma.category.findUnique({
             where: { id: categoryId },

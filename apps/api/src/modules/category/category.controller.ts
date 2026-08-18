@@ -34,6 +34,15 @@ export class CategoryController {
         return PaginatedCategoryResponseDto.fromResult('Categories fetched successfully', result,)
     }
 
+    @Get()
+    @ApiOperation({ summary: 'Get selectable categories and subcategories', })
+    @ApiOkResponse({ type: CategoryListResponseDto, })
+    async findSelectable(): Promise<CategoryListResponseDto> {
+        const categories = await this.categoryService.findSelectable()
+
+        return CategoryListResponseDto.fromEntities('Selectable categories fetched successfully', categories,)
+    }
+
     @Post()
     @ApiOperation({ summary: 'Create a category' })
     @ApiCreatedResponse({ type: CategoryResponseDto })

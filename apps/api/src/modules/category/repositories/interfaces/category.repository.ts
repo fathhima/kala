@@ -11,8 +11,10 @@ export const CATEGORY_REPOSITORY = Symbol('CATEGORY_REPOSITORY');
 
 export interface CategoryRepository {
     findManyForAdmin(params: CategoryListParams): Promise<PaginatedResult<CategoryEntity>>
-    
+
     findAll(): Promise<CategoryEntity[]>;
+
+    findSelectable(): Promise<CategoryEntity[]>
 
     findById(categoryId: string): Promise<CategoryEntity | null>;
 

@@ -76,16 +76,16 @@ export class InstructorOfferingDto {
     @ApiProperty()
     profileId!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     applicationId?: string | null;
 
     @ApiProperty()
     subcategoryId!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     title?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     description?: string | null;
 
     @ApiProperty()
@@ -94,13 +94,13 @@ export class InstructorOfferingDto {
     @ApiProperty()
     currency!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: Number, nullable: true })
     experienceYears?: number | null;
 
     @ApiProperty({ enum: OFFERING_STATUSES })
     status!: (typeof OFFERING_STATUSES)[number];
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     reviewNote?: string | null;
 
     @ApiPropertyOptional({
@@ -110,7 +110,7 @@ export class InstructorOfferingDto {
     })
     reviewedAt?: Date | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     reviewedBy?: string | null;
 
     @ApiProperty({
@@ -173,7 +173,7 @@ export class InstructorApplicantUserDto {
     @ApiProperty()
     email!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     imageUrl?: string | null;
 
     @ApiProperty({
@@ -187,10 +187,10 @@ export class InstructorApplicationProfileDto {
     @ApiProperty()
     id!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     bio?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     location?: string | null;
 
     @ApiProperty()
@@ -239,10 +239,10 @@ export class InstructorApplicationDto {
     })
     reviewedAt?: Date | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     reviewedBy?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     reviewNote?: string | null;
 
     @ApiProperty({
@@ -292,10 +292,10 @@ export class InstructorProfileDto {
     @ApiProperty()
     userId!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     bio?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     location?: string | null;
 
     @ApiProperty()

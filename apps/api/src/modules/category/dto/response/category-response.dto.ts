@@ -17,13 +17,13 @@ export class SubcategoryDto {
     @ApiProperty()
     slug!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     description?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     imageUrl?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     imageStorageKey?: string | null;
 
     @ApiProperty()
@@ -65,13 +65,13 @@ export class CategoryDto {
     @ApiProperty()
     slug!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     description?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     imageUrl?: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     imageStorageKey?: string | null;
 
     @ApiProperty()

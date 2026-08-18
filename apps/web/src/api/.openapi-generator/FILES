@@ -20,6 +20,7 @@ docs/CategoryImageUploadDataDto.md
 docs/CategoryImageUploadResponseDto.md
 docs/CategoryImageViewDataDto.md
 docs/CategoryImageViewResponseDto.md
+docs/CategoryListResponseDto.md
 docs/CategoryResponseDto.md
 docs/ConfirmCategoryImageUploadDto.md
 docs/ConfirmOfferingMediaUploadDto.md

@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **id** | **string** |  | [default to undefined]
 **name** | **string** |  | [default to undefined]
 **email** | **string** |  | [default to undefined]
-**imageUrl** | **object** |  | [optional] [default to undefined]
+**imageUrl** | **string** |  | [optional] [default to undefined]
 **roles** | **Array&lt;string&gt;** |  | [default to undefined]
 
 ## Example

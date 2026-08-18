@@ -10,7 +10,7 @@ All URIs are relative to *http://localhost:4000*
 |[**categoryControllerCreateCategoryImageUploadUrl**](#categorycontrollercreatecategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/image/upload-url | Create a temporary S3 upload URL for a category image|
 |[**categoryControllerCreateSubcategory**](#categorycontrollercreatesubcategory) | **POST** /api/admin/categories/{categoryId}/subcategories | Create a subcategory within a category|
 |[**categoryControllerCreateSubcategoryImageUploadUrl**](#categorycontrollercreatesubcategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/upload-url | Create a temporary S3 upload URL for a subcategory image|
-|[**categoryControllerFindAll**](#categorycontrollerfindall) | **GET** /api/admin/categories | Get paginated categories and subcategories for admin management|
+|[**categoryControllerFindSelectable**](#categorycontrollerfindselectable) | **GET** /api/admin/categories | Get selectable categories and subcategories|
 |[**categoryControllerFindSubcategories**](#categorycontrollerfindsubcategories) | **GET** /api/admin/categories/{categoryId}/subcategories | Get subcategories in a category|
 |[**categoryControllerGetCategoryImageViewUrl**](#categorycontrollergetcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/image/view-url | Create a temporary private S3 view URL for a category image|
 |[**categoryControllerGetSubcategoryImageViewUrl**](#categorycontrollergetsubcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/view-url | Create a temporary private S3 view URL for a subcategory image|
@@ -349,8 +349,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerFindAll**
-> PaginatedCategoryResponseDto categoryControllerFindAll()
+# **categoryControllerFindSelectable**
+> CategoryListResponseDto categoryControllerFindSelectable()
 
 
 ### Example
@@ -364,32 +364,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AdminCategoriesApi(configuration);
 
-let page: number; // (optional) (default to 1)
-let limit: number; // (optional) (default to 10)
-let search: string; // (optional) (default to undefined)
-let isActive: string; // (optional) (default to undefined)
-
-const { status, data } = await apiInstance.categoryControllerFindAll(
-    page,
-    limit,
-    search,
-    isActive
-);
+const { status, data } = await apiInstance.categoryControllerFindSelectable();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **page** | [**number**] |  | (optional) defaults to 1|
-| **limit** | [**number**] |  | (optional) defaults to 10|
-| **search** | [**string**] |  | (optional) defaults to undefined|
-| **isActive** | [**string**] |  | (optional) defaults to undefined|
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**PaginatedCategoryResponseDto**
+**CategoryListResponseDto**
 
 ### Authorization
 

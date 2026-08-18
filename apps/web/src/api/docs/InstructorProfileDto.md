@@ -7,8 +7,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [default to undefined]
 **userId** | **string** |  | [default to undefined]
-**bio** | **object** |  | [optional] [default to undefined]
-**location** | **object** |  | [optional] [default to undefined]
+**bio** | **string** |  | [optional] [default to undefined]
+**location** | **string** |  | [optional] [default to undefined]
 **status** | **string** |  | [default to undefined]
 **createdAt** | **string** |  | [default to undefined]
 **updatedAt** | **string** |  | [default to undefined]

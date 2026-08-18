@@ -2015,90 +2015,6 @@ export const AdminUserManagementApiAxiosParamCreator = function (configuration?:
     return {
         /**
          * 
-         * @summary Get instructor applications
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {AdminUserControllerFindAllStatusEnum} [status] 
-         * @param {string} [search] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerFindAll: async (page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/admin`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
-
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
-            }
-
-            if (status !== undefined) {
-                localVarQueryParameter['status'] = status;
-            }
-
-            if (search !== undefined) {
-                localVarQueryParameter['search'] = search;
-            }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get instructor application by ID
-         * @param {string} applicationId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerFindOne: async (applicationId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'applicationId' is not null or undefined
-            assertParamExists('adminUserControllerFindOne', 'applicationId', applicationId)
-            const localVarPath = `/api/admin/{applicationId}`
-                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @summary Get a single user by id for admin management
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -2188,49 +2104,6 @@ export const AdminUserManagementApiAxiosParamCreator = function (configuration?:
         },
         /**
          * 
-         * @summary Review instructor offering
-         * @param {string} applicationId 
-         * @param {string} offeringId 
-         * @param {ReviewOfferingDto} reviewOfferingDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerReviewOffering: async (applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'applicationId' is not null or undefined
-            assertParamExists('adminUserControllerReviewOffering', 'applicationId', applicationId)
-            // verify required parameter 'offeringId' is not null or undefined
-            assertParamExists('adminUserControllerReviewOffering', 'offeringId', offeringId)
-            // verify required parameter 'reviewOfferingDto' is not null or undefined
-            assertParamExists('adminUserControllerReviewOffering', 'reviewOfferingDto', reviewOfferingDto)
-            const localVarPath = `/api/admin/{applicationId}/offerings/{offeringId}/review`
-                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)))
-                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reviewOfferingDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @summary Block or unblock a user
          * @param {string} id 
          * @param {UpdateUserStatusDto} updateUserStatusDto 
@@ -2279,35 +2152,6 @@ export const AdminUserManagementApiFp = function(configuration?: Configuration) 
     return {
         /**
          * 
-         * @summary Get instructor applications
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {AdminUserControllerFindAllStatusEnum} [status] 
-         * @param {string} [search] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedInstructorApplicationsResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerFindAll(page, limit, status, search, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerFindAll']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get instructor application by ID
-         * @param {string} applicationId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerFindOne(applicationId, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerFindOne']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @summary Get a single user by id for admin management
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -2338,21 +2182,6 @@ export const AdminUserManagementApiFp = function(configuration?: Configuration) 
         },
         /**
          * 
-         * @summary Review instructor offering
-         * @param {string} applicationId 
-         * @param {string} offeringId 
-         * @param {ReviewOfferingDto} reviewOfferingDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorApplicationResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminUserManagementApi.adminUserControllerReviewOffering']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @summary Block or unblock a user
          * @param {string} id 
          * @param {UpdateUserStatusDto} updateUserStatusDto 
@@ -2374,29 +2203,6 @@ export const AdminUserManagementApiFp = function(configuration?: Configuration) 
 export const AdminUserManagementApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = AdminUserManagementApiFp(configuration)
     return {
-        /**
-         * 
-         * @summary Get instructor applications
-         * @param {number} [page] 
-         * @param {number} [limit] 
-         * @param {AdminUserControllerFindAllStatusEnum} [status] 
-         * @param {string} [search] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedInstructorApplicationsResponseDto> {
-            return localVarFp.adminUserControllerFindAll(page, limit, status, search, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get instructor application by ID
-         * @param {string} applicationId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
-            return localVarFp.adminUserControllerFindOne(applicationId, options).then((request) => request(axios, basePath));
-        },
         /**
          * 
          * @summary Get a single user by id for admin management
@@ -2423,18 +2229,6 @@ export const AdminUserManagementApiFactory = function (configuration?: Configura
         },
         /**
          * 
-         * @summary Review instructor offering
-         * @param {string} applicationId 
-         * @param {string} offeringId 
-         * @param {ReviewOfferingDto} reviewOfferingDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig): AxiosPromise<InstructorApplicationResponseDto> {
-            return localVarFp.adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @summary Block or unblock a user
          * @param {string} id 
          * @param {UpdateUserStatusDto} updateUserStatusDto 
@@ -2451,31 +2245,6 @@ export const AdminUserManagementApiFactory = function (configuration?: Configura
  * AdminUserManagementApi - object-oriented interface
  */
 export class AdminUserManagementApi extends BaseAPI {
-    /**
-     * 
-     * @summary Get instructor applications
-     * @param {number} [page] 
-     * @param {number} [limit] 
-     * @param {AdminUserControllerFindAllStatusEnum} [status] 
-     * @param {string} [search] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminUserControllerFindAll(page?: number, limit?: number, status?: AdminUserControllerFindAllStatusEnum, search?: string, options?: RawAxiosRequestConfig) {
-        return AdminUserManagementApiFp(this.configuration).adminUserControllerFindAll(page, limit, status, search, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get instructor application by ID
-     * @param {string} applicationId 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminUserControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig) {
-        return AdminUserManagementApiFp(this.configuration).adminUserControllerFindOne(applicationId, options).then((request) => request(this.axios, this.basePath));
-    }
-
     /**
      * 
      * @summary Get a single user by id for admin management
@@ -2504,19 +2273,6 @@ export class AdminUserManagementApi extends BaseAPI {
 
     /**
      * 
-     * @summary Review instructor offering
-     * @param {string} applicationId 
-     * @param {string} offeringId 
-     * @param {ReviewOfferingDto} reviewOfferingDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public adminUserControllerReviewOffering(applicationId: string, offeringId: string, reviewOfferingDto: ReviewOfferingDto, options?: RawAxiosRequestConfig) {
-        return AdminUserManagementApiFp(this.configuration).adminUserControllerReviewOffering(applicationId, offeringId, reviewOfferingDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @summary Block or unblock a user
      * @param {string} id 
      * @param {UpdateUserStatusDto} updateUserStatusDto 
@@ -2528,14 +2284,6 @@ export class AdminUserManagementApi extends BaseAPI {
     }
 }
 
-export const AdminUserControllerFindAllStatusEnum = {
-    Pending: 'PENDING',
-    Approved: 'APPROVED',
-    Rejected: 'REJECTED',
-    ChangesRequested: 'CHANGES_REQUESTED',
-    Cancelled: 'CANCELLED'
-} as const;
-export type AdminUserControllerFindAllStatusEnum = typeof AdminUserControllerFindAllStatusEnum[keyof typeof AdminUserControllerFindAllStatusEnum];
 export const AdminUserControllerGetAdminUsersStatusEnum = {
     Active: 'active',
     Blocked: 'blocked'

@@ -22,6 +22,7 @@ docs/CategoryImageViewDataDto.md
 docs/CategoryImageViewResponseDto.md
 docs/CategoryListResponseDto.md
 docs/CategoryResponseDto.md
+docs/ChangePasswordDto.md
 docs/ConfirmCategoryImageUploadDto.md
 docs/ConfirmOfferingMediaUploadDto.md
 docs/CreateCategoryDto.md
@@ -80,6 +81,7 @@ docs/UpdateCategoryDto.md
 docs/UpdateInstructorProfileDto.md
 docs/UpdateOfferingDto.md
 docs/UpdateSubcategoryDto.md
+docs/UpdateUserProfileDto.md
 docs/UpdateUserStatusDto.md
 docs/UsersApi.md
 docs/ValidateResetTokenDataDto.md

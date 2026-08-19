@@ -46,6 +46,7 @@ import { AdminBookingDetails } from "@/pages/admin/BookingDetails";
 import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 import { AdminPaymentDetails } from "@/pages/admin/PaymentDetails";
 import { InstructorOfferings } from "@/pages/instructor/Offerings";
+import { AccountSettings } from "@/pages/account/AccountSettings";
 
 const StudentApp = () => (
   <ProtectedRoute>
@@ -142,7 +143,8 @@ export const router = createBrowserRouter([
       // { path: 'payments', element: <PaymentHistory /> },
       // { path: 'settings', element: <StudentProfileSettings /> },
       // { path: 'change-password', element: <ChangePassword /> },
-      { path: 'become-instructor', element: <BecomeInstructor /> }
+      { path: 'become-instructor', element: <BecomeInstructor /> },
+      { path: 'settings', element: <AccountSettings /> },
     ]
   },
   // {
@@ -176,6 +178,7 @@ export const router = createBrowserRouter([
       // { path: 'reviews', element: <Reviews /> },
       // { path: 'payments', element: <InstructorPayments /> },
       // { path: 'settings', element: <InstructorProfileSettings /> },
+      { path: 'settings', element: <AccountSettings /> },
     ]
   },
   {

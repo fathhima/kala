@@ -9,6 +9,7 @@ export interface AuthUser {
     imageUrl?: string | null,
     isActive: boolean,
     isVerified: boolean
+    hasPassword: boolean
 }
 
 interface AuthState {

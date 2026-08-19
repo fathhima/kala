@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **imageUrl** | **object** |  | [default to undefined]
 **isVerified** | **boolean** |  | [default to undefined]
 **isActive** | **boolean** |  | [default to undefined]
+**hasPassword** | **boolean** |  | [default to undefined]
 
 ## Example
 
@@ -26,6 +27,7 @@ const instance: SafeUserDto = {
     imageUrl,
     isVerified,
     isActive,
+    hasPassword,
 };
 ```
 

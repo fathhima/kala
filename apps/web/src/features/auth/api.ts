@@ -21,7 +21,8 @@ const mapUser = (user: SafeUserDto | MeResponseDto): AuthUser => ({
     roles: user.roles,
     imageUrl: (user.imageUrl as string | null | undefined) ?? null,
     isActive: user.isActive,
-    isVerified: user.isVerified
+    isVerified: user.isVerified,
+    hasPassword: user.hasPassword
 })
 
 export const registerUser = async (payload: RegisterDto) => {

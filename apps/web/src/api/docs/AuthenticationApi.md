@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**authControllerChangePassword**](#authcontrollerchangepassword) | **PUT** /api/auth/password | Set or change the current account password|
 |[**authControllerForgotPassword**](#authcontrollerforgotpassword) | **POST** /api/auth/forgot-password | Send password reset link to email|
 |[**authControllerGoogleSignin**](#authcontrollergooglesignin) | **POST** /api/auth/google-signin | Sign in with Google|
 |[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | Login with email and password|
@@ -16,6 +17,57 @@ All URIs are relative to *http://localhost:4000*
 |[**authControllerResetPassword**](#authcontrollerresetpassword) | **POST** /api/auth/reset-password | Reset password using reset token|
 |[**authControllerValidateResetToken**](#authcontrollervalidateresettoken) | **POST** /api/auth/reset-password/validate | Validate password reset token|
 |[**authControllerVerifyOtp**](#authcontrollerverifyotp) | **POST** /api/auth/verify-otp | Verify OTP and create account|
+
+# **authControllerChangePassword**
+> MessageResponseDto authControllerChangePassword(changePasswordDto)
+
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration,
+    ChangePasswordDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+let changePasswordDto: ChangePasswordDto; //
+
+const { status, data } = await apiInstance.authControllerChangePassword(
+    changePasswordDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **changePasswordDto** | **ChangePasswordDto**|  | |
+
+
+### Return type
+
+**MessageResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **authControllerForgotPassword**
 > MessageResponseDto authControllerForgotPassword(forgotPasswordDto)

@@ -18,7 +18,7 @@ export class AdminInstructorService {
         return this.instructorReviewRepository.findApplicationsForAdmin({
             page: query.page,
             limit: query.limit,
-            status: query.status ?? 'PENDING',
+            status: query.status,
             search: query.search,
         });
     }

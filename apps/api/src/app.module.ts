@@ -13,6 +13,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
+import { PublicCatalogModule } from './modules/public-catelog/public-catelog.module';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { InstructorModule } from './modules/instructor/instructor.module';
         limit: 60,
       },
     ]),
-    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, CategoryModule, AdminModule, InstructorModule
+    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, CategoryModule, AdminModule, InstructorModule, PublicCatalogModule
   ],
   providers: [{
     provide: APP_GUARD,

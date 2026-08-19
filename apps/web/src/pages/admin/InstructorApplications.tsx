@@ -1,144 +1,204 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CheckCircle, XCircle, MapPin } from 'lucide-react'
-import { Card } from '../../components/ui/Card'
-import { Avatar } from '../../components/ui/Avatar'
-import { Badge } from '../../components/ui/Badge'
-import { Button } from '../../components/ui/Button'
-import { formatPrice } from '../../lib/utils'
-import { useAdminStore } from '../../stores/adminStore'
-import { cn } from '../../lib/utils'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { AdminInstructorControllerFindAllStatusEnum, type AdminInstructorControllerFindAllStatusEnum as ApplicationStatus, } from '@/api'
+import { Avatar } from '@/components/ui/Avatar'
+import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { useInstructorApplicationsQuery } from '@/features/admin/instructor-applications/hooks'
+import { getApiErrorResponse } from '@/lib/api-error'
 
-type Tab = 'PENDING' | 'APPROVED' | 'REJECTED'
+const PAGE_SIZE = 10
+
+const statusVariant = (status: string) => {
+  if (status === 'APPROVED') return 'success'
+  if (status === 'REJECTED') return 'error'
+  if (status === 'CHANGES_REQUESTED' || status === 'PENDING') return 'warning'
+  return 'default'
+}
 
 export function InstructorApplications() {
-  const {
-    applications,
-    approvedApplicationIds,
-    rejectedApplicationIds,
-    approveApplication,
-    rejectApplication,
-  } = useAdminStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Math.max(Number(searchParams.get('page') || '1'), 1)
+  const committedSearch = searchParams.get('search')?.trim() ?? ''
 
-  const [activeTab, setActiveTab] = useState<Tab>('PENDING')
+  const rawStatus = searchParams.get('status')
+  const status = Object.values(AdminInstructorControllerFindAllStatusEnum).includes(rawStatus as ApplicationStatus,)
+    ? (rawStatus as ApplicationStatus)
+    : undefined
 
-  const pendingApplications = applications.filter(
-    (app) => !approvedApplicationIds.includes(app.id) && !rejectedApplicationIds.includes(app.id),
+  const [searchInput, setSearchInput] = useState(committedSearch)
+
+  useEffect(() => {
+    setSearchInput(committedSearch)
+  }, [committedSearch])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const nextSearch = searchInput.trim()
+
+      if (nextSearch === committedSearch) return
+
+      const next = new URLSearchParams(searchParams)
+
+      if (nextSearch) next.set('search', nextSearch)
+      else next.delete('search')
+
+      next.set('page', '1')
+      setSearchParams(next, { replace: true })
+    }, 400)
+
+    return () => window.clearTimeout(timeout)
+  }, [searchInput, committedSearch, searchParams, setSearchParams])
+
+  const query = useMemo(() => ({
+      page,
+      limit: PAGE_SIZE,
+      status,
+      search: committedSearch || undefined,
+    }),
+    [page, status, committedSearch],
   )
-  const approvedApplications = applications.filter((app) => approvedApplicationIds.includes(app.id))
-  const rejectedApplications = applications.filter((app) => rejectedApplicationIds.includes(app.id))
 
-  const tabItems: { key: Tab; label: string; count: number; dot: string }[] = [
-    { key: 'PENDING',  label: 'Pending',  count: pendingApplications.length,  dot: 'bg-amber-400' },
-    { key: 'APPROVED', label: 'Approved', count: approvedApplications.length, dot: 'bg-green-500' },
-    { key: 'REJECTED', label: 'Rejected', count: rejectedApplications.length, dot: 'bg-red-500'   },
-  ]
+  const { data, isLoading, isError, error, isFetching } = useInstructorApplicationsQuery(query)
 
-  const visible =
-    activeTab === 'PENDING'  ? pendingApplications :
-    activeTab === 'APPROVED' ? approvedApplications :
-                               rejectedApplications
+  const updateStatus = (value: string) => {
+    const next = new URLSearchParams(searchParams)
 
-  const getStatus = (applicationId: string): Tab => {
-    if (approvedApplicationIds.includes(applicationId)) return 'APPROVED'
-    if (rejectedApplicationIds.includes(applicationId)) return 'REJECTED'
-    return 'PENDING'
+    if (value) next.set('status', value)
+    else next.delete('status')
+
+    next.set('page', '1')
+    setSearchParams(next)
   }
+
+  const updatePage = (nextPage: number) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('page', String(nextPage))
+    setSearchParams(next)
+  }
+
+  if (isLoading) {
+    return <div className="text-sm text-stone-500">Loading instructor applications…</div>
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="text-sm text-red-500">
+        {getApiErrorResponse(error, 'Failed to load instructor applications.')}
+      </div>
+    )
+  }
+
+  const totalPages = Math.max(Math.ceil(data.meta.total / data.meta.limit), 1)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-kala-brown">Instructor Applications</h1>
-        <p className="text-stone-500 text-sm mt-1">
-          {pendingApplications.length} pending · {approvedApplications.length} approved · {rejectedApplications.length} rejected
+        <p className="mt-1 text-sm text-stone-500">
+          {data.meta.total} application{data.meta.total === 1 ? '' : 's'}
+          {isFetching ? ' · Refreshing…' : ''}
         </p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-stone-200">
-        {tabItems.map(({ key, label, count, dot }) => (
-          <button
-            key={key}
-            onClick={() => setActiveTab(key)}
-            className={cn(
-              'flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
-              activeTab === key
-                ? 'border-kala-brown text-kala-brown'
-                : 'border-transparent text-stone-500 hover:text-stone-700',
-            )}
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-stone-500">Search</span>
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search by applicant name or email…"
+            className="h-10 rounded-lg border border-stone-200 bg-white px-3 text-sm"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-stone-500">Status</span>
+          <select
+            value={status ?? ''}
+            onChange={(event) => updateStatus(event.target.value)}
+            className="h-10 rounded-lg border border-stone-200 bg-white px-3 text-sm"
           >
-            <span className={cn('w-2 h-2 rounded-full shrink-0', dot)} />
-            {label}
-            <span className={cn(
-              'ml-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold',
-              activeTab === key ? 'bg-kala-brown text-white' : 'bg-stone-100 text-stone-600',
-            )}>
-              {count}
-            </span>
-          </button>
-        ))}
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="CHANGES_REQUESTED">Changes requested</option>
+          </select>
+        </label>
       </div>
 
-      {/* Tab content */}
-      {visible.length === 0 ? (
-        <div className="text-center py-14">
-          <p className="text-stone-500">No {activeTab.toLowerCase()} applications.</p>
-        </div>
+      {data.items.length === 0 ? (
+        <Card className="p-8 text-center text-sm text-stone-500">
+          No instructor applications found.
+        </Card>
       ) : (
-        <div className="space-y-5">
-          {visible.map((app) => (
-            (() => {
-              const status = getStatus(app.id)
-              const isApproved = status === 'APPROVED'
-              const isRejected = status === 'REJECTED'
+        <div className="space-y-4">
+          {data.items.map((application) => {
+            const applicant = application.profile?.user
 
-              return (
-            <Card key={app.id} className="p-6">
-              <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <Avatar name={app.user.name} src={app.user.avatarUrl} size="lg" />
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-stone-800">{app.user.name}</h3>
-                    <p className="text-sm text-stone-500">{app.user.email}</p>
-                    {app.location && (
-                      <div className="flex items-center gap-1 text-xs text-stone-400 mt-1">
-                        <MapPin size={11} /> {app.location}
+            return (
+              <Card key={application.id} className="p-5">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <Avatar
+                      name={applicant?.name ?? 'Applicant'}
+                      src={applicant?.imageUrl ?? undefined}
+                      size="lg"
+                    />
+
+                    <div className="min-w-0">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <h2 className="font-semibold text-stone-800">
+                          {applicant?.name ?? 'Unknown applicant'}
+                        </h2>
+                        <Badge variant={statusVariant(application.status)}>
+                          {application.status}
+                        </Badge>
                       </div>
-                    )}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {app.skills.map((skill) => <Badge key={skill.id}>{skill.name}</Badge>)}
-                    </div>
-                    <p className="text-sm font-semibold text-kala-terracotta mt-2">{formatPrice(app.pricing)}/session</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex gap-3 mt-5 pt-4 border-t border-stone-100">
-                <Link to={`/admin/applications/${app.id}`}>
-                  <Button variant="outline" className="gap-2">Details</Button>
-                </Link>
-                <Button
-                  onClick={() => approveApplication(app.id)}
-                  disabled={isApproved}
-                  className="gap-2 bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle size={15} /> {isApproved ? 'Approved' : 'Approve'}
-                </Button>
-                <Button
-                  onClick={() => rejectApplication(app.id)}
-                  disabled={isRejected}
-                  variant="destructive"
-                  className="gap-2"
-                >
-                  <XCircle size={15} /> {isRejected ? 'Rejected' : 'Reject'}
-                </Button>
-              </div>
-            </Card>
-              )
-            })()
-          ))}
+                      <p className="truncate text-sm text-stone-500">{applicant?.email}</p>
+                      <p className="mt-1 text-sm text-stone-500">
+                        {application.profile?.location || 'Location not supplied'} ·{' '}
+                        {application.offerings.length} offering
+                        {application.offerings.length === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link to={`/admin/applications/${application.id}`}>
+                    <Button variant="outline">Review application</Button>
+                  </Link>
+                </div>
+              </Card>
+            )
+          })}
         </div>
       )}
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-stone-500">
+          Page {data.meta.page} of {totalPages}
+        </p>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={page <= 1}
+            onClick={() => updatePage(page - 1)}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            disabled={page >= totalPages}
+            onClick={() => updatePage(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

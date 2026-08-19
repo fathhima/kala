@@ -81,6 +81,7 @@ docs/UpdateInstructorProfileDto.md
 docs/UpdateOfferingDto.md
 docs/UpdateSubcategoryDto.md
 docs/UpdateUserStatusDto.md
+docs/UsersApi.md
 docs/ValidateResetTokenDataDto.md
 docs/ValidateResetTokenDto.md
 docs/ValidateResetTokenResponseDto.md

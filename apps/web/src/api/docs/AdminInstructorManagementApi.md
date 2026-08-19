@@ -6,6 +6,7 @@ All URIs are relative to *http://localhost:4000*
 |------------- | ------------- | -------------|
 |[**adminInstructorControllerFindAll**](#admininstructorcontrollerfindall) | **GET** /api/admin/instructor-applications | List instructor applications for admin review|
 |[**adminInstructorControllerFindOne**](#admininstructorcontrollerfindone) | **GET** /api/admin/instructor-applications/{applicationId} | Get an instructor application for review|
+|[**adminInstructorControllerGetOfferingMediaViewUrl**](#admininstructorcontrollergetofferingmediaviewurl) | **GET** /api/admin/instructor-applications/{applicationId}/offerings/{offeringId}/media/{mediaId}/view-url | Get a signed offering-media URL for admin review|
 |[**adminInstructorControllerReviewOffering**](#admininstructorcontrollerreviewoffering) | **PATCH** /api/admin/instructor-applications/{applicationId}/offerings/{offeringId}/review | Approve, reject, or request changes for an offering|
 
 # **adminInstructorControllerFindAll**
@@ -117,6 +118,62 @@ No authorization required
 |-------------|-------------|------------------|
 |**200** |  |  -  |
 |**404** | Instructor application not found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **adminInstructorControllerGetOfferingMediaViewUrl**
+> PresignedDownloadResponseDto adminInstructorControllerGetOfferingMediaViewUrl()
+
+
+### Example
+
+```typescript
+import {
+    AdminInstructorManagementApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AdminInstructorManagementApi(configuration);
+
+let applicationId: string; // (default to undefined)
+let offeringId: string; // (default to undefined)
+let mediaId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.adminInstructorControllerGetOfferingMediaViewUrl(
+    applicationId,
+    offeringId,
+    mediaId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **applicationId** | [**string**] |  | defaults to undefined|
+| **offeringId** | [**string**] |  | defaults to undefined|
+| **mediaId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**PresignedDownloadResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

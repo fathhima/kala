@@ -1,100 +1,158 @@
+import { ArrowLeftRight, CheckCircle, Clock3, Plus, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Calendar, DollarSign, Star, TrendingUp, Clock, ArrowRight } from 'lucide-react'
-import { useInstructorStore } from '../../stores/instructorStore'
-import { useBookingStore } from '../../stores/bookingStore'
-import { Card } from '../../components/ui/Card'
-import { Avatar } from '../../components/ui/Avatar'
-import { Button } from '../../components/ui/Button'
-import { SlotCard } from '../../components/shared/SlotCard'
-import { formatPrice } from '../../lib/utils'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { useAuthStore } from '@/features/auth/store'
+import { useOnboardingWorkspaceQuery } from '@/features/instructor/hooks'
+
+const statusVariant = (
+  status: string,
+): 'default' | 'success' | 'warning' | 'error' => {
+  if (status === 'APPROVED') return 'success'
+  if (status === 'REJECTED') return 'error'
+  if (status === 'PENDING' || status === 'CHANGES_REQUESTED') return 'warning'
+  return 'default'
+}
 
 export function InstructorDashboard() {
-  const { profile, slots } = useInstructorStore()
-  const { bookings } = useBookingStore()
+  const user = useAuthStore((state) => state.user)
+  const { data: workspace, isLoading, isError } = useOnboardingWorkspaceQuery()
 
-  const myBookings = bookings.filter((b) => b.instructorId === profile?.id)
-  const upcoming = myBookings.filter((b) => b.status === 'CONFIRMED')
-  const completed = myBookings.filter((b) => b.status === 'COMPLETED')
-  const earnings = completed.reduce((sum, b) => sum + (b.payment?.amount || 0), 0)
-  const availableSlots = slots.filter((s) => s.status === 'AVAILABLE')
+  const offerings = workspace?.offerings ?? []
+  const approvedOfferings = offerings.filter(
+    (offering) => offering.status === 'APPROVED',
+  )
+  const pendingOfferings = offerings.filter(
+    (offering) => offering.status === 'PENDING',
+  )
+  const returnedOfferings = offerings.filter(
+    (offering) =>
+      offering.status === 'REJECTED' ||
+      offering.status === 'CHANGES_REQUESTED',
+  )
+
+  if (isLoading) {
+    return <div className="text-sm text-stone-500">Loading instructor dashboard…</div>
+  }
+
+  if (isError) {
+    return (
+      <div className="text-sm text-red-500">
+        Could not load instructor workspace.
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Avatar name={profile?.user.name || ''} src={profile?.user.avatarUrl} size="lg" />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-kala-brown">{profile?.user.name}</h1>
-          <p className="text-stone-500 text-sm">{profile?.skills.map((s) => s.name).join(' · ')}</p>
+          <h1 className="text-2xl font-bold text-kala-brown">
+            Instructor Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-stone-500">
+            Welcome, {user?.name ?? 'Instructor'}.
+          </p>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Bookings', value: myBookings.length, icon: <Calendar size={20} />, color: 'text-blue-600 bg-blue-50' },
-          { label: 'Earnings', value: formatPrice(earnings), icon: <DollarSign size={20} />, color: 'text-green-600 bg-green-50' },
-          { label: 'Average Rating', value: profile?.avgRating.toFixed(1) || '—', icon: <Star size={20} />, color: 'text-kala-amber bg-amber-50' },
-          { label: 'Upcoming', value: upcoming.length, icon: <TrendingUp size={20} />, color: 'text-purple-600 bg-purple-50' },
-        ].map((stat) => (
-          <Card key={stat.label} className="p-4">
-            <div className={`inline-flex p-2 rounded-xl mb-3 ${stat.color}`}>{stat.icon}</div>
-            <div className="text-2xl font-bold text-stone-800">{stat.value}</div>
-            <div className="text-xs text-stone-500 mt-0.5">{stat.label}</div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="p-5">
+          <CheckCircle className="mb-3 text-green-600" size={22} />
+          <p className="text-2xl font-bold text-stone-800">
+            {approvedOfferings.length}
+          </p>
+          <p className="text-sm text-stone-500">Approved offerings</p>
+        </Card>
+
+        <Card className="p-5">
+          <Clock3 className="mb-3 text-amber-600" size={22} />
+          <p className="text-2xl font-bold text-stone-800">
+            {pendingOfferings.length}
+          </p>
+          <p className="text-sm text-stone-500">Offerings under review</p>
+        </Card>
+
+        <Card className="p-5">
+          <Sparkles className="mb-3 text-red-500" size={22} />
+          <p className="text-2xl font-bold text-stone-800">
+            {returnedOfferings.length}
+          </p>
+          <p className="text-sm text-stone-500">Need your attention</p>
+        </Card>
+      </div>
+
+      <Card className="p-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-lg font-semibold text-stone-800">
+              Add another teaching skill
+            </h2>
+            <p className="mt-1 text-sm text-stone-500">
+              Create a new offering or improve one that was returned by an admin.
+            </p>
+          </div>
+
+          <Link to="/instructor/offerings">
+            <Button>
+              <Plus size={16} /> Manage offerings
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-stone-800">
+          Approved offerings
+        </h2>
+
+        {approvedOfferings.length === 0 ? (
+          <Card className="p-6 text-sm text-stone-500">
+            No approved offerings yet.
           </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Upcoming Sessions */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-kala-brown">Upcoming Sessions</h2>
-            <Link to="/instructor/sessions"><Button variant="ghost" size="sm">View All</Button></Link>
-          </div>
-          {upcoming.length > 0 ? (
-            <div className="space-y-3">
-              {upcoming.map((b) => (
-                <Card key={b.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-stone-800 text-sm">{b.studentName}</p>
-                      <p className="text-xs text-stone-400 flex items-center gap-1 mt-0.5">
-                        <Clock size={11} /> {b.slot.title}
-                      </p>
-                    </div>
-                    <ArrowRight size={16} className="text-stone-300" />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {approvedOfferings.map((offering) => (
+              <Card key={offering.id} className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-stone-800">
+                      {offering.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-stone-500">
+                      {offering.subcategory.category.name} ·{' '}
+                      {offering.subcategory.name}
+                    </p>
                   </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="p-6 text-center">
-              <Calendar size={28} className="text-stone-300 mx-auto mb-2" />
-              <p className="text-sm text-stone-500">No upcoming sessions</p>
-            </Card>
-          )}
-        </div>
 
-        {/* Available Slots */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-kala-brown">Your Slots</h2>
-            <Link to="/instructor/slots"><Button variant="ghost" size="sm">Manage</Button></Link>
+                  <Badge variant={statusVariant(offering.status)}>
+                    {offering.status}
+                  </Badge>
+                </div>
+
+                <p className="mt-3 line-clamp-3 text-sm text-stone-600">
+                  {offering.description}
+                </p>
+
+                <p className="mt-4 font-semibold text-kala-terracotta">
+                  ₹{Number(offering.hourlyRate).toLocaleString('en-IN')} / hour
+                </p>
+              </Card>
+            ))}
           </div>
-          {availableSlots.length > 0 ? (
-            <div className="space-y-3">
-              {availableSlots.slice(0, 3).map((slot) => <SlotCard key={slot.id} slot={slot} />)}
-            </div>
-          ) : (
-            <Card className="p-6 text-center">
-              <Calendar size={28} className="text-stone-300 mx-auto mb-2" />
-              <p className="text-sm text-stone-500 mb-3">No available slots</p>
-              <Link to="/instructor/slots"><Button size="sm">Add Slots</Button></Link>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
+
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-stone-800">
+          Teaching operations
+        </h2>
+        <p className="mt-1 text-sm text-stone-500">
+          Slots, bookings, payments, and reviews belong here after their backend APIs
+          are connected.
+        </p>
+      </Card>
     </div>
   )
 }

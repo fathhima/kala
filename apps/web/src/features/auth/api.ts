@@ -1,7 +1,12 @@
-import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, MeResponseDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
+import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
 import { apiClient, refreshClient } from "@/lib/axios";
 import { AuthUser } from "./store";
 import { ApiEnvelope } from "@/types/api-envelope";
+
+type MeResponseDto = SafeUserDto & {
+    createdAt?: string;
+    updatedAt?: string;
+};
 
 const config = new Configuration({
     basePath: import.meta.env.VITE_API_URL
@@ -70,7 +75,7 @@ export const getMe = async () => {
 }
 
 export const refreshSession = async () => {
-    const response = await refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/auth/refresh");
+    const response = await refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/api/auth/refresh");
 
     return response.data.data.accessToken;
 };

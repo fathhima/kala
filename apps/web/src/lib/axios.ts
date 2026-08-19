@@ -58,7 +58,7 @@ apiClient.interceptors.response.use((response) => response, async (error: AxiosE
 
     try {
         if (!refreshPromise) {
-            refreshPromise = refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/auth/refresh")
+            refreshPromise = refreshClient.post<ApiEnvelope<{ accessToken: string }>>("/api/auth/refresh")
                 .then((response) => response.data.data.accessToken);
         }
 

@@ -1,461 +1,657 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import { CheckCircle, Pencil, Plus, Trash2, X } from 'lucide-react'
+import type { CategoryDto, InstructorOfferingDto } from '@/api'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Input, Textarea } from '@/components/ui/Input'
+import { useSelectableCategoriesQuery } from '@/features/categories/hooks'
 import {
-  CheckCircle, Clock, ImagePlus, VideoIcon, X, Plus, Instagram,
-} from 'lucide-react'
-import { useSkillStore } from '../../stores/skillStore'
-import { useAuthStore } from '../../stores/authStore'
-import { Input, Textarea } from '../../components/ui/Input'
-import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
-import { cn } from '../../lib/utils'
+  useCancelInstructorApplicationMutation,
+  useCreateOfferingMutation,
+  useOnboardingWorkspaceQuery,
+  useOfferingMediaUrlQuery,
+  useRemoveOfferingMediaMutation,
+  useRemoveOfferingMutation,
+  useSaveInstructorProfileMutation,
+  useSubmitInstructorApplicationMutation,
+  useUpdateOfferingMutation,
+  useUploadOfferingMediaMutation,
+} from '@/features/instructor/hooks'
+import { getApiErrorResponse } from '@/lib/api-error'
 
-const skillEmojis: Record<string, string> = {
-  painting: '🎨', mehendi: '🌿', calligraphy: '✍️',
-  'resin-art': '💎', 'clay-modelling': '🏺', 'handmade-crafts': '🧶',
+type OfferingForm = {
+  categoryId: string
+  subcategoryId: string
+  title: string
+  description: string
+  hourlyRate: string
+  experienceYears: string
 }
 
-export function BecomeInstructor() {
-  const { skills } = useSkillStore()
-  const { user } = useAuthStore()
+const emptyOffering: OfferingForm = {
+  categoryId: '',
+  subcategoryId: '',
+  title: '',
+  description: '',
+  hourlyRate: '',
+  experienceYears: '',
+}
 
-  // Mock: first-time if user has no INSTRUCTOR role yet.
-  // In production, check if an instructor profile already exists via API.
-  const isFirstTime = !user?.roles.includes('INSTRUCTOR')
+const editableStatuses = new Set([
+  'DRAFT',
+  'REJECTED',
+  'CHANGES_REQUESTED',
+])
 
-  // First-time-only profile fields
-  const [bio, setBio] = useState('')
-  const [location, setLocation] = useState('')
+const statusVariant = (
+  status: string,
+): 'default' | 'success' | 'warning' | 'error' => {
+  if (status === 'APPROVED') return 'success'
+  if (status === 'REJECTED') return 'error'
+  if (status === 'PENDING' || status === 'CHANGES_REQUESTED') return 'warning'
+  return 'default'
+}
 
-  // Skill selection
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
-  const [showCustomInput, setShowCustomInput] = useState(false)
-  const [customSkill, setCustomSkill] = useState('')
-  const [confirmedCustomSkill, setConfirmedCustomSkill] = useState('')
+function MediaPreview({
+  offeringId,
+  mediaId,
+  type,
+}: {
+  offeringId: string
+  mediaId: string
+  type: 'IMAGE' | 'VIDEO'
+}) {
+  const { data: viewUrl, isLoading } = useOfferingMediaUrlQuery(
+    offeringId,
+    mediaId,
+  )
 
-  // Per-skill form fields
-  const [instagram, setInstagram] = useState('')
-  const [pricePerHour, setPricePerHour] = useState('')
-  const [photos, setPhotos] = useState<File[]>([])
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
-  const [videos, setVideos] = useState<File[]>([])
-
-  const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [errors, setErrors] = useState({ bio: '', location: '', skill: '', instagram: '', price: '' })
-
-  const photoInputRef = useRef<HTMLInputElement>(null)
-  const videoInputRef = useRef<HTMLInputElement>(null)
-
-  // Derived: what skill name is selected
-  const activePredefinedSkill = skills.find((s) => s.id === selectedSkillId)
-  const selectedSkillName = confirmedCustomSkill || activePredefinedSkill?.name || null
-
-  const handleSelectSkill = (id: string) => {
-    setSelectedSkillId(id)
-    setShowCustomInput(false)
-    setCustomSkill('')
-    setConfirmedCustomSkill('')
-    setErrors((e) => ({ ...e, skill: '' }))
-  }
-
-  const handleToggleCustom = () => {
-    setShowCustomInput(true)
-    setSelectedSkillId(null)
-    setConfirmedCustomSkill('')
-    setCustomSkill('')
-    setErrors((e) => ({ ...e, skill: '' }))
-  }
-
-  const handleAddCustomSkill = () => {
-    const trimmed = customSkill.trim()
-    if (!trimmed) return
-    setConfirmedCustomSkill(trimmed)
-    setCustomSkill('')
-    setShowCustomInput(false)
-    setErrors((e) => ({ ...e, skill: '' }))
-  }
-
-  const handleRemoveCustomSkill = () => {
-    setConfirmedCustomSkill('')
-    setShowCustomInput(false)
-    setCustomSkill('')
-  }
-
-  // Photos
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    const newFiles = files.slice(0, 10 - photos.length) // max 10 photos
-    setPhotos((prev) => [...prev, ...newFiles])
-    const previews = newFiles.map((f) => URL.createObjectURL(f))
-    setPhotoPreviews((prev) => [...prev, ...previews])
-    e.target.value = ''
-  }
-
-  const removePhoto = (index: number) => {
-    URL.revokeObjectURL(photoPreviews[index])
-    setPhotos((prev) => prev.filter((_, i) => i !== index))
-    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  // Videos
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    const newFiles = files.slice(0, 5 - videos.length) // max 5 videos
-    setVideos((prev) => [...prev, ...newFiles])
-    e.target.value = ''
-  }
-
-  const removeVideo = (index: number) => {
-    setVideos((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const formatBytes = (bytes: number) => {
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  const validate = () => {
-    const e = { bio: '', location: '', skill: '', instagram: '', price: '' }
-    if (isFirstTime && bio.trim().length < 20) e.bio = 'Please write at least 20 characters about yourself'
-    if (isFirstTime && !location.trim()) e.location = 'Please enter your city or location'
-    if (!selectedSkillName) e.skill = 'Please select or enter a skill'
-    if (!instagram.trim()) e.instagram = 'Instagram URL is required'
-    if (!pricePerHour || Number(pricePerHour) < 100) e.price = 'Enter a valid price (min ₹100)'
-    setErrors(e)
-    return !e.bio && !e.location && !e.skill && !e.instagram && !e.price
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setLoading(false)
-    setSubmitted(true)
-  }
-
-  if (submitted) {
+  if (isLoading) {
     return (
-      <div className="max-w-lg mx-auto text-center py-16">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-5">
-          <CheckCircle size={32} className="text-green-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-kala-brown mb-3">Application Submitted!</h2>
-        <p className="text-stone-500 leading-relaxed mb-2">
-          Your application to teach{' '}
-          <span className="font-semibold text-kala-brown">{selectedSkillName}</span> is on
-          pending review.
-        </p>
-        <p className="text-stone-400 text-sm mb-6">
-          We'll notify you once it's approved. This usually takes 1–2 business days.
-        </p>
-        <div className="flex items-center justify-center gap-2 text-sm text-kala-amber bg-amber-50 rounded-xl px-4 py-3">
-          <Clock size={16} /> Status: Pending Review
-        </div>
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-stone-100 text-xs text-stone-400">
+        Loading…
       </div>
     )
   }
 
+  if (!viewUrl) {
+    return (
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-stone-100 text-xs text-stone-400">
+        Unavailable
+      </div>
+    )
+  }
+
+  if (type === 'VIDEO') {
+    return (
+      <video
+        controls
+        src={viewUrl}
+        className="aspect-square w-full rounded-xl object-cover"
+      />
+    )
+  }
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <img
+      src={viewUrl}
+      alt="Offering portfolio"
+      className="aspect-square w-full rounded-xl object-cover"
+    />
+  )
+}
+
+function OfferingEditor({
+  categories,
+  initialValue,
+  saving,
+  onSave,
+  onCancel,
+}: {
+  categories: CategoryDto[]
+  initialValue: OfferingForm
+  saving: boolean
+  onSave: (form: OfferingForm) => Promise<void>
+  onCancel: () => void
+}) {
+  const [form, setForm] = useState(initialValue)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setForm(initialValue)
+  }, [initialValue])
+
+  const selectedCategory = categories.find(
+    (category) => category.id === form.categoryId,
+  )
+
+  const subcategories =
+    selectedCategory?.subcategories.filter((item) => item.isActive) ?? []
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError('')
+
+    if (
+      !form.subcategoryId ||
+      !form.title.trim() ||
+      !form.description.trim() ||
+      Number(form.hourlyRate) <= 0
+    ) {
+      setError('Complete all required offering fields.')
+      return
+    }
+
+    try {
+      await onSave(form)
+    } catch (requestError) {
+      setError(getApiErrorResponse(requestError, 'Could not save offering.'))
+    }
+  }
+
+  return (
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-stone-800">Offering</h2>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            <X size={15} /> Cancel
+          </Button>
+        </div>
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-stone-700">Category</span>
+            <select
+              value={form.categoryId}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  categoryId: event.target.value,
+                  subcategoryId: '',
+                }))
+              }
+              className="rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm"
+            >
+              <option value="">Select category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-stone-700">
+              Subcategory
+            </span>
+            <select
+              value={form.subcategoryId}
+              disabled={!form.categoryId}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  subcategoryId: event.target.value,
+                }))
+              }
+              className="rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm disabled:bg-stone-100"
+            >
+              <option value="">Select subcategory</option>
+              {subcategories.map((subcategory) => (
+                <option key={subcategory.id} value={subcategory.id}>
+                  {subcategory.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <Input
+          label="Title"
+          value={form.title}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, title: event.target.value }))
+          }
+        />
+
+        <Textarea
+          label="Description"
+          rows={4}
+          value={form.description}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              description: event.target.value,
+            }))
+          }
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Hourly rate (₹)"
+            type="number"
+            min={1}
+            value={form.hourlyRate}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                hourlyRate: event.target.value,
+              }))
+            }
+          />
+
+          <Input
+            label="Experience (years)"
+            type="number"
+            min={0}
+            max={80}
+            value={form.experienceYears}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                experienceYears: event.target.value,
+              }))
+            }
+          />
+        </div>
+
+        <Button type="submit" loading={saving}>
+          Save offering
+        </Button>
+      </form>
+    </Card>
+  )
+}
+
+export function BecomeInstructor({
+  instructorMode = false,
+}: {
+  instructorMode?: boolean
+}) {
+  const workspaceQuery = useOnboardingWorkspaceQuery()
+  const categoriesQuery = useSelectableCategoriesQuery()
+
+  const saveProfileMutation = useSaveInstructorProfileMutation()
+  const createOfferingMutation = useCreateOfferingMutation()
+  const updateOfferingMutation = useUpdateOfferingMutation()
+  const removeOfferingMutation = useRemoveOfferingMutation()
+  const uploadMediaMutation = useUploadOfferingMediaMutation()
+  const removeMediaMutation = useRemoveOfferingMediaMutation()
+  const submitMutation = useSubmitInstructorApplicationMutation()
+  const cancelMutation = useCancelInstructorApplicationMutation()
+
+  const [bio, setBio] = useState('')
+  const [location, setLocation] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [error, setError] = useState('')
+
+  const workspace = workspaceQuery.data
+  const offerings = workspace?.offerings ?? []
+  const categories = categoriesQuery.data ?? []
+  const latestApplication = workspace?.latestApplication
+  const isPending = latestApplication?.status === 'PENDING'
+
+  useEffect(() => {
+    setBio(workspace?.bio ?? '')
+    setLocation(workspace?.location ?? '')
+  }, [workspace?.bio, workspace?.location])
+
+  if (workspaceQuery.isLoading || categoriesQuery.isLoading) {
+    return <div className="text-sm text-stone-500">Loading onboarding…</div>
+  }
+
+  if (workspaceQuery.isError || categoriesQuery.isError) {
+    return (
+      <div className="text-sm text-red-500">
+        {getApiErrorResponse(
+          workspaceQuery.error ?? categoriesQuery.error,
+          'Could not load onboarding.',
+        )}
+      </div>
+    )
+  }
+
+  const toForm = (offering?: InstructorOfferingDto): OfferingForm => {
+    if (!offering) return emptyOffering
+
+    return {
+      categoryId: offering.subcategory.category.id,
+      subcategoryId: offering.subcategoryId,
+      title: offering.title ?? '',
+      description: offering.description ?? '',
+      hourlyRate: offering.hourlyRate,
+      experienceYears: offering.experienceYears?.toString() ?? '',
+    }
+  }
+
+  const saveProfile = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await saveProfileMutation.mutateAsync({
+        bio: bio.trim() || undefined,
+        location: location.trim() || undefined,
+      })
+    } catch (requestError) {
+      setError(getApiErrorResponse(requestError, 'Could not save profile.'))
+    }
+  }
+
+  const saveOffering = async (form: OfferingForm) => {
+    const payload = {
+      subcategoryId: form.subcategoryId,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      hourlyRate: Number(form.hourlyRate),
+      experienceYears: form.experienceYears
+        ? Number(form.experienceYears)
+        : undefined,
+      currency: 'INR',
+    }
+
+    if (editingId) {
+      await updateOfferingMutation.mutateAsync({
+        offeringId: editingId,
+        payload,
+      })
+    } else {
+      await createOfferingMutation.mutateAsync(payload)
+    }
+
+    setEditingId(null)
+    setAdding(false)
+  }
+
+  const uploadMedia = async (
+    offeringId: string,
+    files: FileList | null,
+  ) => {
+    if (!files) return
+
+    setError('')
+
+    try {
+      for (const [index, file] of Array.from(files).entries()) {
+        await uploadMediaMutation.mutateAsync({
+          offeringId,
+          file,
+          sortOrder: index,
+        })
+      }
+    } catch (requestError) {
+      setError(getApiErrorResponse(requestError, 'Could not upload media.'))
+    }
+  }
+
+  const cancelApplication = async () => {
+    if (!latestApplication) return
+
+    setError('')
+
+    try {
+      await cancelMutation.mutateAsync(latestApplication.id)
+    } catch (requestError) {
+      setError(getApiErrorResponse(requestError, 'Could not cancel application.'))
+    }
+  }
+
+  if (isPending && latestApplication) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-6">
+        <Card className="p-6">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="mt-0.5 text-amber-600" size={22} />
+            <div>
+              <h1 className="text-2xl font-bold text-kala-brown">
+                {instructorMode ? 'Offerings management' : 'Become an Instructor'}
+              </h1>
+
+              <p className="mt-1 text-sm text-stone-500">
+                {instructorMode
+                  ? 'Create a new offering, respond to admin feedback, and track every offering status.'
+                  : 'Build your profile, add teaching offerings, then submit them for review.'}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            className="mt-5"
+            variant="destructive"
+            loading={cancelMutation.isPending}
+            onClick={() => void cancelApplication()}
+          >
+            Withdraw application
+          </Button>
+        </Card>
+
+        {latestApplication.offerings.map((offering) => (
+          <Card key={offering.id} className="space-y-4 p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold text-stone-800">
+                {offering.title}
+              </h2>
+              <Badge variant={statusVariant(offering.status)}>
+                {offering.status}
+              </Badge>
+            </div>
+
+            <p className="text-sm text-stone-500">
+              {offering.subcategory.category.name} · {offering.subcategory.name}
+            </p>
+
+            <p className="text-sm text-stone-700">{offering.description}</p>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {offering.media.map((media) => (
+                <MediaPreview
+                  key={media.id}
+                  offeringId={offering.id}
+                  mediaId={media.id}
+                  type={media.type}
+                />
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  const editingOffering = offerings.find((item) => item.id === editingId)
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-kala-brown">Apply as Instructor</h1>
-        <p className="text-stone-500 text-sm mt-1">
-          Each application is for one skill. Fill in the details below and we'll review your application.
+        <h1 className="text-2xl font-bold text-kala-brown">
+          Become an Instructor
+        </h1>
+        <p className="mt-1 text-sm text-stone-500">
+          Build your profile, add teaching offerings, then submit them for review.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</div>
+      )}
 
-        {/* Your Profile — first-time only */}
-        {isFirstTime && (
-          <Card className="p-6">
-            <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-1">
-              Your Profile
-            </h2>
-            <p className="text-xs text-stone-400 mb-4">
-              The details will be shown to students browsing instructors.
-            </p>
-            <div className="space-y-4">
-              <Textarea
-                label="Bio"
-                placeholder="Tell students about your creative journey, experience, and teaching style…"
-                value={bio}
-                onChange={(e) => {
-                  setBio(e.target.value)
-                  setErrors((er) => ({ ...er, bio: '' }))
-                }}
-                rows={4}
-                error={errors.bio}
-                hint={`${bio.trim().length} / 20 characters minimum`}
-              />
-              <Input
-                label="City / Location"
-                placeholder="e.g. Mumbai, Maharashtra"
-                value={location}
-                onChange={(e) => {
-                  setLocation(e.target.value)
-                  setErrors((er) => ({ ...er, location: '' }))
-                }}
-                error={errors.location}
-              />
-            </div>
-          </Card>
-        )}
-
-        {/* Skill */}
+      {!instructorMode && (
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-1">
-            Skill
-          </h2>
-          <p className="text-xs text-stone-400 mb-4">Select the skill you want to teach.</p>
+          <form onSubmit={saveProfile} className="space-y-4">
+            <h2 className="text-lg font-semibold text-stone-800">Profile</h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {skills.map((skill) => {
-              const isSelected = selectedSkillId === skill.id && !confirmedCustomSkill
-              return (
-                <button
-                  type="button"
-                  key={skill.id}
-                  onClick={() => handleSelectSkill(skill.id)}
-                  className={cn(
-                    'flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all text-sm font-medium',
-                    isSelected
-                      ? 'border-kala-amber bg-amber-50 text-kala-brown'
-                      : 'border-stone-100 hover:border-stone-200 text-stone-600'
-                  )}
-                >
-                  <span className="text-base">{skillEmojis[skill.slug] || '🎭'}</span>
-                  {skill.name}
-                </button>
-              )
-            })}
-
-            {/* Confirmed custom skill tile */}
-            {confirmedCustomSkill ? (
-              <div className="flex items-center gap-2 p-3 rounded-xl border-2 border-kala-amber bg-amber-50 text-kala-brown text-sm font-medium">
-                <span className="text-base">🎭</span>
-                <span className="flex-1 truncate">{confirmedCustomSkill}</span>
-                <button
-                  type="button"
-                  onClick={handleRemoveCustomSkill}
-                  className="text-stone-400 hover:text-red-500 transition-colors flex-shrink-0"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-              /* Add your own toggle */
-              <button
-                type="button"
-                onClick={handleToggleCustom}
-                className={cn(
-                  'flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all text-sm font-medium',
-                  showCustomInput
-                    ? 'border-kala-amber bg-amber-50 text-kala-brown'
-                    : 'border-dashed border-stone-200 hover:border-kala-amber text-stone-400 hover:text-kala-brown'
-                )}
-              >
-                <Plus size={16} />
-                Add your own
-              </button>
-            )}
-          </div>
-
-          {/* Custom skill input + Add button */}
-          {showCustomInput && (
-            <div className="mt-4 flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder="e.g. Warli Painting, Macrame, Block Printing…"
-                  value={customSkill}
-                  onChange={(e) => {
-                    setCustomSkill(e.target.value)
-                    setErrors((er) => ({ ...er, skill: '' }))
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill() } }}
-                  autoFocus
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleAddCustomSkill}
-                disabled={!customSkill.trim()}
-                className="flex-shrink-0 self-start mt-0 px-4 py-2.5 rounded-xl bg-kala-amber text-white text-sm font-medium hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Add skill
-              </button>
-            </div>
-          )}
-
-          {errors.skill && (
-            <p className="text-xs text-red-500 mt-2">{errors.skill}</p>
-          )}
-        </Card>
-
-        {/* Skill Details */}
-        <Card className="p-6">
-          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-4">
-            Skill Details
-            {selectedSkillName && (
-              <span className="ml-2 text-kala-amber normal-case font-normal">
-                — {selectedSkillName}
-              </span>
-            )}
-          </h2>
-
-          <div className="space-y-4">
-            {/* Instagram */}
-            <div className="relative">
-              <Input
-                label="Instagram URL"
-                type="url"
-                placeholder="https://instagram.com/yourprofile"
-                value={instagram}
-                onChange={(e) => {
-                  setInstagram(e.target.value)
-                  setErrors((er) => ({ ...er, instagram: '' }))
-                }}
-                error={errors.instagram}
-                hint="Share your Instagram profile showcasing this skill"
-              />
-              <Instagram size={15} className="absolute right-3 top-9 text-stone-400" />
-            </div>
-
-            {/* Price */}
-            <Input
-              label="Session Price per Hour (₹)"
-              type="number"
-              placeholder="e.g. 799"
-              value={pricePerHour}
-              onChange={(e) => {
-                setPricePerHour(e.target.value)
-                setErrors((er) => ({ ...er, price: '' }))
-              }}
-              error={errors.price}
-              hint="Amount students will pay per 1-hour live session"
-              min={100}
+            <Textarea
+              label="Bio"
+              rows={4}
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
             />
-          </div>
+
+            <Input
+              label="Location"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+            />
+
+            <Button type="submit" loading={saveProfileMutation.isPending}>
+              Save profile
+            </Button>
+          </form>
         </Card>
+      )}
 
-        {/* Photos */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide">Photos</h2>
-            <span className="text-xs text-stone-400">{photos.length}/10</span>
-          </div>
-          <p className="text-xs text-stone-400 mb-4">
-            Upload photos of your work for this skill. 
-            This will be shown to students browsing instructors. 
-            PNG, JPG, WEBP up to 5 MB each.
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-stone-800">Offerings</h2>
+          <p className="text-sm text-stone-500">
+            Add each skill you want to teach as a separate offering.
           </p>
+        </div>
 
-          {/* Previews */}
-          {photoPreviews.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
-              {photoPreviews.map((src, i) => (
-                <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-stone-100">
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(i)}
-                    className="absolute top-1 right-1 p-0.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+        {!adding && !editingId && (
+          <Button onClick={() => setAdding(true)}>
+            <Plus size={16} /> Add offering
+          </Button>
+        )}
+      </div>
+
+      {(adding || editingId) && (
+        <OfferingEditor
+          categories={categories}
+          initialValue={toForm(editingOffering)}
+          saving={
+            createOfferingMutation.isPending || updateOfferingMutation.isPending
+          }
+          onSave={saveOffering}
+          onCancel={() => {
+            setAdding(false)
+            setEditingId(null)
+          }}
+        />
+      )}
+
+      {offerings.map((offering) => {
+        const editable = editableStatuses.has(offering.status)
+
+        return (
+          <Card key={offering.id} className="space-y-4 p-6">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-semibold text-stone-800">
+                    {offering.title}
+                  </h3>
+                  <Badge variant={statusVariant(offering.status)}>
+                    {offering.status}
+                  </Badge>
+                </div>
+
+                <p className="mt-1 text-sm text-stone-500">
+                  {offering.subcategory.category.name} ·{' '}
+                  {offering.subcategory.name}
+                </p>
+
+                <p className="mt-2 text-sm text-stone-700">
+                  {offering.description}
+                </p>
+
+                <p className="mt-2 font-medium text-kala-terracotta">
+                  ₹{Number(offering.hourlyRate).toLocaleString('en-IN')} / hour
+                </p>
+              </div>
+
+              {editable && (
+                <div className="flex h-fit gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingId(offering.id)}
                   >
-                    <X size={12} />
-                  </button>
+                    <Pencil size={14} /> Edit
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    loading={removeOfferingMutation.isPending}
+                    onClick={() =>
+                      void removeOfferingMutation.mutateAsync(offering.id)
+                    }
+                  >
+                    <Trash2 size={14} /> Delete
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {offering.reviewNote && (
+              <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+                <span className="font-semibold">Admin feedback:</span>{' '}
+                {offering.reviewNote}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {offering.media.map((media) => (
+                <div key={media.id} className="relative">
+                  <MediaPreview
+                    offeringId={offering.id}
+                    mediaId={media.id}
+                    type={media.type}
+                  />
+
+                  {editable && (
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 rounded-full bg-black/70 p-1 text-white"
+                      onClick={() =>
+                        void removeMediaMutation.mutateAsync({
+                          offeringId: offering.id,
+                          mediaId: media.id,
+                        })
+                      }
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
-          )}
 
-          {photos.length < 10 && (
-            <>
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handlePhotoChange}
-              />
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed border-stone-200 rounded-xl hover:border-kala-amber hover:bg-amber-50/40 transition-colors text-stone-400 hover:text-kala-brown"
-              >
-                <ImagePlus size={24} />
-                <span className="text-sm">Click to add photos</span>
-              </button>
-            </>
-          )}
-        </Card>
+            {editable && (
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-stone-700">
+                  Upload images or videos
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                  onChange={(event) => {
+                    void uploadMedia(offering.id, event.target.files)
+                    event.target.value = ''
+                  }}
+                />
+              </label>
+            )}
+          </Card>
+        )
+      })}
 
-        {/* Videos */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide">Videos</h2>
-            <span className="text-xs text-stone-400">{videos.length}/5</span>
-          </div>
-          <p className="text-xs text-stone-400 mb-4">
-            Upload short demo videos of your skill. This will be shown to students browsing instructors. MP4, MOV up to 50 MB each.
-          </p>
-
-          {/* Video list */}
-          {videos.length > 0 && (
-            <div className="space-y-2 mb-4">
-              {videos.map((file, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 px-3 py-2.5 bg-stone-50 rounded-xl border border-stone-100"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <VideoIcon size={15} className="text-kala-amber" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-stone-700 truncate">{file.name}</p>
-                    <p className="text-xs text-stone-400">{formatBytes(file.size)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeVideo(i)}
-                    className="p-1 text-stone-400 hover:text-red-500 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {videos.length < 5 && (
-            <>
-              <input
-                ref={videoInputRef}
-                type="file"
-                accept="video/*"
-                multiple
-                className="hidden"
-                onChange={handleVideoChange}
-              />
-              <button
-                type="button"
-                onClick={() => videoInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed border-stone-200 rounded-xl hover:border-kala-amber hover:bg-amber-50/40 transition-colors text-stone-400 hover:text-kala-brown"
-              >
-                <VideoIcon size={24} />
-                <span className="text-sm">Click to add videos</span>
-              </button>
-            </>
-          )}
-        </Card>
-
-        <Button type="submit" loading={loading} size="lg" className="w-full">
-          Submit Application
-        </Button>
-      </form>
+      <Button
+        size="lg"
+        className="w-full"
+        loading={submitMutation.isPending}
+        disabled={offerings.length === 0}
+        onClick={() => void submitMutation.mutateAsync()}
+      >
+        Submit application
+      </Button>
     </div>
   )
 }

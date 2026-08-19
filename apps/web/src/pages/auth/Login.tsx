@@ -10,6 +10,12 @@ import { getApiErrorResponse } from '@/lib/api-error'
 import { GoogleLogin } from '@react-oauth/google'
 import { Loginfields, validateLoginForm } from '@/features/auth/validation'
 
+const getPostLoginPath = (roles: string[]) => {
+  if (roles.includes('ADMIN')) return '/admin'
+  if (roles.includes('INSTRUCTOR')) return '/instructor'
+  return '/'
+}
+
 export function Login() {
   const navigate = useNavigate()
   const loginMutation = useLoginMutation()
@@ -55,7 +61,7 @@ export function Login() {
     try {
       const authData = await loginMutation.mutateAsync(formData)
       setAuth(authData.user, authData.accessToken)
-      navigate('/', { replace: true })
+      navigate(getPostLoginPath(authData.user.roles), { replace: true })
     } catch (error) {
       setErrorMessage(getApiErrorResponse(error, 'Login failed'))
     }
@@ -77,7 +83,7 @@ export function Login() {
       });
 
       setAuth(authData.user, authData.accessToken);
-      navigate('/', { replace: true });
+      navigate(getPostLoginPath(authData.user.roles), { replace: true })
     } catch (error) {
       setErrorMessage(getApiErrorResponse(error, "Google sign-in failed"));
     }

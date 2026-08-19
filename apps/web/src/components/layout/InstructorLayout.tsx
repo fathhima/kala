@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, Image, Sparkles, Star, Settings, Menu, LogOut, Clock, CreditCard, ArrowLeftRight } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Image, Sparkles, Star, Settings, Menu, LogOut, Clock, CreditCard, ArrowLeftRight, GraduationCap } from 'lucide-react'
 import { DashboardSidebar } from './DashboardSidebar'
 import { Avatar } from '../ui/Avatar'
 import { useAuthStore } from '@/features/auth/store'
@@ -8,10 +8,11 @@ import { useLogoutMutation } from '@/features/auth/hooks'
 
 const navItems = [
   { label: 'Overview', path: '/instructor', icon: <LayoutDashboard size={18} /> },
+  { label: 'Skills', path: '/instructor/skills', icon: <Sparkles size={18} /> },
+  { label: 'Portfolio', path: '/instructor/portfolio', icon: <Image size={18} /> },
+  { label: 'Offerings', path: '/instructor/offerings', icon: <Sparkles size={18} /> },
   { label: 'Manage Slots', path: '/instructor/slots', icon: <CalendarDays size={18} /> },
   { label: 'My Sessions', path: '/instructor/sessions', icon: <Clock size={18} /> },
-  { label: 'Portfolio', path: '/instructor/portfolio', icon: <Image size={18} /> },
-  { label: 'Skills', path: '/instructor/skills', icon: <Sparkles size={18} /> },
   { label: 'Reviews', path: '/instructor/reviews', icon: <Star size={18} /> },
   { label: 'Payments', path: '/instructor/payments', icon: <CreditCard size={18} /> },
   { label: 'Profile Settings', path: '/instructor/settings', icon: <Settings size={18} /> },
@@ -42,10 +43,16 @@ export function InstructorLayout() {
             <Menu size={20} />
           </button>
           <div className="ml-auto flex items-center gap-3">
-            <Link to="/dashboard" className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-800 sm:inline-flex">
-              <ArrowLeftRight size={16} />
-              Student mode
-            </Link>
+
+            {(user?.roles.includes('INSTRUCTOR') && user?.roles.includes('STUDENT')) && (
+              <Link
+                to="/dashboard"
+                className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-800 sm:inline-flex"
+              >
+                <GraduationCap size={16} />
+                Student Mode
+              </Link>
+            )}
 
             {user && (
               <>

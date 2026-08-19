@@ -871,11 +871,15 @@ export const AdminCategoriesApiAxiosParamCreator = function (configuration?: Con
         },
         /**
          * 
-         * @summary Get selectable categories and subcategories
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        categoryControllerFindSelectable: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        categoryControllerFindAll: async (page?: number, limit?: number, search?: string, isActive?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/admin/categories`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -887,6 +891,22 @@ export const AdminCategoriesApiAxiosParamCreator = function (configuration?: Con
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (isActive !== undefined) {
+                localVarQueryParameter['isActive'] = isActive;
+            }
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -1255,14 +1275,18 @@ export const AdminCategoriesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Get selectable categories and subcategories
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async categoryControllerFindSelectable(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryListResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindSelectable(options);
+        async categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedCategoryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.categoryControllerFindAll(page, limit, search, isActive, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerFindSelectable']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AdminCategoriesApi.categoryControllerFindAll']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1439,12 +1463,16 @@ export const AdminCategoriesApiFactory = function (configuration?: Configuration
         },
         /**
          * 
-         * @summary Get selectable categories and subcategories
+         * @summary Get paginated categories and subcategories for admin management
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [isActive] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        categoryControllerFindSelectable(options?: RawAxiosRequestConfig): AxiosPromise<CategoryListResponseDto> {
-            return localVarFp.categoryControllerFindSelectable(options).then((request) => request(axios, basePath));
+        categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedCategoryResponseDto> {
+            return localVarFp.categoryControllerFindAll(page, limit, search, isActive, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1603,12 +1631,16 @@ export class AdminCategoriesApi extends BaseAPI {
 
     /**
      * 
-     * @summary Get selectable categories and subcategories
+     * @summary Get paginated categories and subcategories for admin management
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {string} [search] 
+     * @param {string} [isActive] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public categoryControllerFindSelectable(options?: RawAxiosRequestConfig) {
-        return AdminCategoriesApiFp(this.configuration).categoryControllerFindSelectable(options).then((request) => request(this.axios, this.basePath));
+    public categoryControllerFindAll(page?: number, limit?: number, search?: string, isActive?: string, options?: RawAxiosRequestConfig) {
+        return AdminCategoriesApiFp(this.configuration).categoryControllerFindAll(page, limit, search, isActive, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1787,6 +1819,48 @@ export const AdminInstructorManagementApiAxiosParamCreator = function (configura
         },
         /**
          * 
+         * @summary Get a signed offering-media URL for admin review
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerGetOfferingMediaViewUrl: async (applicationId: string, offeringId: string, mediaId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('adminInstructorControllerGetOfferingMediaViewUrl', 'applicationId', applicationId)
+            // verify required parameter 'offeringId' is not null or undefined
+            assertParamExists('adminInstructorControllerGetOfferingMediaViewUrl', 'offeringId', offeringId)
+            // verify required parameter 'mediaId' is not null or undefined
+            assertParamExists('adminInstructorControllerGetOfferingMediaViewUrl', 'mediaId', mediaId)
+            const localVarPath = `/api/admin/instructor-applications/{applicationId}/offerings/{offeringId}/media/{mediaId}/view-url`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)))
+                .replace(`{${"offeringId"}}`, encodeURIComponent(String(offeringId)))
+                .replace(`{${"mediaId"}}`, encodeURIComponent(String(mediaId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Approve, reject, or request changes for an offering
          * @param {string} applicationId 
          * @param {string} offeringId 
@@ -1868,6 +1942,21 @@ export const AdminInstructorManagementApiFp = function(configuration?: Configura
         },
         /**
          * 
+         * @summary Get a signed offering-media URL for admin review
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminInstructorControllerGetOfferingMediaViewUrl(applicationId: string, offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PresignedDownloadResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminInstructorControllerGetOfferingMediaViewUrl(applicationId, offeringId, mediaId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminInstructorManagementApi.adminInstructorControllerGetOfferingMediaViewUrl']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Approve, reject, or request changes for an offering
          * @param {string} applicationId 
          * @param {string} offeringId 
@@ -1915,6 +2004,18 @@ export const AdminInstructorManagementApiFactory = function (configuration?: Con
         },
         /**
          * 
+         * @summary Get a signed offering-media URL for admin review
+         * @param {string} applicationId 
+         * @param {string} offeringId 
+         * @param {string} mediaId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminInstructorControllerGetOfferingMediaViewUrl(applicationId: string, offeringId: string, mediaId: string, options?: RawAxiosRequestConfig): AxiosPromise<PresignedDownloadResponseDto> {
+            return localVarFp.adminInstructorControllerGetOfferingMediaViewUrl(applicationId, offeringId, mediaId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Approve, reject, or request changes for an offering
          * @param {string} applicationId 
          * @param {string} offeringId 
@@ -1955,6 +2056,19 @@ export class AdminInstructorManagementApi extends BaseAPI {
      */
     public adminInstructorControllerFindOne(applicationId: string, options?: RawAxiosRequestConfig) {
         return AdminInstructorManagementApiFp(this.configuration).adminInstructorControllerFindOne(applicationId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a signed offering-media URL for admin review
+     * @param {string} applicationId 
+     * @param {string} offeringId 
+     * @param {string} mediaId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminInstructorControllerGetOfferingMediaViewUrl(applicationId: string, offeringId: string, mediaId: string, options?: RawAxiosRequestConfig) {
+        return AdminInstructorManagementApiFp(this.configuration).adminInstructorControllerGetOfferingMediaViewUrl(applicationId, offeringId, mediaId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3135,6 +3249,40 @@ export const InstructorOnboardingApiAxiosParamCreator = function (configuration?
         },
         /**
          * 
+         * @summary Cancel the current pending instructor application
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerCancelApplication: async (applicationId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('instructorControllerCancelApplication', 'applicationId', applicationId)
+            const localVarPath = `/api/instructor/onboarding/applications/{applicationId}/cancel`
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Confirm offering media upload
          * @param {string} offeringId 
          * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
@@ -3479,6 +3627,19 @@ export const InstructorOnboardingApiFp = function(configuration?: Configuration)
         },
         /**
          * 
+         * @summary Cancel the current pending instructor application
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerCancelApplication(applicationId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerCancelApplication(applicationId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorOnboardingApi.instructorControllerCancelApplication']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Confirm offering media upload
          * @param {string} offeringId 
          * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
@@ -3618,6 +3779,16 @@ export const InstructorOnboardingApiFactory = function (configuration?: Configur
         },
         /**
          * 
+         * @summary Cancel the current pending instructor application
+         * @param {string} applicationId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerCancelApplication(applicationId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.instructorControllerCancelApplication(applicationId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Confirm offering media upload
          * @param {string} offeringId 
          * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
@@ -3729,6 +3900,17 @@ export class InstructorOnboardingApi extends BaseAPI {
 
     /**
      * 
+     * @summary Cancel the current pending instructor application
+     * @param {string} applicationId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerCancelApplication(applicationId: string, options?: RawAxiosRequestConfig) {
+        return InstructorOnboardingApiFp(this.configuration).instructorControllerCancelApplication(applicationId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Confirm offering media upload
      * @param {string} offeringId 
      * @param {ConfirmOfferingMediaUploadDto} confirmOfferingMediaUploadDto 
@@ -3827,6 +4009,100 @@ export class InstructorOnboardingApi extends BaseAPI {
      */
     public instructorControllerUpdateOffering(offeringId: string, updateOfferingDto: UpdateOfferingDto, options?: RawAxiosRequestConfig) {
         return InstructorOnboardingApiFp(this.configuration).instructorControllerUpdateOffering(offeringId, updateOfferingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * UsersApi - axios parameter creator
+ */
+export const UsersApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get selectable categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        userControllerFindSelectable: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/users/categories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * UsersApi - functional programming interface
+ */
+export const UsersApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = UsersApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get selectable categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async userControllerFindSelectable(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CategoryListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerFindSelectable(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerFindSelectable']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * UsersApi - factory interface
+ */
+export const UsersApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = UsersApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get selectable categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        userControllerFindSelectable(options?: RawAxiosRequestConfig): AxiosPromise<CategoryListResponseDto> {
+            return localVarFp.userControllerFindSelectable(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * UsersApi - object-oriented interface
+ */
+export class UsersApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get selectable categories and subcategories
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public userControllerFindSelectable(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).userControllerFindSelectable(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

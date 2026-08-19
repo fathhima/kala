@@ -45,6 +45,7 @@ import { BookingMonitoring } from "@/pages/admin/BookingMonitoring";
 import { AdminBookingDetails } from "@/pages/admin/BookingDetails";
 import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 import { AdminPaymentDetails } from "@/pages/admin/PaymentDetails";
+import { InstructorOfferings } from "@/pages/instructor/Offerings";
 
 const StudentApp = () => (
   <ProtectedRoute>
@@ -53,7 +54,7 @@ const StudentApp = () => (
 );
 
 const InstructorApp = () => (
-  <ProtectedRoute>
+  <ProtectedRoute requireRole="INSTRUCTOR">
     <InstructorLayout />
   </ProtectedRoute>
 );
@@ -134,14 +135,14 @@ export const router = createBrowserRouter([
     path: '/dashboard',
     element: <StudentApp />,
     children: [
-      // { index: true, element: <StudentDashboard /> },
+      { index: true, element: <StudentDashboard /> },
       // { path: 'bookings', element: <MyBookings /> },
       // { path: 'bookings/:id', element: <BookingDetails /> },
       // { path: 'bookings/:id/chat', element: <BookingChat /> },
       // { path: 'payments', element: <PaymentHistory /> },
       // { path: 'settings', element: <StudentProfileSettings /> },
       // { path: 'change-password', element: <ChangePassword /> },
-      // { path: 'become-instructor', element: <BecomeInstructor /> }
+      { path: 'become-instructor', element: <BecomeInstructor /> }
     ]
   },
   // {
@@ -164,13 +165,14 @@ export const router = createBrowserRouter([
     path: '/instructor',
     element: <InstructorApp />,
     children: [
-      // { index: true, element: <InstructorDashboard /> },
+      { index: true, element: <InstructorDashboard /> },
+      { path: 'skills', element: <InstructorSkills /> },
+      { path: 'portfolio', element: <Portfolio /> },
+      { path: 'offerings', element: <InstructorOfferings /> },
       // { path: 'slots', element: <ManageSlots /> },
       // { path: 'sessions', element: <MySessions /> },
       // { path: 'sessions/:id', element: <InstructorSessionDetails /> },
       // { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
-      // { path: 'portfolio', element: <Portfolio /> },
-      // { path: 'skills', element: <InstructorSkills /> },
       // { path: 'reviews', element: <Reviews /> },
       // { path: 'payments', element: <InstructorPayments /> },
       // { path: 'settings', element: <InstructorProfileSettings /> },
@@ -181,8 +183,8 @@ export const router = createBrowserRouter([
     element: <AdminApp />,
     children: [
       { index: true, element: <AdminDashboard /> },
-      // { path: 'applications', element: <InstructorApplications /> },
-      // { path: 'applications/:id', element: <ApplicationDetails /> },
+      { path: 'applications', element: <InstructorApplications /> },
+      { path: 'applications/:id', element: <ApplicationDetails /> },
       { path: 'skills', element: <ManageSkills /> },
       { path: 'users', element: <ManageUsers /> },
       { path: 'users/:id', element: <UserDetails /> },

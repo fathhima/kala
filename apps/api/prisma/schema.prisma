@@ -46,6 +46,19 @@ enum MediaType {
   VIDEO
 }
 
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  CANCELLED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -62,6 +75,7 @@ model User {
   updatedAt  DateTime @updatedAt
 
   instructorProfile InstructorProfile?
+  studentBookings   Booking[]          @relation("StudentBookings")
 
   @@map("users")
 }
@@ -116,6 +130,7 @@ model InstructorProfile {
   user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   applications InstructorApplication[]
   offerings    InstructorOffering[]
+  slots        AvailabilitySlot[]
 
   @@index([status])
   @@map("instructor_profiles")
@@ -161,6 +176,7 @@ model InstructorOffering {
   application InstructorApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   subcategory Subcategory            @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
   media       OfferingMedia[]
+  slots       AvailabilitySlot[]
 
   @@index([profileId, status])
   @@index([subcategoryId, status])
@@ -183,4 +199,46 @@ model OfferingMedia {
 
   @@index([offeringId, type, sortOrder])
   @@map("offering_media")
+}
+
+model AvailabilitySlot {
+  id         String     @id @default(cuid())
+  profileId  String
+  offeringId String
+  title      String?
+  startTime  DateTime
+  endTime    DateTime
+  timezone   String     @default("Asia/Kolkata")
+  status     SlotStatus @default(AVAILABLE)
+  bookedAt   DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([offeringId, status, startTime])
+  @@index([profileId, startTime])
+  @@map("availability_slots")
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  slotId      String
+  studentId   String
+  status      BookingStatus @default(CONFIRMED)
+  amount      Decimal       @db.Decimal(10, 2)
+  currency    String
+  cancelledAt DateTime?
+  cancelledBy String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  slot    AvailabilitySlot @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  student User             @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, status, createdAt])
+  @@index([slotId, status])
+  @@map("bookings")
 }

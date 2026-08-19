@@ -171,7 +171,7 @@ export const router = createBrowserRouter([
       { path: 'skills', element: <InstructorSkills /> },
       { path: 'portfolio', element: <Portfolio /> },
       { path: 'offerings', element: <InstructorOfferings /> },
-      // { path: 'slots', element: <ManageSlots /> },
+      { path: 'slots', element: <ManageSlots /> },
       // { path: 'sessions', element: <MySessions /> },
       // { path: 'sessions/:id', element: <InstructorSessionDetails /> },
       // { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },

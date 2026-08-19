@@ -27,6 +27,7 @@ docs/ConfirmCategoryImageUploadDto.md
 docs/ConfirmOfferingMediaUploadDto.md
 docs/CreateCategoryDto.md
 docs/CreateOfferingDto.md
+docs/CreateSlotsDto.md
 docs/CreateSubcategoryDto.md
 docs/ForgotPasswordDto.md
 docs/GoogleSignInRequestDto.md
@@ -67,6 +68,7 @@ docs/PublicMediaDto.md
 docs/PublicOfferingCategoryDto.md
 docs/PublicOfferingDto.md
 docs/PublicOfferingSubcategoryDto.md
+docs/PublicSchedulingApi.md
 docs/PublicSubcategoryDto.md
 docs/RefreshDataDto.md
 docs/RefreshResponseDto.md
@@ -82,6 +84,8 @@ docs/ResetPasswordDto.md
 docs/ReviewOfferingDto.md
 docs/Role.md
 docs/SafeUserDto.md
+docs/SchedulingApi.md
+docs/SlotInputDto.md
 docs/SubcategoryDto.md
 docs/SubcategoryImageUploadDataDto.md
 docs/SubcategoryImageUploadResponseDto.md
@@ -92,6 +96,7 @@ docs/SubcategoryResponseDto.md
 docs/UpdateCategoryDto.md
 docs/UpdateInstructorProfileDto.md
 docs/UpdateOfferingDto.md
+docs/UpdateSlotDto.md
 docs/UpdateSubcategoryDto.md
 docs/UpdateUserProfileDto.md
 docs/UpdateUserStatusDto.md

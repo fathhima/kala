@@ -1,398 +1,543 @@
-import { useState, useMemo } from 'react'
-import { Plus, ChevronUp, CalendarDays, Clock, Trash2 } from 'lucide-react'
-import { useInstructorStore } from '../../stores/instructorStore'
-import { Card } from '../../components/ui/Card'
-import { Button } from '../../components/ui/Button'
-import { Badge } from '../../components/ui/Badge'
-import { cn, formatTime } from '../../lib/utils'
-import type { Slot } from '../../types'
+import { useMemo, useState } from 'react'
+import {
+  CalendarDays,
+  ChevronUp,
+  Clock,
+  Pencil,
+  Plus,
+  Repeat2,
+  Trash2,
+} from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
+import { cn, formatTime } from '@/lib/utils'
+import { useOnboardingWorkspaceQuery } from '@/features/instructor/hooks'
+import {
+  useCreateSlotsMutation,
+  useInstructorSlotsQuery,
+  useRemoveSlotMutation,
+  useUpdateSlotMutation,
+} from '@/features/slots/hooks'
+import type { Slot } from '@/features/slots/api'
 
-/* ── Duration presets ─────────────────────────────────────── */
 const DURATIONS = [
-  { label: '30 min', mins: 30 },
-  { label: '1 hr', mins: 60 },
-  { label: '1.5 hrs', mins: 90 },
-  { label: '2 hrs', mins: 120 },
+  { label: '30 min', value: 30 },
+  { label: '1 hour', value: 60 },
+  { label: '1.5 hours', value: 90 },
+  { label: '2 hours', value: 120 },
 ]
 
-/* ── Next N days as date chips ───────────────────────────── */
-function getUpcomingDays(n = 21) {
-  const days: { key: string; dayShort: string; dayNum: number; monthShort: string; isToday: boolean }[] = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  for (let i = 0; i < n; i++) {
-    const d = new Date(today)
-    d.setDate(today.getDate() + i)
-    days.push({
-      key: d.toISOString().slice(0, 10),
-      dayShort: d.toLocaleDateString('en-IN', { weekday: 'short' }),
-      dayNum: d.getDate(),
-      monthShort: d.toLocaleDateString('en-IN', { month: 'short' }),
-      isToday: i === 0,
-    })
-  }
-  return days
+function dateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+
+  const value = (type: string) => parts.find((part) => part.type === type)?.value
+  return `${value('year')}-${value('month')}-${value('day')}`
 }
 
-/* ── Group slots by date label ────────────────────────────── */
-function groupByDate(slots: Slot[]) {
-  const map = new Map<string, Slot[]>()
-  for (const slot of [...slots].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())) {
-    const d = new Date(slot.startTime)
-    const label = d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    if (!map.has(label)) map.set(label, [])
-    map.get(label)!.push(slot)
-  }
-  return map
+function upcomingDates(count = 21) {
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() + index)
+
+    return {
+      key: dateKey(date),
+      weekday: date.toLocaleDateString('en-IN', { weekday: 'short' }),
+      day: date.toLocaleDateString('en-IN', { day: 'numeric' }),
+      month: date.toLocaleDateString('en-IN', { month: 'short' }),
+      today: index === 0,
+    }
+  })
 }
 
-/* ── Component ─────────────────────────────────────────────── */
+function slotDateLabel(slot: Slot) {
+  return new Date(slot.startTime).toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function statusVariant(status: Slot['status']) {
+  if (status === 'AVAILABLE') return 'success'
+  if (status === 'BOOKED') return 'error'
+  return 'warning'
+}
+
+function getErrorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error &&
+    'response' in error &&
+    typeof error.response === 'object' &&
+    error.response &&
+    'data' in error.response &&
+    typeof error.response.data === 'object' &&
+    error.response.data &&
+    'message' in error.response.data &&
+    typeof error.response.data.message === 'string'
+  ) {
+    return error.response.data.message
+  }
+
+  return 'Something went wrong. Please try again.'
+}
+
 export function ManageSlots() {
-  const { slots, addSlot, deleteSlot, profile } = useInstructorStore()
+  const workspace = useOnboardingWorkspaceQuery()
+  const slotsQuery = useInstructorSlotsQuery()
+  const createMutation = useCreateSlotsMutation()
+  const updateMutation = useUpdateSlotMutation()
+  const removeMutation = useRemoveSlotMutation()
 
-  const skills = profile?.skills ?? []
-  const hasMultipleSkills = skills.length > 1
-  const [activeSkillId, setActiveSkillId] = useState(skills[0]?.id ?? '')
+  const offerings = (workspace.data?.offerings ?? []).filter(
+    (offering) => offering.status === 'APPROVED',
+  )
 
-  // Add-slots panel
   const [showForm, setShowForm] = useState(false)
+  const [offeringId, setOfferingId] = useState('')
   const [title, setTitle] = useState('')
-  const [durationMins, setDurationMins] = useState(60)
-  const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set())
-  const [startTime, setStartTime] = useState('10:00')
-  const [formSkillId, setFormSkillId] = useState(skills[0]?.id ?? '')
+  const [time, setTime] = useState('10:00')
+  const [duration, setDuration] = useState(60)
+  const [dates, setDates] = useState<Set<string>>(new Set())
+  const [repeatWeekly, setRepeatWeekly] = useState(false)
+  const [repeatCount, setRepeatCount] = useState(4)
+  const [error, setError] = useState('')
+  const [editingSlot, setEditingSlot] = useState<Slot | null>(null)
 
-  const upcomingDays = useMemo(() => getUpcomingDays(21), [])
+  const days = useMemo(() => upcomingDates(), [])
+  const slots = slotsQuery.data ?? []
 
-  const toggleDate = (key: string) => {
-    setSelectedDates((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
+  const groupedSlots = useMemo(() => {
+    const map = new Map<string, Slot[]>()
+
+    for (const slot of slots) {
+      const label = slotDateLabel(slot)
+      map.set(label, [...(map.get(label) ?? []), slot])
+    }
+
+    return [...map.entries()]
+  }, [slots])
+
+  function toggleDate(value: string) {
+    setDates((current) => {
+      const next = new Set(current)
+      next.has(value) ? next.delete(value) : next.add(value)
       return next
     })
   }
 
-  const handleCreate = () => {
-    if (!startTime || selectedDates.size === 0) return
-    const [hStr, mStr] = startTime.split(':').map(Number)
-    const sortedDates = [...selectedDates].sort()
-    sortedDates.forEach((dateKey, i) => {
-      const [year, month, day] = dateKey.split('-').map(Number)
-      const start = new Date(year, month - 1, day, hStr, mStr)
-      const end = new Date(start.getTime() + durationMins * 60_000)
-      const slot: Slot = {
-        id: `slot-${Date.now()}-${i}`,
-        instructorId: profile?.id || 'inst1',
-        skillId: formSkillId || undefined,
-        title: title.trim() || undefined,
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
-        timezone: 'Asia/Kolkata',
-        status: 'AVAILABLE',
-      }
-      addSlot(slot)
-    })
-    setSelectedDates(new Set())
-    setTitle('')
-    setShowForm(false)
+  function createPayloadDates() {
+    const sourceDates = [...dates].sort()
+    const result = new Set(sourceDates)
+
+    if (repeatWeekly) {
+      sourceDates.forEach((value) => {
+        const base = new Date(`${value}T00:00:00+05:30`)
+
+        for (let week = 1; week < repeatCount; week += 1) {
+          const repeated = new Date(base)
+          repeated.setUTCDate(repeated.getUTCDate() + week * 7)
+          result.add(dateKey(repeated))
+        }
+      })
+    }
+
+    return [...result].sort()
   }
 
-  // Slots for this skill (or untagged slots in first tab)
-  const slotsForSkill = useMemo(() => {
-    if (!hasMultipleSkills) return slots
-    const isFirst = activeSkillId === skills[0]?.id
-    return slots.filter((s) =>
-      s.skillId === activeSkillId || (isFirst && !s.skillId)
+  async function handleCreate() {
+    setError('')
+
+    if (!offeringId) {
+      setError('Select an offering first.')
+      return
+    }
+
+    const selectedDates = createPayloadDates()
+
+    if (!selectedDates.length) {
+      setError('Select at least one date.')
+      return
+    }
+
+    if (selectedDates.length > 100) {
+      setError('You can create at most 100 slots at once.')
+      return
+    }
+
+    try {
+      await createMutation.mutateAsync({
+        offeringId,
+        timezone: 'Asia/Kolkata',
+        slots: selectedDates.map((date) => {
+          const start = new Date(`${date}T${time}:00+05:30`)
+          const end = new Date(start.getTime() + duration * 60_000)
+
+          return {
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            title: title.trim() || undefined,
+          }
+        }),
+      })
+
+      setDates(new Set())
+      setTitle('')
+      setRepeatWeekly(false)
+      setShowForm(false)
+    } catch (mutationError) {
+      setError(getErrorMessage(mutationError))
+    }
+  }
+
+  async function handleDelete(slotId: string) {
+    if (!window.confirm('Remove this available slot?')) return
+
+    try {
+      await removeMutation.mutateAsync(slotId)
+    } catch (mutationError) {
+      setError(getErrorMessage(mutationError))
+    }
+  }
+
+  if (workspace.isLoading || slotsQuery.isLoading) {
+    return <div className="py-12 text-sm text-stone-500">Loading slots…</div>
+  }
+
+  if (!offerings.length) {
+    return (
+      <div className="py-12">
+        <h1 className="text-2xl font-bold text-kala-brown">Manage Slots</h1>
+        <Card className="mt-6 p-6 text-sm text-stone-600">
+          You need at least one approved offering before you can create slots.
+        </Card>
+      </div>
     )
-  }, [slots, activeSkillId, hasMultipleSkills, skills])
-
-  const grouped = useMemo(() => groupByDate(slotsForSkill), [slotsForSkill])
-
-  const totalForSkill = slotsForSkill.length
-  const activeSkillName = skills.find((s) => s.id === activeSkillId)?.name ?? 'this skill'
+  }
 
   return (
     <div className="space-y-6">
-
-      {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-kala-brown">Manage Slots</h1>
-          <p className="text-stone-500 text-sm mt-1">
-            {slots.length} total slot{slots.length !== 1 ? 's' : ''}
+          <p className="mt-1 text-sm text-stone-500">
+            {slots.length} total slot{slots.length === 1 ? '' : 's'}
           </p>
         </div>
+
         <Button
-          onClick={() => setShowForm((v) => !v)}
-          className="gap-2"
-          variant={showForm ? 'outline' : 'default'}
+          variant={showForm ? 'outline' : 'primary'}
+          onClick={() => setShowForm((current) => !current)}
         >
           {showForm ? <ChevronUp size={16} /> : <Plus size={16} />}
-          {showForm ? 'Close' : 'Add Slots'}
+          {showForm ? 'Close' : 'Add slots'}
         </Button>
       </div>
 
-      {/* ── Skill tabs ─────────────────────────────────────── */}
-      {hasMultipleSkills && (
-        <div className="flex gap-2 flex-wrap">
-          {skills.map((skill) => {
-            const count = slots.filter((s) =>
-              s.skillId === skill.id || (skill.id === skills[0]?.id && !s.skillId)
-            ).length
-            return (
-              <button
-                key={skill.id}
-                type="button"
-                onClick={() => setActiveSkillId(skill.id)}
-                className={cn(
-                  'px-4 py-2 rounded-xl text-sm font-medium transition-all border',
-                  activeSkillId === skill.id
-                    ? 'bg-kala-amber text-white border-kala-amber'
-                    : 'bg-white text-stone-600 border-stone-200 hover:border-kala-amber hover:text-kala-brown'
-                )}
-              >
-                {skill.name}
-                {count > 0 && (
-                  <span className={cn(
-                    'ml-2 text-xs px-1.5 py-0.5 rounded-full',
-                    activeSkillId === skill.id ? 'bg-white/25 text-white' : 'bg-stone-100 text-stone-500'
-                  )}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            )
-          })}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
       )}
 
-      {/* ── Add Slots Panel ────────────────────────────────── */}
       {showForm && (
-        <Card className="p-6 border-kala-amber/30 bg-amber-50/30">
-          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-5">
-            Create Slots
-          </h2>
+        <Card className="space-y-5 border-amber-200 bg-amber-50/40 p-6">
+          <h2 className="font-semibold text-stone-800">Create availability</h2>
 
-          <div className="space-y-5">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-stone-600">
+              Offering
+            </label>
+            <select
+              value={offeringId}
+              onChange={(event) => setOfferingId(event.target.value)}
+              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+            >
+              <option value="">Select an offering</option>
+              {offerings.map((offering) => (
+                <option key={offering.id} value={offering.id}>
+                  {offering.title || offering.subcategory.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Skill selector (if multiple skills) */}
-            {hasMultipleSkills && (
-              <div>
-                <p className="text-xs font-medium text-stone-500 mb-2">Skill</p>
-                <div className="flex flex-wrap gap-2">
-                  {skills.map((skill) => (
-                    <button
-                      key={skill.id}
-                      type="button"
-                      onClick={() => setFormSkillId(skill.id)}
-                      className={cn(
-                        'px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all',
-                        formSkillId === skill.id
-                          ? 'bg-kala-brown text-white border-kala-brown'
-                          : 'bg-white text-stone-600 border-stone-200 hover:border-kala-amber'
-                      )}
-                    >
-                      {skill.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Duration */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-medium text-stone-500 mb-2">Session Duration</p>
-              <div className="flex gap-2 flex-wrap">
-                {DURATIONS.map((d) => (
-                  <button
-                    key={d.mins}
-                    type="button"
-                    onClick={() => setDurationMins(d.mins)}
-                    className={cn(
-                      'px-4 py-2 rounded-xl text-sm font-medium border transition-all',
-                      durationMins === d.mins
-                        ? 'bg-kala-amber text-white border-kala-amber'
-                        : 'bg-white text-stone-600 border-stone-200 hover:border-kala-amber hover:text-kala-brown'
-                    )}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
+              <label className="mb-1.5 block text-sm font-medium text-stone-600">
+                Start time
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+                className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+              />
             </div>
 
-            {/* Date chips */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-stone-500">
-                  Select Dates
-                  {selectedDates.size > 0 && (
-                    <span className="ml-2 text-kala-amber font-semibold">{selectedDates.size} selected</span>
-                  )}
-                </p>
-                {selectedDates.size > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDates(new Set())}
-                    className="text-xs text-stone-400 hover:text-red-500 transition-colors"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-1.5 -mx-1 px-1">
-                {upcomingDays.map((day) => {
-                  const selected = selectedDates.has(day.key)
-                  return (
-                    <button
-                      key={day.key}
-                      type="button"
-                      onClick={() => toggleDate(day.key)}
-                      className={cn(
-                        'flex-shrink-0 flex flex-col items-center px-3 py-2.5 rounded-2xl border-2 text-center transition-all min-w-[3.5rem]',
-                        selected
-                          ? 'bg-kala-amber border-kala-amber text-white shadow-sm'
-                          : 'bg-white border-stone-200 text-stone-600 hover:border-kala-amber hover:text-kala-brown'
-                      )}
-                    >
-                      <span className={cn(
-                        'text-[10px] font-medium uppercase tracking-wide',
-                        selected ? 'text-white/80' : 'text-stone-400'
-                      )}>
-                        {day.isToday ? 'Today' : day.dayShort}
-                      </span>
-                      <span className="text-base font-bold leading-tight">{day.dayNum}</span>
-                      <span className={cn(
-                        'text-[10px]',
-                        selected ? 'text-white/70' : 'text-stone-400'
-                      )}>
-                        {day.monthShort}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Start time + Label */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  Start Time
-                </label>
-                <div className="relative">
-                  <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-kala-amber transition-colors"
-                  />
-                </div>
-                {startTime && durationMins && (
-                  <p className="text-xs text-stone-400 mt-1.5">
-                    Ends at {(() => {
-                      const [h, m] = startTime.split(':').map(Number)
-                      const end = new Date(0, 0, 0, h, m + durationMins)
-                      return end.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-                    })()}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-stone-500 mb-1.5">
-                  Session Label <span className="text-stone-300">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Morning Batch"
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-kala-amber transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Create button */}
-            <div className="flex items-center gap-3 pt-1">
-              <Button
-                onClick={handleCreate}
-                disabled={selectedDates.size === 0 || !startTime}
-                className="gap-2"
-              >
-                <CalendarDays size={15} />
-                Create {selectedDates.size > 0 ? `${selectedDates.size} ` : ''}slot{selectedDates.size !== 1 ? 's' : ''}
-              </Button>
-              {selectedDates.size === 0 && (
-                <p className="text-xs text-stone-400">Select at least one date above</p>
-              )}
+              <label className="mb-1.5 block text-sm font-medium text-stone-600">
+                Session label
+              </label>
+              <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Optional"
+                className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+              />
             </div>
           </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-stone-600">Duration</p>
+            <div className="flex flex-wrap gap-2">
+              {DURATIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setDuration(item.value)}
+                  className={cn(
+                    'rounded-xl border px-3 py-2 text-sm',
+                    duration === item.value
+                      ? 'border-kala-amber bg-kala-amber text-white'
+                      : 'border-stone-200 bg-white text-stone-600',
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-stone-600">Select dates</p>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {days.map((day) => {
+                const selected = dates.has(day.key)
+
+                return (
+                  <button
+                    key={day.key}
+                    type="button"
+                    onClick={() => toggleDate(day.key)}
+                    className={cn(
+                      'min-w-16 rounded-xl border px-3 py-2 text-center',
+                      selected
+                        ? 'border-kala-amber bg-kala-amber text-white'
+                        : 'border-stone-200 bg-white text-stone-600',
+                    )}
+                  >
+                    <span className="block text-[10px] uppercase">
+                      {day.today ? 'Today' : day.weekday}
+                    </span>
+                    <span className="block text-base font-bold">{day.day}</span>
+                    <span className="block text-[10px]">{day.month}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-stone-600">
+            <input
+              type="checkbox"
+              checked={repeatWeekly}
+              onChange={(event) => setRepeatWeekly(event.target.checked)}
+            />
+            <Repeat2 size={15} />
+            Repeat weekly
+          </label>
+
+          {repeatWeekly && (
+            <div className="max-w-xs">
+              <label className="mb-1.5 block text-sm font-medium text-stone-600">
+                Number of weekly occurrences
+              </label>
+              <input
+                type="number"
+                min={2}
+                max={20}
+                value={repeatCount}
+                onChange={(event) =>
+                  setRepeatCount(Math.max(2, Math.min(20, Number(event.target.value))))
+                }
+                className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+              />
+            </div>
+          )}
+
+          <Button
+            onClick={handleCreate}
+            loading={createMutation.isPending}
+            disabled={!dates.size || !offeringId}
+          >
+            <CalendarDays size={16} />
+            Create slots
+          </Button>
         </Card>
       )}
 
-      {/* ── Slot list grouped by date ──────────────────────── */}
-      {totalForSkill === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
-          <CalendarDays size={40} className="text-stone-300 mx-auto mb-3" />
-          <p className="text-stone-500 mb-1">No slots for {activeSkillName}</p>
-          <p className="text-xs text-stone-400 mb-4">Use the "Add Slots" panel above to create your availability</p>
-          {!showForm && (
-            <Button onClick={() => setShowForm(true)} className="gap-2">
-              <Plus size={16} /> Add Slots
-            </Button>
-          )}
-        </div>
+      {!groupedSlots.length ? (
+        <Card className="border-dashed p-10 text-center text-sm text-stone-500">
+          No slots yet. Add availability above.
+        </Card>
       ) : (
         <div className="space-y-6">
-          {[...grouped.entries()].map(([dateLabel, dateSlots]) => (
-            <section key={dateLabel}>
-              {/* Date heading */}
-              <div className="flex items-center gap-3 mb-3">
-                <CalendarDays size={14} className="text-stone-400 flex-shrink-0" />
-                <h3 className="text-sm font-semibold text-stone-600">{dateLabel}</h3>
-                <div className="flex-1 h-px bg-stone-100" />
-                <span className="text-xs text-stone-400">{dateSlots.length} slot{dateSlots.length !== 1 ? 's' : ''}</span>
+          {groupedSlots.map(([label, dateSlots]) => (
+            <section key={label}>
+              <div className="mb-3 flex items-center gap-3">
+                <CalendarDays size={15} className="text-stone-400" />
+                <h2 className="text-sm font-semibold text-stone-700">{label}</h2>
+                <div className="h-px flex-1 bg-stone-100" />
               </div>
 
-              {/* Slot rows */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {dateSlots.map((slot) => {
-                  const statusVariant = slot.status === 'AVAILABLE' ? 'success' : slot.status === 'BOOKED' ? 'error' : 'warning'
-                  return (
-                    <div
-                      key={slot.id}
-                      className="flex items-center gap-3 bg-white border border-stone-100 rounded-2xl px-4 py-3 shadow-sm"
-                    >
-                      <div className="flex-1 min-w-0">
-                        {slot.title && (
-                          <p className="text-sm font-medium text-stone-800 truncate mb-0.5">{slot.title}</p>
-                        )}
-                        <p className="text-xs text-stone-500 flex items-center gap-1">
-                          <Clock size={11} />
-                          {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
-                        </p>
-                      </div>
-                      <Badge variant={statusVariant}>{slot.status}</Badge>
-                      {slot.status === 'AVAILABLE' && (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {dateSlots.map((slot) => (
+                  <Card key={slot.id} className="flex items-center gap-3 p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-stone-800">
+                        {slot.title || slot.offering?.title || slot.offering?.subcategory.name}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1 text-xs text-stone-500">
+                        <Clock size={12} />
+                        {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+                      </p>
+                    </div>
+
+                    <Badge variant={statusVariant(slot.status)}>{slot.status}</Badge>
+
+                    {slot.status === 'AVAILABLE' && (
+                      <div className="flex gap-1">
                         <button
                           type="button"
-                          onClick={() => deleteSlot(slot.id)}
-                          className="flex-shrink-0 p-1.5 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={() => setEditingSlot(slot)}
+                          className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                          aria-label="Edit slot"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(slot.id)}
+                          className="rounded-lg p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-600"
+                          aria-label="Delete slot"
                         >
                           <Trash2 size={14} />
                         </button>
-                      )}
-                    </div>
-                  )
-                })}
+                      </div>
+                    )}
+                  </Card>
+                ))}
               </div>
             </section>
           ))}
         </div>
       )}
+
+      <EditSlotModal
+        slot={editingSlot}
+        loading={updateMutation.isPending}
+        onClose={() => setEditingSlot(null)}
+        onSave={async (payload) => {
+          try {
+            await updateMutation.mutateAsync(payload)
+            setEditingSlot(null)
+          } catch (mutationError) {
+            setError(getErrorMessage(mutationError))
+          }
+        }}
+      />
     </div>
+  )
+}
+
+function EditSlotModal({
+  slot,
+  loading,
+  onClose,
+  onSave,
+}: {
+  slot: Slot | null
+  loading: boolean
+  onClose: () => void
+  onSave: (payload: {
+    slotId: string
+    startTime: string
+    endTime: string
+    title?: string
+  }) => Promise<void>
+}) {
+  const [title, setTitle] = useState('')
+  const [date, setDate] = useState('')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+
+  if (slot && date !== dateKey(new Date(slot.startTime))) {
+    const startDate = new Date(slot.startTime)
+    const endDate = new Date(slot.endTime)
+    setDate(dateKey(startDate))
+    setStart(startDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+    setEnd(endDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+    setTitle(slot.title ?? '')
+  }
+
+  return (
+    <Modal open={Boolean(slot)} onClose={onClose} title="Edit slot">
+      {slot && (
+        <div className="space-y-4">
+          <input
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="time"
+              value={start}
+              onChange={(event) => setStart(event.target.value)}
+              className="rounded-xl border border-stone-200 px-3 py-2.5 text-sm"
+            />
+            <input
+              type="time"
+              value={end}
+              onChange={(event) => setEnd(event.target.value)}
+              className="rounded-xl border border-stone-200 px-3 py-2.5 text-sm"
+            />
+          </div>
+
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Session label"
+            className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm"
+          />
+
+          <Button
+            className="w-full"
+            loading={loading}
+            onClick={() =>
+              onSave({
+                slotId: slot.id,
+                startTime: new Date(`${date}T${start}:00+05:30`).toISOString(),
+                endTime: new Date(`${date}T${end}:00+05:30`).toISOString(),
+                title: title.trim() || undefined,
+              })
+            }
+          >
+            Save changes
+          </Button>
+        </div>
+      )}
+    </Modal>
   )
 }

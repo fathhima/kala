@@ -1,129 +1,218 @@
-import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { SlidersHorizontal, X } from 'lucide-react'
-import { InstructorCard } from '../../components/shared/InstructorCard'
-import { useInstructorStore } from '../../stores/instructorStore'
-import { useSkillStore } from '../../stores/skillStore'
-import { Button } from '../../components/ui/Button'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { MapPin, Search } from 'lucide-react'
+import { Avatar } from '@/components/ui/Avatar'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { usePublicCategoriesQuery, usePublicInstructorsQuery } from '@/features/public-catelog/hooks'
 
-type SortOption = 'top-rated' | 'price-low' | 'price-high' | 'newest'
+const PAGE_SIZE = 12
 
 export function BrowseInstructors() {
-  const { instructors } = useInstructorStore()
-  const { skills } = useSkillStore()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [selectedSkill, setSelectedSkill] = useState(searchParams.get('skill') || '')
-  const [minRating, setMinRating] = useState(0)
-  const [maxPrice, setMaxPrice] = useState(5000)
-  const [sort, setSort] = useState<SortOption>('top-rated')
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const page = Math.max(Number(searchParams.get('page') || '1'), 1)
+  const subcategoryId = searchParams.get('subcategoryId') || undefined
+  const committedSearch = searchParams.get('search') || ''
 
-  const approved = instructors.filter((i) => i.isApproved)
+  const [search, setSearch] = useState(committedSearch)
 
-  const filtered = useMemo(() => {
-    let result = approved.filter((inst) => {
-      const matchesSkill = !selectedSkill || inst.skills.some((s) => s.slug === selectedSkill)
-      const matchesRating = inst.avgRating >= minRating
-      const matchesPrice = inst.pricing <= maxPrice
-      return matchesSkill && matchesRating && matchesPrice
-    })
+  const categoriesQuery = usePublicCategoriesQuery()
+  const instructorsQuery = usePublicInstructorsQuery({
+    page,
+    limit: PAGE_SIZE,
+    search: committedSearch || undefined,
+    subcategoryId,
+  })
 
-    if (sort === 'top-rated') result = [...result].sort((a, b) => b.avgRating - a.avgRating)
-    else if (sort === 'price-low') result = [...result].sort((a, b) => a.pricing - b.pricing)
-    else if (sort === 'price-high') result = [...result].sort((a, b) => b.pricing - a.pricing)
-    else if (sort === 'newest') result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  useEffect(() => {
+    setSearch(committedSearch)
+  }, [committedSearch])
 
-    return result
-  }, [approved, selectedSkill, minRating, maxPrice, sort])
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault()
 
-  const clearFilters = () => {
-    setSelectedSkill('')
-    setMinRating(0)
-    setMaxPrice(5000)
-    setSort('top-rated')
+    const next = new URLSearchParams(searchParams)
+    const value = search.trim()
+
+    if (value) next.set('search', value)
+    else next.delete('search')
+
+    next.set('page', '1')
+    setSearchParams(next)
   }
 
-  const hasFilters = selectedSkill || minRating > 0 || maxPrice < 5000
+  const updateSkill = (value: string) => {
+    const next = new URLSearchParams(searchParams)
+
+    if (value) next.set('subcategoryId', value)
+    else next.delete('subcategoryId')
+
+    next.set('page', '1')
+    setSearchParams(next)
+  }
+
+  const updatePage = (nextPage: number) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('page', String(nextPage))
+    setSearchParams(next)
+  }
+
+  if (instructorsQuery.isLoading) {
+    return (
+      <div className="page-container py-12 text-sm text-stone-500">
+        Loading instructors…
+      </div>
+    )
+  }
+
+  if (instructorsQuery.isError || !instructorsQuery.data) {
+    return (
+      <div className="page-container py-12 text-sm text-red-500">
+        Could not load instructors.
+      </div>
+    )
+  }
+
+  const { items, meta } = instructorsQuery.data
+  const skills =
+    categoriesQuery.data?.flatMap((category) =>
+      category.subcategories.map((subcategory) => ({
+        ...subcategory,
+        categoryName: category.name,
+      })),
+    ) ?? []
 
   return (
     <div className="page-container py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-kala-brown mb-2">Browse Instructors</h1>
-          <p className="text-stone-500">{filtered.length} instructor{filtered.length !== 1 ? 's' : ''} available</p>
-        </div>
-        <Button variant="outline" onClick={() => setFiltersOpen(!filtersOpen)} className="gap-2">
-          <SlidersHorizontal size={16} /> Filters
-          {hasFilters && <span className="h-2 w-2 bg-kala-terracotta rounded-full" />}
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-kala-brown">
+          Browse Instructors
+        </h1>
+        <p className="mt-2 text-stone-500">
+          {meta.total} approved instructor{meta.total === 1 ? '' : 's'}{' '}
+          available.
+        </p>
       </div>
 
-      {/* Filter Panel */}
-      {filtersOpen && (
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* Skill filter */}
-            <div>
-              <label className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2 block">Skill</label>
-              <select
-                value={selectedSkill}
-                onChange={(e) => setSelectedSkill(e.target.value)}
-                className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kala-amber"
-              >
-                <option value="">All Skills</option>
-                {skills.map((s) => <option key={s.id} value={s.slug}>{s.name}</option>)}
-              </select>
-            </div>
+      <div className="mb-8 grid gap-3 md:grid-cols-[1fr_260px]">
+        <form onSubmit={submitSearch} className="relative">
+          <Search
+            size={17}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+          />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search instructor, skill, or style…"
+            className="w-full rounded-xl border border-stone-200 bg-white py-3 pl-10 pr-4 text-sm"
+          />
+        </form>
 
-            {/* Min rating */}
-            <div>
-              <label className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2 block">Min Rating: {minRating > 0 ? minRating.toFixed(1) : 'Any'}</label>
-              <input type="range" min={0} max={5} step={0.5} value={minRating} onChange={(e) => setMinRating(Number(e.target.value))} className="w-full accent-kala-amber" />
-            </div>
+        <select
+          value={subcategoryId ?? ''}
+          onChange={(event) => updateSkill(event.target.value)}
+          className="rounded-xl border border-stone-200 bg-white px-3 text-sm"
+        >
+          <option value="">All skills</option>
+          {skills.map((skill) => (
+            <option key={skill.id} value={skill.id}>
+              {skill.categoryName} — {skill.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-            {/* Max price */}
-            <div>
-              <label className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2 block">Max Price: ₹{maxPrice}</label>
-              <input type="range" min={100} max={5000} step={100} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-kala-amber" />
-            </div>
-
-            {/* Sort */}
-            <div>
-              <label className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2 block">Sort By</label>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortOption)}
-                className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kala-amber"
-              >
-                <option value="top-rated">Top Rated</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="newest">Newest</option>
-              </select>
-            </div>
-          </div>
-
-          {hasFilters && (
-            <button onClick={clearFilters} className="mt-4 flex items-center gap-1.5 text-xs text-kala-terracotta hover:underline">
-              <X size={13} /> Clear filters
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Results */}
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((inst) => <InstructorCard key={inst.id} instructor={inst} />)}
-        </div>
+      {items.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-stone-500">
+          No instructors match your search.
+        </Card>
       ) : (
-        <div className="text-center py-20">
-          <div className="text-5xl mb-4">🔍</div>
-          <p className="text-stone-500 mb-4">No instructors match your filters.</p>
-          <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((instructor) => {
+            const firstOffering = instructor.offerings[0]
+            const firstImage = firstOffering?.media.find(
+              (media) => media.type === 'IMAGE',
+            )
+
+            return (
+              <Link key={instructor.id} to={`/instructors/${instructor.id}`}>
+                <Card hover className="h-full overflow-hidden">
+                  {firstImage && (
+                    <img
+                      src={firstImage.viewUrl}
+                      alt={instructor.name}
+                      className="h-44 w-full object-cover"
+                    />
+                  )}
+
+                  <div className="p-5">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        name={instructor.name}
+                        src={instructor.imageUrl ?? undefined}
+                        size="md"
+                      />
+                      <div>
+                        <h2 className="font-semibold text-stone-800">
+                          {instructor.name}
+                        </h2>
+                        {instructor.location && (
+                          <p className="flex items-center gap-1 text-xs text-stone-500">
+                            <MapPin size={12} /> {instructor.location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="mt-4 line-clamp-2 text-sm text-stone-500">
+                      {instructor.bio || 'Creative instructor on Kala.'}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {instructor.offerings.slice(0, 3).map((offering) => (
+                        <span
+                          key={offering.id}
+                          className="rounded-full bg-amber-50 px-2.5 py-1 text-xs text-kala-terracotta"
+                        >
+                          {offering.subcategory.name}
+                        </span>
+                      ))}
+                    </div>
+
+                    {firstOffering && (
+                      <p className="mt-4 text-sm font-semibold text-kala-terracotta">
+                        From ₹
+                        {Number(firstOffering.hourlyRate).toLocaleString(
+                          'en-IN',
+                        )}{' '}
+                        / hour
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       )}
+
+      <div className="mt-8 flex justify-between">
+        <Button
+          variant="outline"
+          disabled={!meta.hasPrevPage}
+          onClick={() => updatePage(page - 1)}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!meta.hasNextPage}
+          onClick={() => updatePage(page + 1)}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   )
 }

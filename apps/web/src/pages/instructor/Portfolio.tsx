@@ -1,13 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ImageIcon, Plus, Trash2, VideoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import {
-  useOfferingMediaUrlQuery,
-  useOnboardingWorkspaceQuery,
-  useRemoveOfferingMediaMutation,
-  useUploadOfferingMediaMutation,
-} from '@/features/instructor/hooks'
+import { useOfferingMediaUrlQuery, useOnboardingWorkspaceQuery, useRemoveOfferingMediaMutation, useUploadOfferingMediaMutation, } from '@/features/instructor/hooks'
 import { getApiErrorResponse } from '@/lib/api-error'
 
 function MediaItem({
@@ -54,6 +49,7 @@ export function Portfolio() {
   const uploadMutation = useUploadOfferingMediaMutation()
   const removeMutation = useRemoveOfferingMediaMutation()
   const [error, setError] = useState('')
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const offerings = (workspace?.offerings ?? []).filter(
     (offering) => offering.status === 'APPROVED',
@@ -125,6 +121,9 @@ export function Portfolio() {
 
             <label className="inline-flex cursor-pointer">
               <input
+                ref={(element) => {
+                  fileInputRefs.current[offering.id] = element
+                }}
                 type="file"
                 multiple
                 accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
@@ -136,7 +135,11 @@ export function Portfolio() {
                 }}
               />
               <span>
-                <Button type="button" disabled={uploadMutation.isPending}>
+                <Button
+                  type="button"
+                  disabled={uploadMutation.isPending}
+                  onClick={() => fileInputRefs.current[offering.id]?.click()}
+                >
                   <Plus size={16} />
                   Add images or videos
                 </Button>

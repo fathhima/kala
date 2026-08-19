@@ -1,48 +1,90 @@
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
-import { SkillCard } from '../../components/shared/SkillCard'
-import { useSkillStore } from '../../stores/skillStore'
+import { useState } from 'react'
+import { Card } from '@/components/ui/Card'
+import { usePublicCategoriesQuery } from '@/features/public-catelog/hooks'
 
 export function BrowseSkills() {
-  const { skills } = useSkillStore()
-  const [query, setQuery] = useState('')
+  const { data: categories = [], isLoading, isError } = usePublicCategoriesQuery()
 
-  const filtered = skills.filter((s) =>
-    s.name.toLowerCase().includes(query.toLowerCase()) ||
-    s.description?.toLowerCase().includes(query.toLowerCase())
+  const [search, setSearch] = useState('')
+  const normalizedSearch = search.trim().toLowerCase()
+
+  const skills = categories.flatMap((category) =>
+    category.subcategories
+      .filter((subcategory) =>
+        [category.name, subcategory.name, subcategory.description]
+          .filter(Boolean)
+          .some((value) => value!.toLowerCase().includes(normalizedSearch)),
+      )
+      .map((subcategory) => ({ category, subcategory })),
   )
+
+  if (isLoading) {
+    return (
+      <div className="page-container py-12 text-sm text-stone-500">
+        Loading skills…
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="page-container py-12 text-sm text-red-500">
+        Could not load skills.
+      </div>
+    )
+  }
 
   return (
     <div className="page-container py-12">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-kala-brown mb-3">Creative Skills</h1>
-        <p className="text-stone-500 max-w-md mx-auto">Explore artistic skills taught by passionate instructors. Find what sparks your creativity.</p>
+      <div className="mx-auto mb-10 max-w-2xl text-center">
+        <h1 className="text-4xl font-bold text-kala-brown">
+          Creative Skills
+        </h1>
+        <p className="mt-3 text-stone-500">
+          Discover skills taught by approved Kala instructors.
+        </p>
       </div>
 
-      {/* Search */}
-      <div className="max-w-md mx-auto mb-10 relative">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+      <div className="relative mx-auto mb-10 max-w-xl">
+        <Search
+          size={17}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+        />
         <input
-          type="text"
-          placeholder="Search skills..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-kala-amber shadow-sm"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search skills…"
+          className="w-full rounded-xl border border-stone-200 bg-white py-3 pl-10 pr-4 text-sm"
         />
       </div>
 
-      {/* Grid */}
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          {filtered.map((skill) => (
-            <SkillCard key={skill.id} skill={skill} />
-          ))}
-        </div>
+      {skills.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-stone-500">
+          No skills match your search.
+        </Card>
       ) : (
-        <div className="text-center py-20">
-          <div className="text-5xl mb-4">🔍</div>
-          <p className="text-stone-500">No skills found for "{query}"</p>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {skills.map(({ category, subcategory }) => (
+            <Link
+              key={subcategory.id}
+              to={`/instructors?subcategoryId=${subcategory.id}`}
+            >
+              <Card hover className="h-full p-5">
+                <p className="text-xs font-medium text-kala-terracotta">
+                  {category.name}
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-stone-800">
+                  {subcategory.name}
+                </h2>
+                <p className="mt-2 text-sm text-stone-500">
+                  {subcategory.description ||
+                    'Find an instructor and start learning.'}
+                </p>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
     </div>

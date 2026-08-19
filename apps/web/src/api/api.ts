@@ -374,6 +374,83 @@ export interface PresignedUploadResponseDto {
     'message': string;
     'data': PresignedUploadDataDto;
 }
+export interface PublicCategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+    'description'?: object | null;
+    'subcategories': Array<PublicSubcategoryDto>;
+}
+export interface PublicCategoryListResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': Array<PublicCategoryDto>;
+}
+export interface PublicInstructorDto {
+    /**
+     * Instructor profile ID
+     */
+    'id': string;
+    'name': string;
+    'imageUrl'?: object | null;
+    'bio'?: object | null;
+    'location'?: object | null;
+    'offerings': Array<PublicOfferingDto>;
+}
+export interface PublicInstructorListDataDto {
+    'items': Array<PublicInstructorDto>;
+    'meta': PaginationMetaDto;
+}
+export interface PublicInstructorListResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PublicInstructorListDataDto;
+}
+export interface PublicInstructorResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': PublicInstructorDto;
+}
+export interface PublicMediaDto {
+    'id': string;
+    'type': PublicMediaDtoTypeEnum;
+    'viewUrl': string;
+}
+
+export const PublicMediaDtoTypeEnum = {
+    Image: 'IMAGE',
+    Video: 'VIDEO'
+} as const;
+
+export type PublicMediaDtoTypeEnum = typeof PublicMediaDtoTypeEnum[keyof typeof PublicMediaDtoTypeEnum];
+
+export interface PublicOfferingCategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+}
+export interface PublicOfferingDto {
+    'id': string;
+    'title'?: object | null;
+    'description'?: object | null;
+    'hourlyRate': string;
+    'currency': string;
+    'experienceYears'?: object | null;
+    'subcategory': PublicOfferingSubcategoryDto;
+    'media': Array<PublicMediaDto>;
+}
+export interface PublicOfferingSubcategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+    'category': PublicOfferingCategoryDto;
+}
+export interface PublicSubcategoryDto {
+    'id': string;
+    'name': string;
+    'slug': string;
+    'description'?: object | null;
+}
 export interface RefreshDataDto {
     'accessToken': string;
 }
@@ -4090,6 +4167,261 @@ export class InstructorOnboardingApi extends BaseAPI {
      */
     public instructorControllerUpdateOffering(offeringId: string, updateOfferingDto: UpdateOfferingDto, options?: RawAxiosRequestConfig) {
         return InstructorOnboardingApiFp(this.configuration).instructorControllerUpdateOffering(offeringId, updateOfferingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * PublicCatalogApi - axios parameter creator
+ */
+export const PublicCatalogApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List active categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetCategories: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/public/catalog/categories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get one approved instructor profile
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetInstructor: async (profileId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileId' is not null or undefined
+            assertParamExists('publicCatalogControllerGetInstructor', 'profileId', profileId)
+            const localVarPath = `/api/public/catalog/instructors/{profileId}`
+                .replace(`{${"profileId"}}`, encodeURIComponent(String(profileId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List approved instructors and offerings
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [subcategoryId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetInstructors: async (page?: number, limit?: number, search?: string, subcategoryId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/public/catalog/instructors`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+            if (subcategoryId !== undefined) {
+                localVarQueryParameter['subcategoryId'] = subcategoryId;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * PublicCatalogApi - functional programming interface
+ */
+export const PublicCatalogApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = PublicCatalogApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List active categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async publicCatalogControllerGetCategories(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicCategoryListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.publicCatalogControllerGetCategories(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PublicCatalogApi.publicCatalogControllerGetCategories']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get one approved instructor profile
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async publicCatalogControllerGetInstructor(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicInstructorResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.publicCatalogControllerGetInstructor(profileId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PublicCatalogApi.publicCatalogControllerGetInstructor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List approved instructors and offerings
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [subcategoryId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async publicCatalogControllerGetInstructors(page?: number, limit?: number, search?: string, subcategoryId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicInstructorListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.publicCatalogControllerGetInstructors(page, limit, search, subcategoryId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PublicCatalogApi.publicCatalogControllerGetInstructors']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * PublicCatalogApi - factory interface
+ */
+export const PublicCatalogApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = PublicCatalogApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List active categories and subcategories
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetCategories(options?: RawAxiosRequestConfig): AxiosPromise<PublicCategoryListResponseDto> {
+            return localVarFp.publicCatalogControllerGetCategories(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get one approved instructor profile
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetInstructor(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<PublicInstructorResponseDto> {
+            return localVarFp.publicCatalogControllerGetInstructor(profileId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List approved instructors and offerings
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {string} [search] 
+         * @param {string} [subcategoryId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        publicCatalogControllerGetInstructors(page?: number, limit?: number, search?: string, subcategoryId?: string, options?: RawAxiosRequestConfig): AxiosPromise<PublicInstructorListResponseDto> {
+            return localVarFp.publicCatalogControllerGetInstructors(page, limit, search, subcategoryId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * PublicCatalogApi - object-oriented interface
+ */
+export class PublicCatalogApi extends BaseAPI {
+    /**
+     * 
+     * @summary List active categories and subcategories
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public publicCatalogControllerGetCategories(options?: RawAxiosRequestConfig) {
+        return PublicCatalogApiFp(this.configuration).publicCatalogControllerGetCategories(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get one approved instructor profile
+     * @param {string} profileId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public publicCatalogControllerGetInstructor(profileId: string, options?: RawAxiosRequestConfig) {
+        return PublicCatalogApiFp(this.configuration).publicCatalogControllerGetInstructor(profileId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List approved instructors and offerings
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {string} [search] 
+     * @param {string} [subcategoryId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public publicCatalogControllerGetInstructors(page?: number, limit?: number, search?: string, subcategoryId?: string, options?: RawAxiosRequestConfig) {
+        return PublicCatalogApiFp(this.configuration).publicCatalogControllerGetInstructors(page, limit, search, subcategoryId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

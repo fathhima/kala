@@ -74,18 +74,18 @@ export const router = createBrowserRouter([
         path: '/',
         element: <Landing />
       },
-      // {
-      //   path: '/skills',
-      //   element: <BrowseSkills />
-      // },
-      // {
-      //   path: '/instructors',
-      //   element: <BrowseInstructors />
-      // },
-      // {
-      //   path: '/instructors:id',
-      //   element: <InstructorProfile />
-      // }
+      {
+        path: '/skills',
+        element: <BrowseSkills />
+      },
+      {
+        path: '/instructors',
+        element: <BrowseInstructors />
+      },
+      {
+        path: '/instructors/:profileId',
+        element: <InstructorProfile />
+      }
     ]
   },
   {

@@ -8,6 +8,7 @@ import { useLogoutMutation } from '@/features/auth/hooks'
 
 const navItems = [
   { label: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+  { label: 'Become an Instructor', path: '/dashboard/become-instructor', icon: <GraduationCap size={18} />, },
   { label: 'Profile Settings', path: '/dashboard/settings', icon: <Settings size={18} /> },
 ]
 

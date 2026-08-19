@@ -51,5 +51,7 @@ export interface InstructorRepository {
 
     deleteMedia(mediaId: string): Promise<void>;
 
+    cancelPendingApplication(profileId: string, applicationId: string,): Promise<boolean>;
+
     submitApplication(profileId: string, offeringIds: string[],): Promise<InstructorApplicationEntity>;
 }

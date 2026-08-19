@@ -102,6 +102,15 @@ export class InstructorController {
         return MessageResponseDto.success('Offering media removed successfully',);
     }
 
+    @Post('applications/:applicationId/cancel')
+    @ApiOperation({ summary: 'Cancel the current pending instructor application' })
+    @ApiOkResponse({ type: MessageResponseDto })
+    async cancelApplication(@UserId() userId: string, @Param('applicationId') applicationId: string,): Promise<MessageResponseDto> {
+        await this.instructorService.cancelApplication(userId, applicationId);
+
+        return MessageResponseDto.success('Instructor application cancelled successfully',);
+    }
+
     @Post('submit')
     @ApiOperation({ summary: 'Submit instructor application', })
     @ApiOkResponse({ type: InstructorApplicationResponseDto, })

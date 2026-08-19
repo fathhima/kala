@@ -1,17 +1,15 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
-import { MediaType, OfferingStatus } from '@prisma/client';
+import { MediaType, } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { StorageService } from '@/shared/storage/storage.service';
-import { PaginatedResult } from '@/shared/types';
 import { UpdateInstructorProfileDto } from './dto/request/update-instructor-profile.dto';
 import { CreateOfferingDto } from './dto/request/create-offering.dto';
 import { UpdateOfferingDto } from './dto/request/update-offering.dto';
 import { OFFERING_MEDIA_MIME_TYPES, RequestOfferingMediaUploadDto, } from './dto/request/request-offering-media-upload.dto';
 import { ConfirmOfferingMediaUploadDto } from './dto/request/confirm-offering-media-upload.dto';
-import { InstructorApplicationQueryDto } from './dto/request/instructor-application-query.dto';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from './entities/instructor-profile.entity';
 import { INSTRUCTOR_REPOSITORY, type InstructorRepository } from './repositories/interfaces/instructor.repository';
-import { isEditableOfferingStatus, ReviewableOfferingStatus } from './types/offering-status.type';
+import { isEditableOfferingStatus } from './types/offering-status.type';
 
 @Injectable()
 export class InstructorService {
@@ -26,11 +24,7 @@ export class InstructorService {
     }
 
     async saveProfile(userId: string, dto: UpdateInstructorProfileDto,): Promise<InstructorProfileEntity> {
-        const workspace = await this.instructorRepository.findWorkspaceByUserId(userId);
-
-        if (workspace?.latestApplication?.status === 'PENDING') {
-            throw new ConflictException('Your profile cannot be changed while an application is under review',);
-        }
+        await this.assertNoPendingApplication(userId);
 
         return this.instructorRepository.upsertProfile(userId, {
             bio: dto.bio?.trim(),
@@ -39,10 +33,30 @@ export class InstructorService {
     }
 
     async addOffering(userId: string, dto: CreateOfferingDto,): Promise<InstructorOfferingEntity> {
+        await this.assertNoPendingApplication(userId);
+
         const profile = await this.getOrCreateDraftProfile(userId);
         await this.assertSubcategoryIsSelectable(dto.subcategoryId);
 
         return this.instructorRepository.createOffering(profile.id, dto);
+    }
+
+    async cancelApplication(userId: string, applicationId: string,): Promise<void> {
+        const workspace = await this.instructorRepository.findWorkspaceByUserId(userId);
+
+        if (!workspace) {
+            throw new NotFoundException('Instructor application not found');
+        }
+
+        if (workspace.latestApplication?.id !== applicationId || workspace.latestApplication.status !== 'PENDING') {
+            throw new ConflictException('Only your current pending application can be cancelled',);
+        }
+
+        const cancelled = await this.instructorRepository.cancelPendingApplication(workspace.id, applicationId,);
+
+        if (!cancelled) {
+            throw new ConflictException('Application could not be cancelled');
+        }
     }
 
     async updateOffering(userId: string, offeringId: string, dto: UpdateOfferingDto,): Promise<InstructorOfferingEntity> {
@@ -66,7 +80,8 @@ export class InstructorService {
     }
 
     async createMediaUploadUrl(userId: string, offeringId: string, dto: RequestOfferingMediaUploadDto,) {
-        await this.getOwnedEditableOffering(userId, offeringId);
+        await this.getOwnedPortfolioOffering(userId, offeringId);
+
         this.assertMediaTypeMatchesMimeType(dto.type, dto.mimeType);
 
         const currentCount = await this.instructorRepository.countMedia(offeringId, dto.type,);
@@ -88,7 +103,7 @@ export class InstructorService {
     }
 
     async confirmMediaUpload(userId: string, offeringId: string, dto: ConfirmOfferingMediaUploadDto,): Promise<OfferingMediaEntity> {
-        await this.getOwnedEditableOffering(userId, offeringId);
+        await this.getOwnedPortfolioOffering(userId, offeringId)
 
         const expectedPrefix = `instructor-offerings/${offeringId}/${dto.type.toLowerCase()}/`;
 
@@ -137,7 +152,7 @@ export class InstructorService {
     }
 
     async removeMedia(userId: string, offeringId: string, mediaId: string,): Promise<void> {
-        const offering = await this.getOwnedEditableOffering(userId, offeringId);
+        const offering = await this.getOwnedPortfolioOffering(userId, offeringId);
         const media = offering.media.find((item) => item.id === mediaId);
 
         if (!media) {
@@ -199,6 +214,14 @@ export class InstructorService {
         );
     }
 
+    private async assertNoPendingApplication(userId: string): Promise<void> {
+        const workspace = await this.instructorRepository.findWorkspaceByUserId(userId);
+
+        if (workspace?.latestApplication?.status === 'PENDING') {
+            throw new ConflictException('Your application is under review and cannot be changed',);
+        }
+    }
+
     private async getOrCreateDraftProfile(userId: string) {
         return (
             (await this.instructorRepository.findWorkspaceByUserId(userId)) ??
@@ -218,6 +241,8 @@ export class InstructorService {
     }
 
     private async getOwnedEditableOffering(userId: string, offeringId: string,): Promise<InstructorOfferingEntity> {
+        await this.assertNoPendingApplication(userId);
+
         const offering = await this.getOwnedOffering(userId, offeringId);
 
         if (!isEditableOfferingStatus(offering.status)) {
@@ -225,6 +250,18 @@ export class InstructorService {
         }
 
         return offering;
+    }
+
+    private async getOwnedPortfolioOffering(userId: string, offeringId: string,): Promise<InstructorOfferingEntity> {
+        await this.assertNoPendingApplication(userId)
+
+        const offering = await this.getOwnedOffering(userId, offeringId)
+
+        if (offering.status !== 'APPROVED' && !isEditableOfferingStatus(offering.status)) {
+            throw new ConflictException('Portfolio media can only be changed for approved or editable offerings',)
+        }
+
+        return offering
     }
 
     private async assertSubcategoryIsSelectable(subcategoryId: string) {

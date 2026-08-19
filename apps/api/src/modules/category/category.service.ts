@@ -41,10 +41,6 @@ export class CategoryService {
         return this.categoryRepository.findAll();
     }
 
-    async findSelectable(): Promise<CategoryEntity[]> {
-        return this.categoryRepository.findSelectable()
-    }
-
     async findSubcategories(categoryId: string,): Promise<SubcategoryEntity[]> {
         await this.getCategoryOrThrow(categoryId);
 

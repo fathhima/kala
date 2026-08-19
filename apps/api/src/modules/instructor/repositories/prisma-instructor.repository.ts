@@ -236,6 +236,66 @@ export class PrismaInstructorRepository implements InstructorRepository, AdminIn
         });
     }
 
+    async cancelPendingApplication(profileId: string, applicationId: string,): Promise<boolean> {
+        return this.prisma.$transaction(async (tx) => {
+            const application = await tx.instructorApplication.findFirst({
+                where: {
+                    id: applicationId,
+                    profileId,
+                    status: InstructorApplicationStatus.PENDING,
+                },
+                select: { id: true },
+            });
+
+            if (!application) {
+                return false;
+            }
+
+            await tx.instructorOffering.updateMany({
+                where: {
+                    profileId,
+                    applicationId,
+                    status: OfferingStatus.PENDING,
+                },
+                data: {
+                    applicationId: null,
+                    status: OfferingStatus.DRAFT,
+                    reviewNote: null,
+                    reviewedAt: null,
+                    reviewedBy: null,
+                },
+            });
+
+            await tx.instructorApplication.update({
+                where: { id: applicationId },
+                data: {
+                    status: InstructorApplicationStatus.CANCELLED,
+                    reviewedAt: new Date(),
+                    reviewedBy: null,
+                    reviewNote: null,
+                },
+            });
+
+            const approvedOfferingCount = await tx.instructorOffering.count({
+                where: {
+                    profileId,
+                    status: OfferingStatus.APPROVED,
+                },
+            });
+
+            await tx.instructorProfile.update({
+                where: { id: profileId },
+                data: {
+                    status: approvedOfferingCount > 0
+                        ? InstructorProfileStatus.APPROVED
+                        : InstructorProfileStatus.DRAFT,
+                },
+            });
+
+            return true;
+        });
+    }
+
     async findApplicationsForAdmin(input: {
         page: number;
         limit: number;

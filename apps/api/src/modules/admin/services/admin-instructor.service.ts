@@ -2,6 +2,7 @@ import { InstructorApplicationQueryDto } from "@/modules/instructor/dto/request/
 import { InstructorApplicationEntity } from "@/modules/instructor/entities/instructor-profile.entity";
 import { ADMIN_INSTRUCTOR_REPOSITORY, type AdminInstructorRepository } from "@/modules/instructor/repositories/interfaces/admin-instructor.repositoty";
 import { ReviewableOfferingStatus } from "@/modules/instructor/types/offering-status.type";
+import { StorageService } from "@/shared/storage/storage.service";
 import { PaginatedResult } from "@/shared/types";
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 
@@ -9,7 +10,9 @@ import { BadRequestException, ConflictException, Inject, Injectable, NotFoundExc
 export class AdminInstructorService {
 
     constructor(@Inject(ADMIN_INSTRUCTOR_REPOSITORY)
-    private readonly instructorReviewRepository: AdminInstructorRepository) { }
+    private readonly instructorReviewRepository: AdminInstructorRepository,
+        private readonly storageService: StorageService
+    ) { }
 
     async getApplicationsForAdmin(query: InstructorApplicationQueryDto,): Promise<PaginatedResult<InstructorApplicationEntity>> {
         return this.instructorReviewRepository.findApplicationsForAdmin({
@@ -54,5 +57,30 @@ export class AdminInstructorService {
         }
 
         return result;
+    }
+
+    async getOfferingMediaViewUrl(applicationId: string, offeringId: string, mediaId: string,) {
+        const application = await this.instructorReviewRepository.findApplicationForAdmin(applicationId);
+
+        if (!application) {
+            throw new NotFoundException('Instructor application not found');
+        }
+
+        const offering = application.offerings.find((item) => item.id === offeringId,);
+
+        if (!offering) {
+            throw new NotFoundException('Offering not found in this application');
+        }
+
+        const media = offering.media.find((item) => item.id === mediaId);
+
+        if (!media) {
+            throw new NotFoundException('Offering media not found');
+        }
+
+        return this.storageService.createDownloadUrl({
+            key: media.storageKey,
+            expiresInSeconds: 900,
+        });
     }
 }

@@ -5,7 +5,7 @@ import { UserId } from '@/shared/decorators/user-id.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
 import { InstructorApplicationQueryDto } from '@/modules/instructor/dto/request/instructor-application-query.dto';
 import { ReviewOfferingDto } from '@/modules/instructor/dto/request/review-offering.dto';
-import { InstructorApplicationResponseDto, PaginatedInstructorApplicationsResponseDto, } from '@/modules/instructor/dto/response/instructor-response.dto';
+import { InstructorApplicationResponseDto, PaginatedInstructorApplicationsResponseDto, PresignedDownloadResponseDto, } from '@/modules/instructor/dto/response/instructor-response.dto';
 import { AdminInstructorService } from '../services/admin-instructor.service';
 
 @ApiTags('Admin instructor management')
@@ -25,6 +25,16 @@ export class AdminInstructorController {
         const result = await this.adminInstructorService.getApplicationsForAdmin(query);
 
         return PaginatedInstructorApplicationsResponseDto.fromResult('Instructor applications fetched successfully', result,);
+    }
+
+    @Get(':applicationId/offerings/:offeringId/media/:mediaId/view-url')
+    @ApiOperation({ summary: 'Get a signed offering-media URL for admin review', })
+    @ApiOkResponse({ type: PresignedDownloadResponseDto })
+    async getOfferingMediaViewUrl(@Param('applicationId') applicationId: string, @Param('offeringId') offeringId: string, @Param('mediaId') mediaId: string,
+    ): Promise<PresignedDownloadResponseDto> {
+        const view = await this.adminInstructorService.getOfferingMediaViewUrl(applicationId, offeringId, mediaId,);
+
+        return PresignedDownloadResponseDto.create(view);
     }
 
     @Get(':applicationId')

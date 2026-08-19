@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, } from '@nestjs/common';
-import { ApiConflictResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse, } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/shared/decorators/roles.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
 import { CategoryService } from './category.service';
-import { CategoryListResponseDto, CategoryResponseDto, PaginatedCategoryResponseDto } from './dto/response/category-response.dto';
+import { CategoryResponseDto, PaginatedCategoryResponseDto } from './dto/response/category-response.dto';
 import { CreateCategoryDto } from './dto/request/create-category.dto';
 import { UpdateCategoryDto } from './dto/request/update-category.dto';
 import { SubcategoryListResponseDto, SubcategoryResponseDto } from './dto/response/subcategory-response.dto';
@@ -32,15 +32,6 @@ export class CategoryController {
         const result = await this.categoryService.findManyForAdmin(query)
 
         return PaginatedCategoryResponseDto.fromResult('Categories fetched successfully', result,)
-    }
-
-    @Get()
-    @ApiOperation({ summary: 'Get selectable categories and subcategories', })
-    @ApiOkResponse({ type: CategoryListResponseDto, })
-    async findSelectable(): Promise<CategoryListResponseDto> {
-        const categories = await this.categoryService.findSelectable()
-
-        return CategoryListResponseDto.fromEntities('Selectable categories fetched successfully', categories,)
     }
 
     @Post()

@@ -51,6 +51,15 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
     return UserMapper.toEntity(user)
   }
 
+  async updateProfile(userId: string, data: { name?: string; imageUrl?: string | null }): Promise<UserEntity> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data,
+    })
+
+    return UserMapper.toEntity(user)
+  }
+
   async updatePassword(userId: string, hashedPassword: string) {
     await this.prisma.user.update({
       where: {

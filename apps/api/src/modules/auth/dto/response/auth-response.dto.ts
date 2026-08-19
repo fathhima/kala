@@ -24,6 +24,9 @@ export class SafeUserDto {
   @ApiProperty()
   isActive!: boolean;
 
+  @ApiProperty()
+  hasPassword!: boolean;
+
   static fromEntity(user: UserEntity): SafeUserDto {
     const dto = new SafeUserDto()
 
@@ -34,6 +37,7 @@ export class SafeUserDto {
     dto.imageUrl = user.imageUrl ?? null
     dto.isVerified = user.isVerified
     dto.isActive = user.isActive
+    dto.hasPassword = user.hasPassword
 
     return dto
   }

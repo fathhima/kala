@@ -26,6 +26,7 @@ import { REFRESH_SESSION_REPOSITORY } from "../repositories/interfaces/refresh-s
 import type { RefreshSessionRepository } from "../repositories/interfaces/refresh-session.repository";
 import { PENDING_SIGNUP_REPOSITORY, type PendingSignupRepository } from "../repositories/interfaces/pending-signup.repository";
 import { PASSWORD_RESET_REPOSITORY, type PasswordResetRepository } from "../repositories/interfaces/password-reset.repository";
+import { ChangePasswordDto } from "../dto/request/change-password.dto";
 
 @Injectable()
 export class AuthService {
@@ -404,6 +405,33 @@ export class AuthService {
     }
 
     async logoutAll(userId: string) {
+        await this.refreshSessionRepository.revokeAllForUser(userId)
+    }
+
+    async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+        const user = await this.userRepository.findAuthByEmail(
+            (await this.userRepository.findById(userId))?.email ?? '',)
+
+        if (!user) {
+            throw new UnauthorizedException('User not found')
+        }
+
+        if (user.password) {
+            if (!dto.currentPassword) {
+                throw new BadRequestException('Current password is required')
+            }
+
+            const matches = await bcrypt.compare(dto.currentPassword, user.password)
+
+            if (!matches) {
+                throw new BadRequestException('Current password is incorrect')
+            }
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
+
+        await this.userRepository.updatePassword(userId, hashedPassword)
+        await this.passwordResetRepository.revokeAllForUser(userId)
         await this.refreshSessionRepository.revokeAllForUser(userId)
     }
 

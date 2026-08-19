@@ -11,6 +11,7 @@ export interface UserRepository {
   findById(id: string): Promise<UserEntity | null>
   findAuthByEmail(email: string): Promise<AuthUser | null>;
   create(data: CreateUserInput): Promise<UserEntity>;
+  updateProfile(userId: string, data: { name?: string; imageUrl?: string | null },): Promise<UserEntity>
   updatePassword(userId: string, hashedPassword: string): Promise<void>;
   updateGoogleAccount(userId: string,
     data: {

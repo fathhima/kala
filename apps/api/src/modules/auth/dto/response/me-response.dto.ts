@@ -9,6 +9,7 @@ export class MeUserDto {
   imageUrl?: string | null;
   isVerified!: boolean;
   isActive!: boolean;
+  hasPassword!: boolean;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -22,6 +23,7 @@ export class MeUserDto {
     dto.imageUrl = user.imageUrl ?? null;
     dto.isVerified = user.isVerified;
     dto.isActive = user.isActive;
+    dto.hasPassword = user.hasPassword;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;
 

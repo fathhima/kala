@@ -8,6 +8,7 @@ export class UserEntity {
   imageUrl?: string | null;
   googleId?: string | null;
   isVerified!: boolean;
+  hasPassword!: boolean
   isActive!: boolean;
   createdAt!: Date;
   updatedAt!: Date;

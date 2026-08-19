@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from "@nestjs/common";
+import { Body, Controller, Get, Post, Put, Req, Res, UnauthorizedException } from "@nestjs/common";
 import { ApiBadRequestResponse, ApiForbiddenResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from "@nestjs/swagger";
 import { RegisterDto } from "./dto/request/register.dto";
 import { AuthService } from "./services/auth.service";
@@ -22,6 +22,7 @@ import { GoogleSignInRequestDto } from "./dto/request/google-signin.dto";
 import { RefreshResponseDto } from "./dto/response/refresh-response.dto";
 import { ValidateResetTokenResponseDto } from "./dto/response/validate-reset-token-response.dto";
 import { Throttle } from "@nestjs/throttler";
+import { ChangePasswordDto } from "./dto/request/change-password.dto";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -203,6 +204,15 @@ export class AuthController {
             message: 'User fetched successfully',
             user
         })
+    }
+
+    @Put('password')
+    @ApiOperation({ summary: 'Set or change the current account password', })
+    @ApiOkResponse({ type: MessageResponseDto })
+    async changePassword(@UserId() userId: string, @Body() dto: ChangePasswordDto,): Promise<MessageResponseDto> {
+        await this.authService.changePassword(userId, dto)
+
+        return MessageResponseDto.success('Password updated. Please sign in again.',)
     }
 
     private getRefreshTokenFromCookie(request: Request): string {

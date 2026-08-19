@@ -12,6 +12,7 @@ export class UserMapper {
             roles: user.roles.map(role => role as UserRole),
             imageUrl: user.imageUrl,
             googleId: user.googleId,
+            hasPassword: Boolean(user.password),
             isVerified: user.isVerified,
             isActive: user.isActive,
             createdAt: user.createdAt,

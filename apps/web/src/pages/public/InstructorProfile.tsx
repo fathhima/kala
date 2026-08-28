@@ -3,7 +3,7 @@ import { ArrowLeft, MapPin, Video } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import { usePublicInstructorQuery } from '@/features/public-catelog/hooks'
+import { usePublicInstructorQuery } from '@/features/instructor/hooks'
 
 export function InstructorProfile() {
   const { profileId } = useParams()

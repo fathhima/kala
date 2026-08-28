@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
-import { usePublicCategoriesQuery } from '@/features/public-catelog/hooks'
+import { useCategoriesQuery } from '@/features/categories/hooks'
 
 export function BrowseSkills() {
-  const { data: categories = [], isLoading, isError } = usePublicCategoriesQuery()
+  const { data: categories = [], isLoading, isError } = useCategoriesQuery()
 
   const [search, setSearch] = useState('')
   const normalizedSearch = search.trim().toLowerCase()

@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**userControllerFindSelectable**](#usercontrollerfindselectable) | **GET** /api/users/categories | Get selectable categories and subcategories|
+|[**userControllerGetMe**](#usercontrollergetme) | **GET** /api/users/me | Get the current user profile|
 |[**userControllerUpdateMe**](#usercontrollerupdateme) | **PATCH** /api/users/me | Update the current user profile|
 
-# **userControllerFindSelectable**
-> CategoryListResponseDto userControllerFindSelectable()
+# **userControllerGetMe**
+> object userControllerGetMe()
 
 
 ### Example
@@ -22,7 +22,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new UsersApi(configuration);
 
-const { status, data } = await apiInstance.userControllerFindSelectable();
+const { status, data } = await apiInstance.userControllerGetMe();
 ```
 
 ### Parameters
@@ -31,7 +31,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**CategoryListResponseDto**
+**object**
 
 ### Authorization
 

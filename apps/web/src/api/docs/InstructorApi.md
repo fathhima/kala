@@ -1,21 +1,22 @@
-# InstructorOnboardingApi
+# InstructorApi
 
 All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**instructorControllerAddOffering**](#instructorcontrolleraddoffering) | **POST** /api/instructor/onboarding/offerings | Create an instructor offering|
-|[**instructorControllerCancelApplication**](#instructorcontrollercancelapplication) | **POST** /api/instructor/onboarding/applications/{applicationId}/cancel | Cancel the current pending instructor application|
-|[**instructorControllerConfirmMediaUpload**](#instructorcontrollerconfirmmediaupload) | **POST** /api/instructor/onboarding/offerings/{offeringId}/media/confirm | Confirm offering media upload|
-|[**instructorControllerCreateMediaUploadUrl**](#instructorcontrollercreatemediauploadurl) | **POST** /api/instructor/onboarding/offerings/{offeringId}/media/upload-url | Create offering media upload URL|
-|[**instructorControllerGetInstructor**](#instructorcontrollergetinstructor) | **GET** /api/instructor/onboarding/{profileId} | Get one approved instructor profile|
-|[**instructorControllerGetMediaViewUrl**](#instructorcontrollergetmediaviewurl) | **GET** /api/instructor/onboarding/offerings/{offeringId}/media/{mediaId}/view-url | Get offering media view URL|
-|[**instructorControllerGetWorkspace**](#instructorcontrollergetworkspace) | **GET** /api/instructor/onboarding | Get instructor onboarding workspace|
-|[**instructorControllerRemoveMedia**](#instructorcontrollerremovemedia) | **DELETE** /api/instructor/onboarding/offerings/{offeringId}/media/{mediaId} | Remove offering media|
-|[**instructorControllerRemoveOffering**](#instructorcontrollerremoveoffering) | **DELETE** /api/instructor/onboarding/offerings/{offeringId} | Remove an instructor offering|
-|[**instructorControllerSaveProfile**](#instructorcontrollersaveprofile) | **PATCH** /api/instructor/onboarding/profile | Create or update instructor profile|
-|[**instructorControllerSubmitApplication**](#instructorcontrollersubmitapplication) | **POST** /api/instructor/onboarding/submit | Submit instructor application|
-|[**instructorControllerUpdateOffering**](#instructorcontrollerupdateoffering) | **PATCH** /api/instructor/onboarding/offerings/{offeringId} | Update an instructor offering|
+|[**instructorControllerAddOffering**](#instructorcontrolleraddoffering) | **POST** /api/instructors/offerings | Create an instructor offering|
+|[**instructorControllerCancelApplication**](#instructorcontrollercancelapplication) | **POST** /api/instructors/applications/{applicationId}/cancel | Cancel the current pending instructor application|
+|[**instructorControllerConfirmMediaUpload**](#instructorcontrollerconfirmmediaupload) | **POST** /api/instructors/offerings/{offeringId}/media/confirm | Confirm offering media upload|
+|[**instructorControllerCreateMediaUploadUrl**](#instructorcontrollercreatemediauploadurl) | **POST** /api/instructors/offerings/{offeringId}/media/upload-url | Create offering media upload URL|
+|[**instructorControllerGetInstructor**](#instructorcontrollergetinstructor) | **GET** /api/instructors/{profileId} | Get one approved instructor profile|
+|[**instructorControllerGetInstructors**](#instructorcontrollergetinstructors) | **GET** /api/instructors | List approved instructors and offerings|
+|[**instructorControllerGetMediaViewUrl**](#instructorcontrollergetmediaviewurl) | **GET** /api/instructors/offerings/{offeringId}/media/{mediaId}/view-url | Get offering media view URL|
+|[**instructorControllerGetWorkspace**](#instructorcontrollergetworkspace) | **GET** /api/instructors/onboarding | Get instructor onboarding workspace|
+|[**instructorControllerRemoveMedia**](#instructorcontrollerremovemedia) | **DELETE** /api/instructors/offerings/{offeringId}/media/{mediaId} | Remove offering media|
+|[**instructorControllerRemoveOffering**](#instructorcontrollerremoveoffering) | **DELETE** /api/instructors/offerings/{offeringId} | Remove an instructor offering|
+|[**instructorControllerSaveProfile**](#instructorcontrollersaveprofile) | **PATCH** /api/instructors/profile | Create or update instructor profile|
+|[**instructorControllerSubmitApplication**](#instructorcontrollersubmitapplication) | **POST** /api/instructors/submit | Submit instructor application|
+|[**instructorControllerUpdateOffering**](#instructorcontrollerupdateoffering) | **PATCH** /api/instructors/offerings/{offeringId} | Update an instructor offering|
 
 # **instructorControllerAddOffering**
 > InstructorOfferingResponseDto instructorControllerAddOffering(createOfferingDto)
@@ -25,13 +26,13 @@ All URIs are relative to *http://localhost:4000*
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration,
     CreateOfferingDto
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let createOfferingDto: CreateOfferingDto; //
 
@@ -76,12 +77,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let applicationId: string; // (default to undefined)
 
@@ -126,13 +127,13 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration,
     ConfirmOfferingMediaUploadDto
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 let confirmOfferingMediaUploadDto: ConfirmOfferingMediaUploadDto; //
@@ -180,13 +181,13 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration,
     RequestOfferingMediaUploadDto
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 let requestOfferingMediaUploadDto: RequestOfferingMediaUploadDto; //
@@ -234,12 +235,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let profileId: string; // (default to undefined)
 
@@ -277,6 +278,65 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **instructorControllerGetInstructors**
+> PublicInstructorListResponseDto instructorControllerGetInstructors()
+
+
+### Example
+
+```typescript
+import {
+    InstructorApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new InstructorApi(configuration);
+
+let page: number; // (optional) (default to 1)
+let limit: number; // (optional) (default to 10)
+let search: string; // (optional) (default to undefined)
+let subcategoryId: string; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.instructorControllerGetInstructors(
+    page,
+    limit,
+    search,
+    subcategoryId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **page** | [**number**] |  | (optional) defaults to 1|
+| **limit** | [**number**] |  | (optional) defaults to 10|
+| **search** | [**string**] |  | (optional) defaults to undefined|
+| **subcategoryId** | [**string**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+**PublicInstructorListResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **instructorControllerGetMediaViewUrl**
 > PresignedDownloadResponseDto instructorControllerGetMediaViewUrl()
 
@@ -285,12 +345,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 let mediaId: string; // (default to undefined)
@@ -338,12 +398,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 const { status, data } = await apiInstance.instructorControllerGetWorkspace();
 ```
@@ -381,12 +441,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 let mediaId: string; // (default to undefined)
@@ -434,12 +494,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 
@@ -484,13 +544,13 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration,
     UpdateInstructorProfileDto
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let updateInstructorProfileDto: UpdateInstructorProfileDto; //
 
@@ -535,12 +595,12 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 const { status, data } = await apiInstance.instructorControllerSubmitApplication();
 ```
@@ -578,13 +638,13 @@ No authorization required
 
 ```typescript
 import {
-    InstructorOnboardingApi,
+    InstructorApi,
     Configuration,
     UpdateOfferingDto
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new InstructorOnboardingApi(configuration);
+const apiInstance = new InstructorApi(configuration);
 
 let offeringId: string; // (default to undefined)
 let updateOfferingDto: UpdateOfferingDto; //

@@ -4,7 +4,8 @@ import { MapPin, Search } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { usePublicCategoriesQuery, usePublicInstructorsQuery } from '@/features/public-catelog/hooks'
+import { useCategoriesQuery } from '@/features/categories/hooks'
+import { usePublicInstructorsQuery } from '@/features/instructor/hooks'
 
 const PAGE_SIZE = 12
 
@@ -17,7 +18,7 @@ export function BrowseInstructors() {
 
   const [search, setSearch] = useState(committedSearch)
 
-  const categoriesQuery = usePublicCategoriesQuery()
+  const categoriesQuery = useCategoriesQuery()
   const instructorsQuery = usePublicInstructorsQuery({
     page,
     limit: PAGE_SIZE,

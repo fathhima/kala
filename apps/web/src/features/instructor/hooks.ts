@@ -1,11 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     cancelInstructorApplication,
-    createOffering, getOfferingMediaUrl, getOnboardingWorkspace, removeOffering, removeOfferingMedia, saveInstructorProfile,
+    createOffering, getOfferingMediaUrl, getOnboardingWorkspace, getPublicInstructor, getPublicInstructors, removeOffering, removeOfferingMedia, saveInstructorProfile,
     submitInstructorApplication, updateOffering, uploadOfferingMedia,
 } from './api'
 
 const workspaceKey = ['instructor-onboarding']
+
+export const usePublicInstructorsQuery = (params: {
+    page: number
+    limit: number
+    search?: string
+    subcategoryId?: string
+}) =>
+    useQuery({
+        queryKey: ['instructors', 'public', params],
+        queryFn: () => getPublicInstructors(params),
+    })
+
+export const usePublicInstructorQuery = (profileId: string) =>
+    useQuery({
+        queryKey: ['instructors', 'public', profileId],
+        queryFn: () => getPublicInstructor(profileId),
+        enabled: Boolean(profileId),
+    })
 
 const useInvalidateWorkspace = () => {
     const queryClient = useQueryClient()

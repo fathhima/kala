@@ -10,7 +10,6 @@ All URIs are relative to *http://localhost:4000*
 |[**authControllerLogin**](#authcontrollerlogin) | **POST** /api/auth/login | Login with email and password|
 |[**authControllerLogout**](#authcontrollerlogout) | **POST** /api/auth/logout | logout current session|
 |[**authControllerLogoutAll**](#authcontrollerlogoutall) | **POST** /api/auth/logout-all | Logout all sessions of current user|
-|[**authControllerMe**](#authcontrollerme) | **GET** /api/auth/me | Get current authenticated user|
 |[**authControllerRefresh**](#authcontrollerrefresh) | **POST** /api/auth/refresh | Refresh access token using refresh cookie|
 |[**authControllerRegister**](#authcontrollerregister) | **POST** /api/auth/register | Register user and send OTP to email|
 |[**authControllerResendOtp**](#authcontrollerresendotp) | **POST** /api/auth/resend-otp | Resend OTP to email|
@@ -294,49 +293,6 @@ This endpoint does not have any parameters.
 ### Return type
 
 **MessageResponseDto**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authControllerMe**
-> object authControllerMe()
-
-
-### Example
-
-```typescript
-import {
-    AuthenticationApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new AuthenticationApi(configuration);
-
-const { status, data } = await apiInstance.authControllerMe();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**object**
 
 ### Authorization
 

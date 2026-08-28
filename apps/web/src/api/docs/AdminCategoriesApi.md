@@ -4,23 +4,23 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**categoryControllerConfirmCategoryImageUpload**](#categorycontrollerconfirmcategoryimageupload) | **POST** /api/admin/categories/{categoryId}/image/confirm | Confirm and attach an uploaded category image|
-|[**categoryControllerConfirmSubcategoryImageUpload**](#categorycontrollerconfirmsubcategoryimageupload) | **POST** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/confirm | Confirm and attach an uploaded subcategory image|
-|[**categoryControllerCreateCategory**](#categorycontrollercreatecategory) | **POST** /api/admin/categories | Create a category|
-|[**categoryControllerCreateCategoryImageUploadUrl**](#categorycontrollercreatecategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/image/upload-url | Create a temporary S3 upload URL for a category image|
-|[**categoryControllerCreateSubcategory**](#categorycontrollercreatesubcategory) | **POST** /api/admin/categories/{categoryId}/subcategories | Create a subcategory within a category|
-|[**categoryControllerCreateSubcategoryImageUploadUrl**](#categorycontrollercreatesubcategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/upload-url | Create a temporary S3 upload URL for a subcategory image|
-|[**categoryControllerFindAll**](#categorycontrollerfindall) | **GET** /api/admin/categories | Get paginated categories and subcategories for admin management|
-|[**categoryControllerFindSubcategories**](#categorycontrollerfindsubcategories) | **GET** /api/admin/categories/{categoryId}/subcategories | Get subcategories in a category|
-|[**categoryControllerGetCategoryImageViewUrl**](#categorycontrollergetcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/image/view-url | Create a temporary private S3 view URL for a category image|
-|[**categoryControllerGetSubcategoryImageViewUrl**](#categorycontrollergetsubcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/view-url | Create a temporary private S3 view URL for a subcategory image|
-|[**categoryControllerRemoveCategoryImage**](#categorycontrollerremovecategoryimage) | **DELETE** /api/admin/categories/{categoryId}/image | Remove the image from a category and S3|
-|[**categoryControllerRemoveSubcategoryImage**](#categorycontrollerremovesubcategoryimage) | **DELETE** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image | Remove a subcategory image from the record and S3|
-|[**categoryControllerUpdateCategory**](#categorycontrollerupdatecategory) | **PATCH** /api/admin/categories/{categoryId} | Update or archive a category|
-|[**categoryControllerUpdateSubcategory**](#categorycontrollerupdatesubcategory) | **PATCH** /api/admin/categories/{categoryId}/subcategories/{subcategoryId} | Update or archive a subcategory|
+|[**adminCategoryControllerConfirmCategoryImageUpload**](#admincategorycontrollerconfirmcategoryimageupload) | **POST** /api/admin/categories/{categoryId}/image/confirm | Confirm and attach an uploaded category image|
+|[**adminCategoryControllerConfirmSubcategoryImageUpload**](#admincategorycontrollerconfirmsubcategoryimageupload) | **POST** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/confirm | Confirm and attach an uploaded subcategory image|
+|[**adminCategoryControllerCreateCategory**](#admincategorycontrollercreatecategory) | **POST** /api/admin/categories | Create a category|
+|[**adminCategoryControllerCreateCategoryImageUploadUrl**](#admincategorycontrollercreatecategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/image/upload-url | Create a temporary S3 upload URL for a category image|
+|[**adminCategoryControllerCreateSubcategory**](#admincategorycontrollercreatesubcategory) | **POST** /api/admin/categories/{categoryId}/subcategories | Create a subcategory within a category|
+|[**adminCategoryControllerCreateSubcategoryImageUploadUrl**](#admincategorycontrollercreatesubcategoryimageuploadurl) | **POST** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/upload-url | Create a temporary S3 upload URL for a subcategory image|
+|[**adminCategoryControllerFindAll**](#admincategorycontrollerfindall) | **GET** /api/admin/categories | Get paginated categories and subcategories for admin management|
+|[**adminCategoryControllerFindSubcategories**](#admincategorycontrollerfindsubcategories) | **GET** /api/admin/categories/{categoryId}/subcategories | Get subcategories in a category|
+|[**adminCategoryControllerGetCategoryImageViewUrl**](#admincategorycontrollergetcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/image/view-url | Create a temporary private S3 view URL for a category image|
+|[**adminCategoryControllerGetSubcategoryImageViewUrl**](#admincategorycontrollergetsubcategoryimageviewurl) | **GET** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image/view-url | Create a temporary private S3 view URL for a subcategory image|
+|[**adminCategoryControllerRemoveCategoryImage**](#admincategorycontrollerremovecategoryimage) | **DELETE** /api/admin/categories/{categoryId}/image | Remove the image from a category and S3|
+|[**adminCategoryControllerRemoveSubcategoryImage**](#admincategorycontrollerremovesubcategoryimage) | **DELETE** /api/admin/categories/{categoryId}/subcategories/{subcategoryId}/image | Remove a subcategory image from the record and S3|
+|[**adminCategoryControllerUpdateCategory**](#admincategorycontrollerupdatecategory) | **PATCH** /api/admin/categories/{categoryId} | Update or archive a category|
+|[**adminCategoryControllerUpdateSubcategory**](#admincategorycontrollerupdatesubcategory) | **PATCH** /api/admin/categories/{categoryId}/subcategories/{subcategoryId} | Update or archive a subcategory|
 
-# **categoryControllerConfirmCategoryImageUpload**
-> CategoryResponseDto categoryControllerConfirmCategoryImageUpload(confirmCategoryImageUploadDto)
+# **adminCategoryControllerConfirmCategoryImageUpload**
+> CategoryResponseDto adminCategoryControllerConfirmCategoryImageUpload(confirmCategoryImageUploadDto)
 
 
 ### Example
@@ -38,7 +38,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto; //
 
-const { status, data } = await apiInstance.categoryControllerConfirmCategoryImageUpload(
+const { status, data } = await apiInstance.adminCategoryControllerConfirmCategoryImageUpload(
     categoryId,
     confirmCategoryImageUploadDto
 );
@@ -73,8 +73,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerConfirmSubcategoryImageUpload**
-> SubcategoryResponseDto categoryControllerConfirmSubcategoryImageUpload(confirmCategoryImageUploadDto)
+# **adminCategoryControllerConfirmSubcategoryImageUpload**
+> SubcategoryResponseDto adminCategoryControllerConfirmSubcategoryImageUpload(confirmCategoryImageUploadDto)
 
 
 ### Example
@@ -93,7 +93,7 @@ let categoryId: string; // (default to undefined)
 let subcategoryId: string; // (default to undefined)
 let confirmCategoryImageUploadDto: ConfirmCategoryImageUploadDto; //
 
-const { status, data } = await apiInstance.categoryControllerConfirmSubcategoryImageUpload(
+const { status, data } = await apiInstance.adminCategoryControllerConfirmSubcategoryImageUpload(
     categoryId,
     subcategoryId,
     confirmCategoryImageUploadDto
@@ -130,8 +130,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerCreateCategory**
-> CategoryResponseDto categoryControllerCreateCategory(createCategoryDto)
+# **adminCategoryControllerCreateCategory**
+> CategoryResponseDto adminCategoryControllerCreateCategory(createCategoryDto)
 
 
 ### Example
@@ -148,7 +148,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 
 let createCategoryDto: CreateCategoryDto; //
 
-const { status, data } = await apiInstance.categoryControllerCreateCategory(
+const { status, data } = await apiInstance.adminCategoryControllerCreateCategory(
     createCategoryDto
 );
 ```
@@ -182,8 +182,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerCreateCategoryImageUploadUrl**
-> CategoryImageUploadResponseDto categoryControllerCreateCategoryImageUploadUrl(requestCategoryImageUploadDto)
+# **adminCategoryControllerCreateCategoryImageUploadUrl**
+> CategoryImageUploadResponseDto adminCategoryControllerCreateCategoryImageUploadUrl(requestCategoryImageUploadDto)
 
 
 ### Example
@@ -201,7 +201,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let requestCategoryImageUploadDto: RequestCategoryImageUploadDto; //
 
-const { status, data } = await apiInstance.categoryControllerCreateCategoryImageUploadUrl(
+const { status, data } = await apiInstance.adminCategoryControllerCreateCategoryImageUploadUrl(
     categoryId,
     requestCategoryImageUploadDto
 );
@@ -236,8 +236,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerCreateSubcategory**
-> SubcategoryResponseDto categoryControllerCreateSubcategory(createSubcategoryDto)
+# **adminCategoryControllerCreateSubcategory**
+> SubcategoryResponseDto adminCategoryControllerCreateSubcategory(createSubcategoryDto)
 
 
 ### Example
@@ -255,7 +255,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let createSubcategoryDto: CreateSubcategoryDto; //
 
-const { status, data } = await apiInstance.categoryControllerCreateSubcategory(
+const { status, data } = await apiInstance.adminCategoryControllerCreateSubcategory(
     categoryId,
     createSubcategoryDto
 );
@@ -292,8 +292,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerCreateSubcategoryImageUploadUrl**
-> SubcategoryImageUploadResponseDto categoryControllerCreateSubcategoryImageUploadUrl(requestCategoryImageUploadDto)
+# **adminCategoryControllerCreateSubcategoryImageUploadUrl**
+> SubcategoryImageUploadResponseDto adminCategoryControllerCreateSubcategoryImageUploadUrl(requestCategoryImageUploadDto)
 
 
 ### Example
@@ -312,7 +312,7 @@ let categoryId: string; // (default to undefined)
 let subcategoryId: string; // (default to undefined)
 let requestCategoryImageUploadDto: RequestCategoryImageUploadDto; //
 
-const { status, data } = await apiInstance.categoryControllerCreateSubcategoryImageUploadUrl(
+const { status, data } = await apiInstance.adminCategoryControllerCreateSubcategoryImageUploadUrl(
     categoryId,
     subcategoryId,
     requestCategoryImageUploadDto
@@ -349,8 +349,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerFindAll**
-> PaginatedCategoryResponseDto categoryControllerFindAll()
+# **adminCategoryControllerFindAll**
+> PaginatedCategoryResponseDto adminCategoryControllerFindAll()
 
 
 ### Example
@@ -369,7 +369,7 @@ let limit: number; // (optional) (default to 10)
 let search: string; // (optional) (default to undefined)
 let isActive: string; // (optional) (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerFindAll(
+const { status, data } = await apiInstance.adminCategoryControllerFindAll(
     page,
     limit,
     search,
@@ -408,8 +408,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerFindSubcategories**
-> SubcategoryListResponseDto categoryControllerFindSubcategories()
+# **adminCategoryControllerFindSubcategories**
+> SubcategoryListResponseDto adminCategoryControllerFindSubcategories()
 
 
 ### Example
@@ -425,7 +425,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 
 let categoryId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerFindSubcategories(
+const { status, data } = await apiInstance.adminCategoryControllerFindSubcategories(
     categoryId
 );
 ```
@@ -459,8 +459,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerGetCategoryImageViewUrl**
-> CategoryImageViewResponseDto categoryControllerGetCategoryImageViewUrl()
+# **adminCategoryControllerGetCategoryImageViewUrl**
+> CategoryImageViewResponseDto adminCategoryControllerGetCategoryImageViewUrl()
 
 
 ### Example
@@ -476,7 +476,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 
 let categoryId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerGetCategoryImageViewUrl(
+const { status, data } = await apiInstance.adminCategoryControllerGetCategoryImageViewUrl(
     categoryId
 );
 ```
@@ -509,8 +509,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerGetSubcategoryImageViewUrl**
-> SubcategoryImageViewResponseDto categoryControllerGetSubcategoryImageViewUrl()
+# **adminCategoryControllerGetSubcategoryImageViewUrl**
+> SubcategoryImageViewResponseDto adminCategoryControllerGetSubcategoryImageViewUrl()
 
 
 ### Example
@@ -527,7 +527,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let subcategoryId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerGetSubcategoryImageViewUrl(
+const { status, data } = await apiInstance.adminCategoryControllerGetSubcategoryImageViewUrl(
     categoryId,
     subcategoryId
 );
@@ -562,8 +562,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerRemoveCategoryImage**
-> CategoryResponseDto categoryControllerRemoveCategoryImage()
+# **adminCategoryControllerRemoveCategoryImage**
+> CategoryResponseDto adminCategoryControllerRemoveCategoryImage()
 
 
 ### Example
@@ -579,7 +579,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 
 let categoryId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerRemoveCategoryImage(
+const { status, data } = await apiInstance.adminCategoryControllerRemoveCategoryImage(
     categoryId
 );
 ```
@@ -612,8 +612,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerRemoveSubcategoryImage**
-> SubcategoryResponseDto categoryControllerRemoveSubcategoryImage()
+# **adminCategoryControllerRemoveSubcategoryImage**
+> SubcategoryResponseDto adminCategoryControllerRemoveSubcategoryImage()
 
 
 ### Example
@@ -630,7 +630,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let subcategoryId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.categoryControllerRemoveSubcategoryImage(
+const { status, data } = await apiInstance.adminCategoryControllerRemoveSubcategoryImage(
     categoryId,
     subcategoryId
 );
@@ -665,8 +665,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerUpdateCategory**
-> CategoryResponseDto categoryControllerUpdateCategory(updateCategoryDto)
+# **adminCategoryControllerUpdateCategory**
+> CategoryResponseDto adminCategoryControllerUpdateCategory(updateCategoryDto)
 
 
 ### Example
@@ -684,7 +684,7 @@ const apiInstance = new AdminCategoriesApi(configuration);
 let categoryId: string; // (default to undefined)
 let updateCategoryDto: UpdateCategoryDto; //
 
-const { status, data } = await apiInstance.categoryControllerUpdateCategory(
+const { status, data } = await apiInstance.adminCategoryControllerUpdateCategory(
     categoryId,
     updateCategoryDto
 );
@@ -721,8 +721,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **categoryControllerUpdateSubcategory**
-> SubcategoryResponseDto categoryControllerUpdateSubcategory(updateSubcategoryDto)
+# **adminCategoryControllerUpdateSubcategory**
+> SubcategoryResponseDto adminCategoryControllerUpdateSubcategory(updateSubcategoryDto)
 
 
 ### Example
@@ -741,7 +741,7 @@ let categoryId: string; // (default to undefined)
 let subcategoryId: string; // (default to undefined)
 let updateSubcategoryDto: UpdateSubcategoryDto; //
 
-const { status, data } = await apiInstance.categoryControllerUpdateSubcategory(
+const { status, data } = await apiInstance.adminCategoryControllerUpdateSubcategory(
     categoryId,
     subcategoryId,
     updateSubcategoryDto

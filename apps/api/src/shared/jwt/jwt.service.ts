@@ -6,41 +6,41 @@ import { parseDurationToSeconds } from "./utils/parse-duration-seconds";
 
 @Injectable()
 export class JwtService {
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly _configService: ConfigService) { }
 
-  private getAccessTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
-    return this.configService.getOrThrow<string>('ACCESS_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
+  private _getAccessTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
+    return this._configService.getOrThrow<string>('ACCESS_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
   }
 
-  private getRefreshTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
-    return this.configService.getOrThrow<string>('REFRESH_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
+  private _getRefreshTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
+    return this._configService.getOrThrow<string>('REFRESH_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
   }
 
-  private getRefreshTokenExpiresInRaw(): string {
-    return this.configService.getOrThrow<string>("REFRESH_TOKEN_EXPIRES_IN");
+  private _getRefreshTokenExpiresInRaw(): string {
+    return this._configService.getOrThrow<string>("REFRESH_TOKEN_EXPIRES_IN");
   }
 
   getRefreshTokenTtlSeconds(): number {
-    return parseDurationToSeconds(this.getRefreshTokenExpiresInRaw())
+    return parseDurationToSeconds(this._getRefreshTokenExpiresInRaw())
   }
 
   async signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): Promise<string> {
     return jwt.sign({
       ...payload,
       type: 'access'
-    }, this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'), { expiresIn: this.getAccessTokenExpiresIn() })
+    }, this._configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'), { expiresIn: this._getAccessTokenExpiresIn() })
   }
 
   async signRefreshToken(payload: Omit<RefreshTokenPayload, 'type'>): Promise<string> {
     return jwt.sign({
       ...payload,
       type: 'refresh'
-    }, this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'), { expiresIn: this.getRefreshTokenExpiresIn() })
+    }, this._configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'), { expiresIn: this._getRefreshTokenExpiresIn() })
   }
 
   async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
     try {
-      const payload = jwt.verify(token, this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET')) as AccessTokenPayload
+      const payload = jwt.verify(token, this._configService.getOrThrow<string>('ACCESS_TOKEN_SECRET')) as AccessTokenPayload
 
       if (payload.type !== 'access' || !payload.sub || !Array.isArray(payload.roles)) {
         throw new UnauthorizedException('Invalid access token')
@@ -54,7 +54,7 @@ export class JwtService {
 
   async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
     try {
-      const payload = jwt.verify(token, this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET')) as RefreshTokenPayload
+      const payload = jwt.verify(token, this._configService.getOrThrow<string>('REFRESH_TOKEN_SECRET')) as RefreshTokenPayload
 
       if (payload.type !== 'refresh' || !payload.sub || !payload.sessionId) {
         throw new UnauthorizedException('Invalid refresh token')

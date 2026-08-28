@@ -1,4 +1,3 @@
-
 export type GoogleProfile = {
     googleId: string;
     email: string;

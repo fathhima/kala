@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OBJECT_STORAGE_PROVIDER, type ObjectStorageProvider, } from './repositories/interfaces/storage.repository';
+import { OBJECT_STORAGE_PROVIDER, type IObjectStorageProvider, } from './repositories/interfaces/storage.interface';
 import { CreateUploadUrlInput } from './types/create-upload-url.type';
 import { PresignedUpload } from './types/presigned-upload.type';
 import { CreateDownloadUrlInput } from './types/create-download-url.type';
@@ -10,22 +10,22 @@ import { StoredObjectMetadata } from './types/stored-object.type';
 export class StorageService {
     constructor(
         @Inject(OBJECT_STORAGE_PROVIDER)
-        private readonly objectStorageProvider: ObjectStorageProvider,
+        private readonly _objectStorageProvider: IObjectStorageProvider,
     ) { }
 
     createUploadUrl(input: CreateUploadUrlInput,): Promise<PresignedUpload> {
-        return this.objectStorageProvider.createUploadUrl(input);
+        return this._objectStorageProvider.createUploadUrl(input);
     }
 
     createDownloadUrl(input: CreateDownloadUrlInput,): Promise<PresignedDownload> {
-        return this.objectStorageProvider.createDownloadUrl(input);
+        return this._objectStorageProvider.createDownloadUrl(input);
     }
 
     getObjectMetadata(key: string,): Promise<StoredObjectMetadata | null> {
-        return this.objectStorageProvider.getObjectMetadata(key);
+        return this._objectStorageProvider.getObjectMetadata(key);
     }
 
     deleteObject(key: string): Promise<void> {
-        return this.objectStorageProvider.deleteObject(key);
+        return this._objectStorageProvider.deleteObject(key);
     }
 }

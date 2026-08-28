@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { PrismaUserRepository } from './repositories/prisma-user.repository';
-import { USER_REPOSITORY } from './repositories/interfaces/user.repository';
-import { UserService } from './user.service';
-import { ADMIN_USER_REPOSITORY } from './repositories/interfaces/admin-user.repository';
-import { PrismaCategoryRepository } from '../category/repositories/prisma-category.repository';
-import { CATEGORY_REPOSITORY } from '../category/repositories/interfaces/category.repository';
-import { CategoryModule } from '../category/category.module';
+import { USER_REPOSITORY } from './repositories/interfaces/user.interface';
+import { UserService } from './services/user.service';
+import { ADMIN_USER_REPOSITORY } from './repositories/interfaces/admin-user.interface';
+import { USER_SERVICE } from './services/interfaces/user.service.interface';
 
 @Module({
-  imports: [CategoryModule],
   controllers: [UserController],
   providers: [
-    UserService,
+    {
+      provide: USER_SERVICE,
+      useClass: UserService,
+    },
     PrismaUserRepository,
     {
       provide: USER_REPOSITORY,

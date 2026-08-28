@@ -1,21 +1,24 @@
 import { Module } from '@nestjs/common';
-import { CategoryController } from './category.controller';
-import { CategoryService } from './category.service';
 import { PrismaCategoryRepository } from './repositories/prisma-category.repository';
-import { CATEGORY_REPOSITORY } from './repositories/interfaces/category.repository';
-import { StorageModule } from '@/shared/storage/storage.module';
+import { CATEGORY_REPOSITORY } from './repositories/interfaces/category.interface';
+import { CategoryController } from './category.controller';
+import { CategoryService } from './services/category.service';
+import { CATEGORY_SERVICE } from './services/interfaces/category.service.interface';
 
 @Module({
-    imports:[StorageModule],
+    imports: [],
     controllers: [CategoryController],
     providers: [
-        CategoryService,
+        {
+            provide: CATEGORY_SERVICE,
+            useClass: CategoryService,
+        },
         PrismaCategoryRepository,
         {
             provide: CATEGORY_REPOSITORY,
             useExisting: PrismaCategoryRepository,
         },
     ],
-    exports: [CATEGORY_REPOSITORY],
+    exports: [CATEGORY_REPOSITORY, CATEGORY_SERVICE],
 })
 export class CategoryModule { }

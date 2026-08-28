@@ -1,7 +1,7 @@
 import { UserRole } from "@/shared/enums/role.enum";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { UserEntity } from "../../entities/user.entity";
-import { PaginatedResult } from "@/shared/types/paginated-result";
+import { IPaginatedResult } from "@/shared/types/paginated-result";
 
 export class AdminUserListItemDto {
     @ApiProperty({ example: 'cuid1234' })
@@ -96,7 +96,7 @@ export class PaginatedAdminUsersResponseDto {
 
     static fromResult(params: {
         message: string;
-        result: PaginatedResult<UserEntity>;
+        result: IPaginatedResult<UserEntity>;
     }): PaginatedAdminUsersResponseDto {
         const dto = new PaginatedAdminUsersResponseDto();
 

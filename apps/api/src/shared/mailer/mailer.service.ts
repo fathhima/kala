@@ -4,18 +4,18 @@ import * as nodemailer from 'nodemailer'
 
 @Injectable()
 export class MailerService {
-  private readonly transporter: nodemailer.Transporter
-  private readonly from: string
+  private readonly _transporter: nodemailer.Transporter
+  private readonly _from: string
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly _configService: ConfigService) {
 
-    const host = this.configService.getOrThrow<string>('SMTP_HOST')
-    const port = this.configService.getOrThrow<number>('SMTP_PORT')
-    const user = this.configService.getOrThrow<string>('SMTP_USER')
-    const pass = this.configService.getOrThrow<string>('SMTP_PASS')
-    this.from = this.configService.getOrThrow<string>('SMTP_FROM')
+    const host = this._configService.getOrThrow<string>('SMTP_HOST')
+    const port = this._configService.getOrThrow<number>('SMTP_PORT')
+    const user = this._configService.getOrThrow<string>('SMTP_USER')
+    const pass = this._configService.getOrThrow<string>('SMTP_PASS')
+    this._from = this._configService.getOrThrow<string>('SMTP_FROM')
 
-    this.transporter = nodemailer.createTransport({
+    this._transporter = nodemailer.createTransport({
       host,
       port,
       secure: port === 465,
@@ -29,8 +29,8 @@ export class MailerService {
   async sendOtpEmail(email: string, otp: string, ttlSeconds: number): Promise<void> {
     const expiresInMinutes = Math.ceil(ttlSeconds / 60)
 
-    await this.transporter.sendMail({
-      from: this.from,
+    await this._transporter.sendMail({
+      from: this._from,
       to: email,
       subject: 'Verify your email',
       html: `
@@ -54,8 +54,8 @@ export class MailerService {
   ): Promise<void> {
     const expiresInMinutes = Math.ceil(ttlSeconds / 60);
 
-    await this.transporter.sendMail({
-      from: this.from,
+    await this._transporter.sendMail({
+      from: this._from,
       to: email,
       subject: "Reset your password",
       html: `

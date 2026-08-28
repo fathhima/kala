@@ -8,9 +8,9 @@ import { CreateCategoryInput } from '../types/create-category-input.type';
 import { CreateSubcategoryInput } from '../types/create-subcategory-input.type';
 import { UpdateCategoryInput } from '../types/update-category-input.type';
 import { UpdateSubcategoryInput } from '../types/update-subcategory-input.type';
-import { CategoryRepository } from './interfaces/category.repository';
+import { ICategoryRepository } from './interfaces/category.interface';
 import { CategoryListParams } from '../types/category-list-params.type';
-import { PaginatedResult } from '@/shared/types/paginated-result';
+import { IPaginatedResult } from '@/shared/types/paginated-result';
 
 const categoryWithSubcategories = {
     subcategories: {
@@ -19,10 +19,10 @@ const categoryWithSubcategories = {
 } satisfies Prisma.CategoryInclude;
 
 @Injectable()
-export class PrismaCategoryRepository implements CategoryRepository {
-    constructor(private readonly prisma: PrismaService) { }
+export class PrismaCategoryRepository implements ICategoryRepository {
+    constructor(private readonly _prisma: PrismaService) { }
 
-    async findManyForAdmin(params: CategoryListParams): Promise<PaginatedResult<CategoryEntity>> {
+    async findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>> {
         const skip = (params.page - 1) * params.limit
         const where: Prisma.CategoryWhereInput = {}
 
@@ -38,15 +38,15 @@ export class PrismaCategoryRepository implements CategoryRepository {
             where.isActive = params.isActive
         }
 
-        const [categories, total] = await this.prisma.$transaction([
-            this.prisma.category.findMany({
+        const [categories, total] = await this._prisma.$transaction([
+            this._prisma.category.findMany({
                 where,
                 skip,
                 take: params.limit,
                 include: categoryWithSubcategories,
                 orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
             }),
-            this.prisma.category.count({ where }),
+            this._prisma.category.count({ where }),
         ])
 
         return {
@@ -58,7 +58,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findAll(): Promise<CategoryEntity[]> {
-        const categories = await this.prisma.category.findMany({
+        const categories = await this._prisma.category.findMany({
             include: categoryWithSubcategories,
             orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         });
@@ -67,7 +67,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findSelectable(): Promise<CategoryEntity[]> {
-        const categories = await this.prisma.category.findMany({
+        const categories = await this._prisma.category.findMany({
             where: {
                 isActive: true,
             },
@@ -92,7 +92,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findById(categoryId: string): Promise<CategoryEntity | null> {
-        const category = await this.prisma.category.findUnique({
+        const category = await this._prisma.category.findUnique({
             where: { id: categoryId },
             include: categoryWithSubcategories,
         });
@@ -101,7 +101,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findBySlug(slug: string): Promise<CategoryEntity | null> {
-        const category = await this.prisma.category.findUnique({
+        const category = await this._prisma.category.findUnique({
             where: { slug },
             include: categoryWithSubcategories,
         });
@@ -110,7 +110,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async createCategory(input: CreateCategoryInput,): Promise<CategoryEntity> {
-        const category = await this.prisma.category.create({
+        const category = await this._prisma.category.create({
             data: input,
             include: categoryWithSubcategories,
         });
@@ -119,7 +119,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async updateCategory(categoryId: string, input: UpdateCategoryInput,): Promise<CategoryEntity> {
-        const category = await this.prisma.category.update({
+        const category = await this._prisma.category.update({
             where: { id: categoryId },
             data: input,
             include: categoryWithSubcategories,
@@ -129,7 +129,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findSubcategories(categoryId: string,): Promise<SubcategoryEntity[]> {
-        const subcategories = await this.prisma.subcategory.findMany({
+        const subcategories = await this._prisma.subcategory.findMany({
             where: { categoryId },
             orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         });
@@ -138,7 +138,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findSubcategoryById(categoryId: string, subcategoryId: string,): Promise<SubcategoryEntity | null> {
-        const subcategory = await this.prisma.subcategory.findFirst({
+        const subcategory = await this._prisma.subcategory.findFirst({
             where: {
                 id: subcategoryId,
                 categoryId,
@@ -151,7 +151,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async findSubcategoryBySlug(categoryId: string, slug: string,): Promise<SubcategoryEntity | null> {
-        const subcategory = await this.prisma.subcategory.findUnique({
+        const subcategory = await this._prisma.subcategory.findUnique({
             where: {
                 categoryId_slug: {
                     categoryId,
@@ -166,7 +166,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async createSubcategory(input: CreateSubcategoryInput,): Promise<SubcategoryEntity> {
-        const subcategory = await this.prisma.subcategory.create({
+        const subcategory = await this._prisma.subcategory.create({
             data: input,
         });
 
@@ -174,7 +174,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
     }
 
     async updateSubcategory(subcategoryId: string, input: UpdateSubcategoryInput,): Promise<SubcategoryEntity> {
-        const subcategory = await this.prisma.subcategory.update({
+        const subcategory = await this._prisma.subcategory.update({
             where: { id: subcategoryId },
             data: input,
         });

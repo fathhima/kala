@@ -1,41 +1,41 @@
 import { PrismaService } from "@/shared/prisma/prisma.service";
-import { UserRepository } from "./interfaces/user.repository";
+import { IUserRepository } from "./interfaces/user.interface";
 import { UserMapper } from "../mappers/user.mapper";
 import { CreateUserInput } from "../types/create-user-input.type";
 import { Prisma, Role } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { UserEntity } from "../entities/user.entity";
 import { AdminUserListParams } from "../types/admin-user-list-params.type";
-import { PaginatedResult } from "@/shared/types";
-import { AdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.repository";
+import { IPaginatedResult } from "@/shared/types";
+import { IAdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.interface";
 
 @Injectable()
-export class PrismaUserRepository implements UserRepository, AdminUserRepository {
-  constructor(private readonly prisma: PrismaService) { }
+export class PrismaUserRepository implements IUserRepository, IAdminUserRepository {
+  constructor(private readonly _prisma: PrismaService) { }
 
   async findByEmail(email: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this._prisma.user.findUnique({
       where: { email }
     })
     return user ? UserMapper.toEntity(user) : null
   }
 
   async findById(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this._prisma.user.findUnique({
       where: { id }
     })
     return user ? UserMapper.toEntity(user) : null
   }
 
   async findAuthByEmail(email: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this._prisma.user.findUnique({
       where: { email }
     })
-    return user ? UserMapper.toAuthUser(user) : null
+    return user ? UserMapper.toEntity(user) : null
   }
 
   async create(data: CreateUserInput) {
-    const user = await this.prisma.user.create({
+    const user = await this._prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
@@ -52,7 +52,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
   }
 
   async updateProfile(userId: string, data: { name?: string; imageUrl?: string | null }): Promise<UserEntity> {
-    const user = await this.prisma.user.update({
+    const user = await this._prisma.user.update({
       where: { id: userId },
       data,
     })
@@ -61,7 +61,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
   }
 
   async updatePassword(userId: string, hashedPassword: string) {
-    await this.prisma.user.update({
+    await this._prisma.user.update({
       where: {
         id: userId
       },
@@ -77,7 +77,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
       imageUrl?: string | null;
       isVerified?: boolean;
     }) {
-    const user = await this.prisma.user.update({
+    const user = await this._prisma.user.update({
       where: { id: userId },
       data: {
         googleId: data.googleId,
@@ -89,7 +89,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
     return UserMapper.toEntity(user);
   }
 
-  async findManyForAdmin(params: AdminUserListParams): Promise<PaginatedResult<UserEntity>> {
+  async findManyForAdmin(params: AdminUserListParams): Promise<IPaginatedResult<UserEntity>> {
     const where: Prisma.UserWhereInput = {};
     const skip = (params.page - 1) * params.limit;
 
@@ -120,8 +120,8 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
       where.isActive = params.isActive;
     }
 
-    const [users, total] = await this.prisma.$transaction([
-      this.prisma.user.findMany({
+    const [users, total] = await this._prisma.$transaction([
+      this._prisma.user.findMany({
         where,
         skip,
         take: params.limit,
@@ -129,7 +129,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
           createdAt: 'desc',
         },
       }),
-      this.prisma.user.count({ where }),
+      this._prisma.user.count({ where }),
     ]);
 
     return {
@@ -141,7 +141,7 @@ export class PrismaUserRepository implements UserRepository, AdminUserRepository
   }
 
   async updateStatus(userId: string, isActive: boolean): Promise<UserEntity> {
-    const user = await this.prisma.user.update({
+    const user = await this._prisma.user.update({
       where: { id: userId },
       data: { isActive },
     });

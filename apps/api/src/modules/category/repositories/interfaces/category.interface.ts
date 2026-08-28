@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/shared/types/paginated-result';
+import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { CategoryEntity } from '../../entities/category.entity';
 import { SubcategoryEntity } from '../../entities/subcategory.entity';
 import { CategoryListParams } from '../../types/category-list-params.type';
@@ -9,8 +9,9 @@ import { UpdateSubcategoryInput } from '../../types/update-subcategory-input.typ
 
 export const CATEGORY_REPOSITORY = Symbol('CATEGORY_REPOSITORY');
 
-export interface CategoryRepository {
-    findManyForAdmin(params: CategoryListParams): Promise<PaginatedResult<CategoryEntity>>
+export interface ICategoryRepository {
+    
+    findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>>
 
     findAll(): Promise<CategoryEntity[]>;
 

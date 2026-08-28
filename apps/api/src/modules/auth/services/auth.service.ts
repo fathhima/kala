@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { RegisterDto } from "../dto/request/register.dto";
-import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.repository";
-import type { UserRepository } from "@/modules/user/repositories/interfaces/user.repository";
+import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
+import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import * as bcrypt from 'bcrypt'
 import { PendingSignup } from "../types/pending-signup.type";
 import { MailerService } from "@/shared/mailer/mailer.service";
@@ -22,55 +22,58 @@ import { GoogleOAuthService } from "./google-oauth.service";
 import { GoogleSignInRequestDto } from "../dto/request/google-signin.dto";
 import { AuthResult, RefreshResult } from "../types/auth-result.type";
 import { UserRole } from "@/shared/enums/role.enum";
-import { REFRESH_SESSION_REPOSITORY } from "../repositories/interfaces/refresh-session.repository";
-import type { RefreshSessionRepository } from "../repositories/interfaces/refresh-session.repository";
-import { PENDING_SIGNUP_REPOSITORY, type PendingSignupRepository } from "../repositories/interfaces/pending-signup.repository";
-import { PASSWORD_RESET_REPOSITORY, type PasswordResetRepository } from "../repositories/interfaces/password-reset.repository";
+import { REFRESH_SESSION_REPOSITORY } from "../repositories/interfaces/refresh-session.interface";
+import type { IRefreshSessionRepository } from "../repositories/interfaces/refresh-session.interface";
+import { PENDING_SIGNUP_REPOSITORY, type IPendingSignupRepository } from "../repositories/interfaces/pending-signup.interface";
+import { PASSWORD_RESET_REPOSITORY, type IPasswordResetRepository } from "../repositories/interfaces/password-reset.interface";
 import { ChangePasswordDto } from "../dto/request/change-password.dto";
+import { IAuthService } from "./interfaces/auth.service.interface";
+import { GOOGLE_OAUTH_SERVICE, type IGoogleOAuthService } from "./interfaces/google-oauth.service.interface";
 
 @Injectable()
-export class AuthService {
-    private readonly otpTtlSeconds: number;
-    private readonly otpResendCooldownSeconds: number;
-    private readonly refreshTokenTtlSeconds: number;
-    private readonly passwordResetTtlSeconds: number;
-    private readonly passwordResetUrl: string;
+export class AuthService implements IAuthService {
+    private readonly _otpTtlSeconds: number;
+    private readonly _otpResendCooldownSeconds: number;
+    private readonly _refreshTokenTtlSeconds: number;
+    private readonly _passwordResetTtlSeconds: number;
+    private readonly _passwordResetUrl: string;
 
     constructor(
         @Inject(USER_REPOSITORY)
-        private readonly userRepository: UserRepository,
+        private readonly _userRepository: IUserRepository,
         @Inject(REFRESH_SESSION_REPOSITORY)
-        private readonly refreshSessionRepository: RefreshSessionRepository,
+        private readonly _refreshSessionRepository: IRefreshSessionRepository,
         @Inject(PENDING_SIGNUP_REPOSITORY)
-        private readonly pendingSignupRepository: PendingSignupRepository,
+        private readonly _pendingSignupRepository: IPendingSignupRepository,
         @Inject(PASSWORD_RESET_REPOSITORY)
-        private readonly passwordResetRepository: PasswordResetRepository,
-        private readonly mailerService: MailerService,
-        private readonly jwtService: JwtService,
-        private readonly configService: ConfigService,
-        private readonly googleOAuthService: GoogleOAuthService
+        private readonly _passwordResetRepository: IPasswordResetRepository,
+        @Inject(GOOGLE_OAUTH_SERVICE)
+        private readonly _googleOAuthService: IGoogleOAuthService,
+        private readonly _mailerService: MailerService,
+        private readonly _jwtService: JwtService,
+        private readonly _configService: ConfigService,
 
     ) {
-        this.otpTtlSeconds = this.configService.getOrThrow<number>('OTP_TTL_SECONDS')
-        this.refreshTokenTtlSeconds = this.jwtService.getRefreshTokenTtlSeconds()
-        this.passwordResetTtlSeconds =
-            this.configService.getOrThrow<number>("PASSWORD_RESET_TTL_SECONDS");
-        this.passwordResetUrl =
-            this.configService.getOrThrow<string>("PASSWORD_RESET_URL");
-        this.otpResendCooldownSeconds = this.configService.getOrThrow<number>("OTP_RESEND_COOLDOWN_SECONDS");
+        this._otpTtlSeconds = this._configService.getOrThrow<number>('OTP_TTL_SECONDS')
+        this._refreshTokenTtlSeconds = this._jwtService.getRefreshTokenTtlSeconds()
+        this._passwordResetTtlSeconds =
+            this._configService.getOrThrow<number>("PASSWORD_RESET_TTL_SECONDS");
+        this._passwordResetUrl =
+            this._configService.getOrThrow<string>("PASSWORD_RESET_URL");
+        this._otpResendCooldownSeconds = this._configService.getOrThrow<number>("OTP_RESEND_COOLDOWN_SECONDS");
     }
 
     async register(dto: RegisterDto) {
         const email = normalizeEmail(dto.email);
 
-        const existingUser = await this.userRepository.findByEmail(email)
+        const existingUser = await this._userRepository.findByEmail(email)
         if (existingUser?.isVerified) {
             throw new BadRequestException('Email already registered')
         }
 
-        const existingPendingId = await this.pendingSignupRepository.findIdByEmail(email)
+        const existingPendingId = await this._pendingSignupRepository.findIdByEmail(email)
         if (existingPendingId) {
-            await this.pendingSignupRepository.delete(existingPendingId, email)
+            await this._pendingSignupRepository.delete(existingPendingId, email)
         }
 
         const hashedPassword = await bcrypt.hash(dto.password, 10)
@@ -87,24 +90,24 @@ export class AuthService {
             otpAttempts: 0,
             resendCount: 0,
             createdAt: new Date().toISOString(),
-            otpExpiresAt: new Date(Date.now() + this.otpTtlSeconds * 1000).toISOString(),
-            resendAfter: new Date(Date.now() + this.otpResendCooldownSeconds * 1000).toISOString(),
+            otpExpiresAt: new Date(Date.now() + this._otpTtlSeconds * 1000).toISOString(),
+            resendAfter: new Date(Date.now() + this._otpResendCooldownSeconds * 1000).toISOString(),
         }
 
-        await this.pendingSignupRepository.save(pendingSignup, this.otpTtlSeconds,)
+        await this._pendingSignupRepository.save(pendingSignup, this._otpTtlSeconds,)
 
-        await this.mailerService.sendOtpEmail(email, otp, this.otpTtlSeconds)
+        await this._mailerService.sendOtpEmail(email, otp, this._otpTtlSeconds)
 
         return {
             pendingSignupId,
             maskedEmail: maskEmail(email),
-            expiresIn: this.otpTtlSeconds,
-            resendAfter: this.otpResendCooldownSeconds
+            expiresIn: this._otpTtlSeconds,
+            resendAfter: this._otpResendCooldownSeconds
         }
     }
 
     async verifyOtp(dto: VerifyOtpDto): Promise<AuthResult> {
-        const pendingSignup = await this.pendingSignupRepository.findById(dto.pendingSignupId,);
+        const pendingSignup = await this._pendingSignupRepository.findById(dto.pendingSignupId,);
 
         if (!pendingSignup) {
             throw new BadRequestException("OTP expired or registration not found");
@@ -117,27 +120,27 @@ export class AuthService {
         const isOtpValid = await bcrypt.compare(dto.otp, pendingSignup.otpHash)
 
         if (!isOtpValid) {
-            const ttl = await this.pendingSignupRepository.getTtl(dto.pendingSignupId)
+            const ttl = await this._pendingSignupRepository.getTtl(dto.pendingSignupId)
 
             if (ttl <= 0) {
                 throw new BadRequestException('OTP expired or registration not found');
             }
 
             pendingSignup.otpAttempts += 1
-            await this.pendingSignupRepository.save(pendingSignup, ttl)
+            await this._pendingSignupRepository.save(pendingSignup, ttl)
             throw new BadRequestException('Invalid OTP')
         }
 
-        const existingUser = await this.userRepository.findByEmail(pendingSignup.email)
+        const existingUser = await this._userRepository.findByEmail(pendingSignup.email)
         if (existingUser) {
-            await this.pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
+            await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
             throw new BadRequestException('User already exists')
         }
 
         let user;
 
         try {
-            user = await this.userRepository.create({
+            user = await this._userRepository.create({
                 name: pendingSignup.name,
                 email: pendingSignup.email,
                 password: pendingSignup.hashedPassword,
@@ -147,7 +150,7 @@ export class AuthService {
             })
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                await this.pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
+                await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
 
                 throw new BadRequestException('User already exists');
             }
@@ -155,9 +158,9 @@ export class AuthService {
             throw error;
         }
 
-        await this.pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
+        await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
 
-        const tokens = await this.generateTokens(user)
+        const tokens = await this._generateTokens(user)
 
         return {
             user,
@@ -167,15 +170,15 @@ export class AuthService {
     }
 
     async resendOtp(dto: ResendOtpDto) {
-        const pendingSignup = await this.pendingSignupRepository.findById(dto.pendingSignupId,);
+        const pendingSignup = await this._pendingSignupRepository.findById(dto.pendingSignupId,);
 
         if (!pendingSignup) {
             throw new BadRequestException("OTP expired or registration not found");
         }
 
-        const existingUser = await this.userRepository.findByEmail(pendingSignup.email)
+        const existingUser = await this._userRepository.findByEmail(pendingSignup.email)
         if (existingUser?.isVerified) {
-            await this.pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
+            await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
             throw new BadRequestException('Email already verified')
         }
 
@@ -195,23 +198,23 @@ export class AuthService {
         pendingSignup.otpHash = await bcrypt.hash(otp, 10)
         pendingSignup.otpAttempts = 0
         pendingSignup.resendCount += 1
-        pendingSignup.otpExpiresAt = new Date(Date.now() + this.otpTtlSeconds * 1000).toISOString()
-        pendingSignup.resendAfter = new Date(Date.now() + this.otpResendCooldownSeconds * 1000).toISOString();
+        pendingSignup.otpExpiresAt = new Date(Date.now() + this._otpTtlSeconds * 1000).toISOString()
+        pendingSignup.resendAfter = new Date(Date.now() + this._otpResendCooldownSeconds * 1000).toISOString();
 
-        await this.pendingSignupRepository.save(pendingSignup, this.otpTtlSeconds)
+        await this._pendingSignupRepository.save(pendingSignup, this._otpTtlSeconds)
 
-        await this.mailerService.sendOtpEmail(pendingSignup.email, otp, this.otpTtlSeconds)
+        await this._mailerService.sendOtpEmail(pendingSignup.email, otp, this._otpTtlSeconds)
 
         return {
-            expiresIn: this.otpTtlSeconds,
-            resendAfter: this.otpResendCooldownSeconds
+            expiresIn: this._otpTtlSeconds,
+            resendAfter: this._otpResendCooldownSeconds
         }
     }
 
     async login(dto: LoginDto): Promise<AuthResult> {
         const email = normalizeEmail(dto.email)
 
-        const authUser = await this.userRepository.findAuthByEmail(email)
+        const authUser = await this._userRepository.findAuthByEmail(email)
 
         if (!authUser || !authUser?.password) {
             throw new UnauthorizedException('Invalid credentials')
@@ -230,12 +233,12 @@ export class AuthService {
             throw new ForbiddenException('Account is blocked')
         }
 
-        const safeUser = await this.userRepository.findById(authUser.id)
+        const safeUser = await this._userRepository.findById(authUser.id)
         if (!safeUser) {
             throw new UnauthorizedException('User not found')
         }
 
-        const tokens = await this.generateTokens(safeUser)
+        const tokens = await this._generateTokens(safeUser)
 
         return {
             user: safeUser,
@@ -245,34 +248,34 @@ export class AuthService {
     }
 
     async refresh(refreshToken: string): Promise<RefreshResult> {
-        const payload = await this.jwtService.verifyRefreshToken(refreshToken)
+        const payload = await this._jwtService.verifyRefreshToken(refreshToken)
 
-        const session = await this.refreshSessionRepository.findById(payload.sessionId)
+        const session = await this._refreshSessionRepository.findById(payload.sessionId)
 
         if (!session || session.userId !== payload.sub) {
             throw new UnauthorizedException('Refresh session revoked or not found')
         }
 
-        const user = await this.userRepository.findById(payload.sub)
+        const user = await this._userRepository.findById(payload.sub)
 
         if (!user) {
-            await this.refreshSessionRepository.revoke(payload.sessionId, payload.sub)
+            await this._refreshSessionRepository.revoke(payload.sessionId, payload.sub)
             throw new UnauthorizedException('User not found')
         }
 
         if (!user?.isActive) {
-            await this.refreshSessionRepository.revokeAllForUser(user.id)
+            await this._refreshSessionRepository.revokeAllForUser(user.id)
             throw new ForbiddenException('Account is blocked')
         }
 
         if (!user?.isVerified) {
-            await this.refreshSessionRepository.revokeAllForUser(user.id)
+            await this._refreshSessionRepository.revokeAllForUser(user.id)
             throw new ForbiddenException('Email is not verified')
         }
 
-        await this.refreshSessionRepository.revoke(payload.sessionId, payload.sub)
+        await this._refreshSessionRepository.revoke(payload.sessionId, payload.sub)
 
-        const tokens = await this.generateTokens(user)
+        const tokens = await this._generateTokens(user)
 
         return {
             accessToken: tokens.accessToken,
@@ -280,44 +283,32 @@ export class AuthService {
         }
     }
 
-    async me(userId: string) {
-
-        const user = await this.userRepository.findById(userId)
-
-        if (!user) {
-            throw new UnauthorizedException('User not found')
-        }
-
-        return user
-
-    }
-
     async forgotPassword(dto: ForgotPasswordDto) {
         const email = normalizeEmail(dto.email)
 
-        const user = await this.userRepository.findAuthByEmail(email)
+        const user = await this._userRepository.findAuthByEmail(email)
 
         if (!user || !user.password || !user.isActive || !user.isVerified) {
             return
         }
 
-        const rawToken = this.generatePasswordResetToken()
-        const tokenHash = this.hashPasswordResetToken(rawToken)
+        const rawToken = this._generatePasswordResetToken()
+        const tokenHash = this._hashPasswordResetToken(rawToken)
 
-        await this.passwordResetRepository.create(tokenHash, user.id, this.passwordResetTtlSeconds,)
+        await this._passwordResetRepository.create(tokenHash, user.id, this._passwordResetTtlSeconds,)
 
-        const resetLink = `${this.passwordResetUrl}?token=${rawToken}`
+        const resetLink = `${this._passwordResetUrl}?token=${rawToken}`
 
-        await this.mailerService.sendPasswordResetEmail(
+        await this._mailerService.sendPasswordResetEmail(
             email,
             resetLink,
-            this.passwordResetTtlSeconds
+            this._passwordResetTtlSeconds
         )
     }
 
     async validateResetToken(dto: ValidateResetTokenDto) {
-        const tokenHash = this.hashPasswordResetToken(dto.token)
-        const record = await this.passwordResetRepository.findByTokenHash(tokenHash)
+        const tokenHash = this._hashPasswordResetToken(dto.token)
+        const record = await this._passwordResetRepository.findByTokenHash(tokenHash)
 
         if (!record) {
             throw new BadRequestException('Reset link is invalid or expired')
@@ -329,14 +320,14 @@ export class AuthService {
     }
 
     async resetPassword(dto: ResetPasswordDto) {
-        const tokenHash = this.hashPasswordResetToken(dto.token)
-        const record = await this.passwordResetRepository.consume(tokenHash)
+        const tokenHash = this._hashPasswordResetToken(dto.token)
+        const record = await this._passwordResetRepository.consume(tokenHash)
 
         if (!record) {
             throw new BadRequestException('Reset link is invalid or expired')
         }
 
-        const user = await this.userRepository.findById(record.userId)
+        const user = await this._userRepository.findById(record.userId)
 
         if (!user) {
             throw new BadRequestException("Reset link is invalid or expired");
@@ -344,16 +335,16 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
 
-        await this.userRepository.updatePassword(user.id, hashedPassword);
-        await this.passwordResetRepository.revokeAllForUser(user.id)
-        await this.refreshSessionRepository.revokeAllForUser(user.id);
+        await this._userRepository.updatePassword(user.id, hashedPassword);
+        await this._passwordResetRepository.revokeAllForUser(user.id)
+        await this._refreshSessionRepository.revokeAllForUser(user.id);
     }
 
     async googleSignin(dto: GoogleSignInRequestDto) {
-        const googleProfile = await this.googleOAuthService.verifyIdToken(dto.idToken);
+        const googleProfile = await this._googleOAuthService.verifyIdToken(dto.idToken);
 
         const email = normalizeEmail(googleProfile.email);
-        const existingAuthUser = await this.userRepository.findAuthByEmail(email);
+        const existingAuthUser = await this._userRepository.findAuthByEmail(email);
 
         let safeUser;
 
@@ -363,20 +354,20 @@ export class AuthService {
             }
 
             if (existingAuthUser.googleId !== googleProfile.googleId) {
-                safeUser = await this.userRepository.updateGoogleAccount(existingAuthUser.id, {
+                safeUser = await this._userRepository.updateGoogleAccount(existingAuthUser.id, {
                     googleId: googleProfile.googleId,
                     imageUrl: googleProfile.picture ?? null,
                     isVerified: true,
                 });
             } else {
-                safeUser = await this.userRepository.findById(existingAuthUser.id);
+                safeUser = await this._userRepository.findById(existingAuthUser.id);
             }
 
             if (!safeUser) {
                 throw new UnauthorizedException("User not found");
             }
         } else {
-            safeUser = await this.userRepository.create({
+            safeUser = await this._userRepository.create({
                 name: googleProfile.name,
                 email,
                 password: null,
@@ -388,7 +379,7 @@ export class AuthService {
             });
         }
 
-        const tokens = await this.generateTokens(safeUser);
+        const tokens = await this._generateTokens(safeUser);
 
         return {
             user: safeUser,
@@ -399,18 +390,18 @@ export class AuthService {
 
     async logout(refreshToken?: string) {
         if (refreshToken) {
-            const payload = await this.jwtService.verifyRefreshToken(refreshToken)
-            await this.refreshSessionRepository.revoke(payload.sessionId, payload.sub)
+            const payload = await this._jwtService.verifyRefreshToken(refreshToken)
+            await this._refreshSessionRepository.revoke(payload.sessionId, payload.sub)
         }
     }
 
     async logoutAll(userId: string) {
-        await this.refreshSessionRepository.revokeAllForUser(userId)
+        await this._refreshSessionRepository.revokeAllForUser(userId)
     }
 
     async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
-        const user = await this.userRepository.findAuthByEmail(
-            (await this.userRepository.findById(userId))?.email ?? '',)
+        const user = await this._userRepository.findAuthByEmail(
+            (await this._userRepository.findById(userId))?.email ?? '',)
 
         if (!user) {
             throw new UnauthorizedException('User not found')
@@ -430,22 +421,22 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
 
-        await this.userRepository.updatePassword(userId, hashedPassword)
-        await this.passwordResetRepository.revokeAllForUser(userId)
-        await this.refreshSessionRepository.revokeAllForUser(userId)
+        await this._userRepository.updatePassword(userId, hashedPassword)
+        await this._passwordResetRepository.revokeAllForUser(userId)
+        await this._refreshSessionRepository.revokeAllForUser(userId)
     }
 
-    private async generateTokens(user: { id: string, roles: Role[] }) {
+    private async _generateTokens(user: { id: string, roles: Role[] }) {
         const sessionId = randomUUID()
 
-        await this.refreshSessionRepository.create(sessionId, user.id, this.refreshTokenTtlSeconds)
+        await this._refreshSessionRepository.create(sessionId, user.id, this._refreshTokenTtlSeconds)
 
-        const accessToken = await this.jwtService.signAccessToken({
+        const accessToken = await this._jwtService.signAccessToken({
             sub: user.id,
             roles: user.roles
         })
 
-        const refreshToken = await this.jwtService.signRefreshToken({
+        const refreshToken = await this._jwtService.signRefreshToken({
             sub: user.id,
             sessionId
         })
@@ -456,11 +447,11 @@ export class AuthService {
         }
     }
 
-    private generatePasswordResetToken(): string {
+    private _generatePasswordResetToken(): string {
         return randomBytes(32).toString("hex");
     }
 
-    private hashPasswordResetToken(token: string): string {
+    private _hashPasswordResetToken(token: string): string {
         return createHash("sha256").update(token).digest("hex");
     }
 }

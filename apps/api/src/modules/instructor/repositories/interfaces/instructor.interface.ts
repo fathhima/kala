@@ -1,11 +1,19 @@
-import { InstructorApplicationStatus, MediaType, } from '@prisma/client';
-import { PaginatedResult } from '@/shared/types';
+import { MediaType, } from '@prisma/client';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../../entities/instructor-profile.entity';
-import { ReviewableOfferingStatus } from '../../types/offering-status.type';
+import { PublicInstructorProfile } from '../../types/public-instructor.type';
 
 export const INSTRUCTOR_REPOSITORY = Symbol('INSTRUCTOR_REPOSITORY');
 
-export interface InstructorRepository {
+export interface IInstructorRepository {
+    findPublicInstructors(input: {
+        page: number;
+        limit: number;
+        search?: string;
+        subcategoryId?: string;
+    }): Promise<{ profiles: PublicInstructorProfile[]; total: number }>;
+
+    findPublicInstructor(profileId: string): Promise<PublicInstructorProfile | null>;
+
     findWorkspaceByUserId(userId: string): Promise<InstructorProfileEntity | null>;
 
     upsertProfile(userId: string, input: { bio?: string; location?: string },): Promise<InstructorProfileEntity>;

@@ -1,30 +1,30 @@
 import { BadRequestException, ConflictException, Inject, Injectable, Logger, NotFoundException, } from '@nestjs/common';
-import { CategoryEntity } from './entities/category.entity';
-import { SubcategoryEntity } from './entities/subcategory.entity';
-import { CATEGORY_REPOSITORY, type CategoryRepository, } from './repositories/interfaces/category.repository';
-import { CreateCategoryDto } from './dto/request/create-category.dto';
-import { UpdateCategoryDto } from './dto/request/update-category.dto';
-import { CreateSubcategoryDto } from './dto/request/create-subcategory.dto';
-import { UpdateSubcategoryDto } from './dto/request/update-subcategory.dto';
 import { StorageService } from '@/shared/storage/storage.service';
-import { CATEGORY_IMAGE_MIME_TYPES, RequestCategoryImageUploadDto } from './dto/request/create-category-image-upload.dto';
 import { randomUUID } from 'crypto';
-import { ConfirmCategoryImageUploadDto } from './dto/request/confirm-category-image-upload.dto';
-import { CategoryQueryDto } from './dto/request/category-query.dto';
-import { PaginatedResult } from '@/shared/types/paginated-result';
+import { IPaginatedResult } from '@/shared/types/paginated-result';
+import { CATEGORY_REPOSITORY, type ICategoryRepository } from '@/modules/category/repositories/interfaces/category.interface';
+import { CategoryQueryDto } from '@/modules/category/dto/request/category-query.dto';
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { SubcategoryEntity } from '@/modules/category/entities/subcategory.entity';
+import { CreateCategoryDto } from '@/modules/category/dto/request/create-category.dto';
+import { UpdateCategoryDto } from '@/modules/category/dto/request/update-category.dto';
+import { CreateSubcategoryDto } from '@/modules/category/dto/request/create-subcategory.dto';
+import { UpdateSubcategoryDto } from '@/modules/category/dto/request/update-subcategory.dto';
+import { ConfirmCategoryImageUploadDto } from '@/modules/category/dto/request/confirm-category-image-upload.dto';
+import { CATEGORY_IMAGE_MIME_TYPES, RequestCategoryImageUploadDto } from '@/modules/category/dto/request/create-category-image-upload.dto';
+import { IAdminCategoryService } from './interfaces/admin-category.service.interface';
 
 @Injectable()
-export class CategoryService {
-    private readonly logger = new Logger(CategoryService.name);
+export class AdminCategoryService implements IAdminCategoryService {
 
     constructor(
         @Inject(CATEGORY_REPOSITORY)
-        private readonly categoryRepository: CategoryRepository,
-        private readonly storageService: StorageService
+        private readonly _categoryRepository: ICategoryRepository,
+        private readonly _storageService: StorageService
     ) { }
 
-    async findManyForAdmin(query: CategoryQueryDto): Promise<PaginatedResult<CategoryEntity>> {
-        return this.categoryRepository.findManyForAdmin({
+    async findManyForAdmin(query: CategoryQueryDto): Promise<IPaginatedResult<CategoryEntity>> {
+        return this._categoryRepository.findManyForAdmin({
             page: query.page ?? 1,
             limit: query.limit ?? 10,
             search: query.search,
@@ -38,25 +38,25 @@ export class CategoryService {
     }
 
     async findAll(): Promise<CategoryEntity[]> {
-        return this.categoryRepository.findAll();
+        return this._categoryRepository.findAll();
     }
 
     async findSubcategories(categoryId: string,): Promise<SubcategoryEntity[]> {
-        await this.getCategoryOrThrow(categoryId);
+        await this._getCategoryOrThrow(categoryId);
 
-        return this.categoryRepository.findSubcategories(categoryId);
+        return this._categoryRepository.findSubcategories(categoryId);
     }
 
     async createCategory(dto: CreateCategoryDto,): Promise<CategoryEntity> {
-        const slug = this.slugify(dto.slug ?? dto.name);
+        const slug = this._slugify(dto.slug ?? dto.name);
 
-        const existingCategory = await this.categoryRepository.findBySlug(slug);
+        const existingCategory = await this._categoryRepository.findBySlug(slug);
 
         if (existingCategory) {
             throw new ConflictException('A category with this slug already exists',);
         }
 
-        return this.categoryRepository.createCategory({
+        return this._categoryRepository.createCategory({
             name: dto.name,
             slug,
             description: dto.description,
@@ -65,19 +65,19 @@ export class CategoryService {
     }
 
     async updateCategory(categoryId: string, dto: UpdateCategoryDto,): Promise<CategoryEntity> {
-        await this.getCategoryOrThrow(categoryId);
+        await this._getCategoryOrThrow(categoryId);
 
-        const slug = dto.slug ? this.slugify(dto.slug) : undefined;
+        const slug = dto.slug ? this._slugify(dto.slug) : undefined;
 
         if (slug) {
-            const existingCategory = await this.categoryRepository.findBySlug(slug);
+            const existingCategory = await this._categoryRepository.findBySlug(slug);
 
             if (existingCategory && existingCategory.id !== categoryId) {
                 throw new ConflictException('A category with this slug already exists',);
             }
         }
 
-        return this.categoryRepository.updateCategory(categoryId, {
+        return this._categoryRepository.updateCategory(categoryId, {
             name: dto.name,
             slug,
             description: dto.description,
@@ -87,11 +87,11 @@ export class CategoryService {
     }
 
     async createSubcategory(categoryId: string, dto: CreateSubcategoryDto,): Promise<SubcategoryEntity> {
-        await this.getCategoryOrThrow(categoryId);
+        await this._getCategoryOrThrow(categoryId);
 
-        const slug = this.slugify(dto.slug ?? dto.name);
+        const slug = this._slugify(dto.slug ?? dto.name);
 
-        const existingSubcategory = await this.categoryRepository.findSubcategoryBySlug(
+        const existingSubcategory = await this._categoryRepository.findSubcategoryBySlug(
             categoryId,
             slug,
         );
@@ -100,7 +100,7 @@ export class CategoryService {
             throw new ConflictException('A subcategory with this slug already exists in this category',);
         }
 
-        return this.categoryRepository.createSubcategory({
+        return this._categoryRepository.createSubcategory({
             categoryId,
             name: dto.name,
             slug,
@@ -110,7 +110,7 @@ export class CategoryService {
     }
 
     async updateSubcategory(categoryId: string, subcategoryId: string, dto: UpdateSubcategoryDto,): Promise<SubcategoryEntity> {
-        const subcategory = await this.categoryRepository.findSubcategoryById(
+        const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
         );
@@ -119,10 +119,10 @@ export class CategoryService {
             throw new NotFoundException('Subcategory not found');
         }
 
-        const slug = dto.slug ? this.slugify(dto.slug) : undefined;
+        const slug = dto.slug ? this._slugify(dto.slug) : undefined;
 
         if (slug) {
-            const existingSubcategory = await this.categoryRepository.findSubcategoryBySlug(
+            const existingSubcategory = await this._categoryRepository.findSubcategoryBySlug(
                 categoryId,
                 slug,
             );
@@ -132,7 +132,7 @@ export class CategoryService {
             }
         }
 
-        return this.categoryRepository.updateSubcategory(subcategoryId, {
+        return this._categoryRepository.updateSubcategory(subcategoryId, {
             name: dto.name,
             slug,
             description: dto.description,
@@ -142,12 +142,12 @@ export class CategoryService {
     }
 
     async createCategoryImageUploadUrl(categoryId: string, dto: RequestCategoryImageUploadDto,) {
-        await this.getCategoryOrThrow(categoryId);
+        await this._getCategoryOrThrow(categoryId);
 
-        const extension = this.imageExtension(dto.mimeType);
+        const extension = this._imageExtension(dto.mimeType);
         const storageKey = `categories/${categoryId}/images/${randomUUID()}.${extension}`;
 
-        return this.storageService.createUploadUrl({
+        return this._storageService.createUploadUrl({
             key: storageKey,
             contentType: dto.mimeType,
             expiresInSeconds: 300,
@@ -155,14 +155,14 @@ export class CategoryService {
     }
 
     async confirmCategoryImageUpload(categoryId: string, dto: ConfirmCategoryImageUploadDto,): Promise<CategoryEntity> {
-        const category = await this.getCategoryOrThrow(categoryId);
+        const category = await this._getCategoryOrThrow(categoryId);
         const expectedPrefix = `categories/${categoryId}/images/`;
 
         if (!dto.storageKey.startsWith(expectedPrefix)) {
             throw new BadRequestException('Invalid category image key');
         }
 
-        const object = await this.storageService.getObjectMetadata(
+        const object = await this._storageService.getObjectMetadata(
             dto.storageKey,
         );
 
@@ -178,26 +178,26 @@ export class CategoryService {
             throw new BadRequestException('Category image must be 5 MB or smaller',);
         }
 
-        const updatedCategory = await this.categoryRepository.updateCategory(categoryId, {
+        const updatedCategory = await this._categoryRepository.updateCategory(categoryId, {
             imageStorageKey: dto.storageKey,
             imageUrl: null,
         });
 
         if (category.imageStorageKey && category.imageStorageKey !== dto.storageKey) {
-            await this.deleteOldImage(category.imageStorageKey);
+            await this._deleteOldImage(category.imageStorageKey);
         }
 
         return updatedCategory;
     }
 
     async getCategoryImageViewUrl(categoryId: string) {
-        const category = await this.getCategoryOrThrow(categoryId);
+        const category = await this._getCategoryOrThrow(categoryId);
 
         if (!category.imageStorageKey) {
             throw new NotFoundException('Category has no image');
         }
 
-        const object = await this.storageService.getObjectMetadata(
+        const object = await this._storageService.getObjectMetadata(
             category.imageStorageKey,
         );
 
@@ -205,29 +205,29 @@ export class CategoryService {
             throw new NotFoundException('Category image was not found');
         }
 
-        return this.storageService.createDownloadUrl({
+        return this._storageService.createDownloadUrl({
             key: category.imageStorageKey,
             expiresInSeconds: 900,
         });
     }
 
     async removeCategoryImage(categoryId: string,): Promise<CategoryEntity> {
-        const category = await this.getCategoryOrThrow(categoryId);
+        const category = await this._getCategoryOrThrow(categoryId);
 
-        const updatedCategory = await this.categoryRepository.updateCategory(categoryId, {
+        const updatedCategory = await this._categoryRepository.updateCategory(categoryId, {
             imageStorageKey: null,
             imageUrl: null,
         });
 
         if (category.imageStorageKey) {
-            await this.deleteOldImage(category.imageStorageKey);
+            await this._deleteOldImage(category.imageStorageKey);
         }
 
         return updatedCategory;
     }
 
     async createSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, dto: RequestCategoryImageUploadDto,) {
-        const subcategory = await this.categoryRepository.findSubcategoryById(
+        const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
         );
@@ -236,10 +236,10 @@ export class CategoryService {
             throw new NotFoundException('Subcategory not found');
         }
 
-        const extension = this.imageExtension(dto.mimeType);
+        const extension = this._imageExtension(dto.mimeType);
         const storageKey = `subcategories/${subcategoryId}/images/${randomUUID()}.${extension}`;
 
-        return this.storageService.createUploadUrl({
+        return this._storageService.createUploadUrl({
             key: storageKey,
             contentType: dto.mimeType,
             expiresInSeconds: 300,
@@ -247,7 +247,7 @@ export class CategoryService {
     }
 
     async confirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, dto: ConfirmCategoryImageUploadDto,): Promise<SubcategoryEntity> {
-        const subcategory = await this.categoryRepository.findSubcategoryById(
+        const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
         );
@@ -262,7 +262,7 @@ export class CategoryService {
             throw new BadRequestException('Invalid subcategory image key');
         }
 
-        const object = await this.storageService.getObjectMetadata(
+        const object = await this._storageService.getObjectMetadata(
             dto.storageKey,
         );
 
@@ -278,7 +278,7 @@ export class CategoryService {
             throw new BadRequestException('Subcategory image must be 5 MB or smaller',);
         }
 
-        const updatedSubcategory = await this.categoryRepository.updateSubcategory(
+        const updatedSubcategory = await this._categoryRepository.updateSubcategory(
             subcategoryId,
             {
                 imageStorageKey: dto.storageKey,
@@ -287,14 +287,14 @@ export class CategoryService {
         );
 
         if (subcategory.imageStorageKey && subcategory.imageStorageKey !== dto.storageKey) {
-            await this.deleteOldImage(subcategory.imageStorageKey);
+            await this._deleteOldImage(subcategory.imageStorageKey);
         }
 
         return updatedSubcategory;
     }
 
     async getSubcategoryImageViewUrl(categoryId: string, subcategoryId: string,) {
-        const subcategory = await this.categoryRepository.findSubcategoryById(
+        const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
         );
@@ -307,7 +307,7 @@ export class CategoryService {
             throw new NotFoundException('Subcategory has no image');
         }
 
-        const object = await this.storageService.getObjectMetadata(
+        const object = await this._storageService.getObjectMetadata(
             subcategory.imageStorageKey,
         );
 
@@ -315,14 +315,14 @@ export class CategoryService {
             throw new NotFoundException('Subcategory image was not found',);
         }
 
-        return this.storageService.createDownloadUrl({
+        return this._storageService.createDownloadUrl({
             key: subcategory.imageStorageKey,
             expiresInSeconds: 900,
         });
     }
 
     async removeSubcategoryImage(categoryId: string, subcategoryId: string,): Promise<SubcategoryEntity> {
-        const subcategory = await this.categoryRepository.findSubcategoryById(
+        const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
         );
@@ -331,7 +331,7 @@ export class CategoryService {
             throw new NotFoundException('Subcategory not found');
         }
 
-        const updatedSubcategory = await this.categoryRepository.updateSubcategory(
+        const updatedSubcategory = await this._categoryRepository.updateSubcategory(
             subcategoryId,
             {
                 imageStorageKey: null,
@@ -340,22 +340,22 @@ export class CategoryService {
         );
 
         if (subcategory.imageStorageKey) {
-            await this.deleteOldImage(subcategory.imageStorageKey);
+            await this._deleteOldImage(subcategory.imageStorageKey);
         }
 
         return updatedSubcategory;
     }
 
-    private async deleteOldImage(storageKey: string): Promise<void> {
+    private async _deleteOldImage(storageKey: string): Promise<void> {
         try {
-            await this.storageService.deleteObject(storageKey);
+            await this._storageService.deleteObject(storageKey);
         } catch (error) {
-            this.logger.error(`Failed to delete S3 object: ${storageKey}`, error instanceof Error ? error.stack : undefined,);
+            console.error(`Failed to delete S3 object: ${storageKey}`, error instanceof Error ? error.stack : undefined,);
         }
     }
 
-    private async getCategoryOrThrow(categoryId: string,): Promise<CategoryEntity> {
-        const category = await this.categoryRepository.findById(categoryId);
+    private async _getCategoryOrThrow(categoryId: string,): Promise<CategoryEntity> {
+        const category = await this._categoryRepository.findById(categoryId);
 
         if (!category) {
             throw new NotFoundException('Category not found');
@@ -364,7 +364,7 @@ export class CategoryService {
         return category;
     }
 
-    private imageExtension(mimeType: string): string {
+    private _imageExtension(mimeType: string): string {
         const extensions: Record<string, string> = {
             'image/jpeg': 'jpg',
             'image/png': 'png',
@@ -380,7 +380,7 @@ export class CategoryService {
         return extension;
     }
 
-    private slugify(value: string): string {
+    private _slugify(value: string): string {
         const slug = value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
         if (!slug) {

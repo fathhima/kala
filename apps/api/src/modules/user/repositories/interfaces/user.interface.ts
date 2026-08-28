@@ -1,15 +1,12 @@
-import { PaginatedResult } from "@/shared/types";
 import { UserEntity } from "../../entities/user.entity";
-import { AdminUserListParams } from "../../types/admin-user-list-params.type";
-import { AuthUser } from "../../types/auth-user.type";
 import { CreateUserInput } from "../../types/create-user-input.type";
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY')
 
-export interface UserRepository {
+export interface IUserRepository {
   findByEmail(email: string): Promise<UserEntity | null>;
   findById(id: string): Promise<UserEntity | null>
-  findAuthByEmail(email: string): Promise<AuthUser | null>;
+  findAuthByEmail(email: string): Promise<UserEntity | null>;
   create(data: CreateUserInput): Promise<UserEntity>;
   updateProfile(userId: string, data: { name?: string; imageUrl?: string | null },): Promise<UserEntity>
   updatePassword(userId: string, hashedPassword: string): Promise<void>;

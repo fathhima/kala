@@ -1,15 +1,10 @@
-import {
-  INestApplication,
-  RawBodyRequest,
-  ValidationPipe,
-} from '@nestjs/common';
+import { INestApplication, RawBodyRequest, ValidationPipe, } from '@nestjs/common';
 import morgan from 'morgan';
 import { Request } from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-
 import { AppModule } from '@/app.module';
 import { Logger } from '@/shared/logger/winston-logger';
 import { setupSwagger } from '@/shared/config/swagger.config';

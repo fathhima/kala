@@ -11,6 +11,7 @@ import { InstructorApplicationResponseDto, InstructorOfferingResponseDto, Instru
 import { INSTRUCTOR_SERVICE, type IInstructorService } from './services/interfaces/instructor.service.interface';
 import { PublicInstructorListResponseDto, PublicInstructorResponseDto } from './dto/response/public-catelog-response.dto';
 import { PublicInstructorQueryDto } from './dto/request/public-instructor-query.dto';
+import { Public } from '@/shared/decorators/public.decorator';
 
 @ApiTags('Instructor')
 @Controller('instructors')
@@ -19,6 +20,7 @@ export class InstructorController {
         @Inject(INSTRUCTOR_SERVICE)
         private readonly _instructorService: IInstructorService) { }
 
+    @Public()
     @Get()
     @ApiOperation({ summary: 'List approved instructors and offerings' })
     @ApiOkResponse({ type: PublicInstructorListResponseDto })
@@ -41,6 +43,7 @@ export class InstructorController {
         return InstructorProfileResponseDto.fromEntity('Instructor onboarding fetched successfully', profile,);
     }
 
+    @Public()
     @Get(':profileId')
     @ApiOperation({ summary: 'Get one approved instructor profile' })
     @ApiOkResponse({ type: PublicInstructorResponseDto })

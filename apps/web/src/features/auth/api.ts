@@ -1,4 +1,4 @@
-import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
+import { AuthenticationApi, Configuration, ForgotPasswordDto, GoogleSignInRequestDto, LoginDto, RegisterDto, ResendOtpDto, ResetPasswordDto, SafeUserDto, UsersApi, ValidateResetTokenDto, VerifyOtpDto } from "@/api";
 import { apiClient, refreshClient } from "@/lib/axios";
 import { AuthUser } from "./store";
 import { ApiEnvelope } from "@/types/api-envelope";
@@ -13,6 +13,7 @@ const config = new Configuration({
 })
 
 const authApi = new AuthenticationApi(config, undefined, apiClient)
+const usersApi = new UsersApi(config, undefined, apiClient)
 
 const mapUser = (user: SafeUserDto | MeResponseDto): AuthUser => ({
     id: user.id,
@@ -70,7 +71,7 @@ export const resetPassword = async (payload: ResetPasswordDto) => {
 };
 
 export const getMe = async () => {
-    const response = await authApi.authControllerMe()
+    const response = await usersApi.userControllerGetMe()
     const payload = response.data as unknown as ApiEnvelope<MeResponseDto>
     return mapUser(payload.data)
 }

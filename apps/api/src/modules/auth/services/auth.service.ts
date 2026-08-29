@@ -18,7 +18,6 @@ import { maskEmail } from "../utils/masked-email";
 import { ForgotPasswordDto } from "../dto/request/forgot-password.dto";
 import { ValidateResetTokenDto } from "../dto/request/validate-reset-token.dto";
 import { ResetPasswordDto } from "../dto/request/reset-password.dto";
-import { GoogleOAuthService } from "./google-oauth.service";
 import { GoogleSignInRequestDto } from "../dto/request/google-signin.dto";
 import { AuthResult, RefreshResult } from "../types/auth-result.type";
 import { UserRole } from "@/shared/enums/role.enum";
@@ -353,15 +352,11 @@ export class AuthService implements IAuthService {
                 throw new ForbiddenException("Account is blocked");
             }
 
-            if (existingAuthUser.googleId !== googleProfile.googleId) {
-                safeUser = await this._userRepository.updateGoogleAccount(existingAuthUser.id, {
-                    googleId: googleProfile.googleId,
-                    imageUrl: googleProfile.picture ?? null,
-                    isVerified: true,
-                });
-            } else {
-                safeUser = await this._userRepository.findById(existingAuthUser.id);
-            }
+            safeUser = await this._userRepository.updateGoogleAccount(existingAuthUser.id, {
+                googleId: googleProfile.googleId,
+                imageUrl: googleProfile.picture ?? null,
+                isVerified: true,
+            });
 
             if (!safeUser) {
                 throw new UnauthorizedException("User not found");

@@ -4,19 +4,19 @@ import Redis from "ioredis";
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
-  private readonly client: Redis
+  private readonly _client: Redis
 
-  constructor(private readonly configService: ConfigService) {
-    const redisUri = this.configService.getOrThrow<string>('REDIS_URI')
-    this.client = new Redis(redisUri)
+  constructor(private readonly _configService: ConfigService) {
+    const redisUri = this._configService.getOrThrow<string>('REDIS_URI')
+    this._client = new Redis(redisUri)
   }
 
   getClient(): Redis {
-    return this.client;
+    return this._client;
   }
 
   async onModuleDestroy() {
-    await this.client.quit()
+    await this._client.quit()
   }
 
 }

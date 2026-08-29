@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client, S3ServiceException, } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { ObjectStorageProvider } from './interfaces/storage.repository';
+import { IObjectStorageProvider } from './interfaces/storage.interface';
 import { CreateUploadUrlInput } from '../types/create-upload-url.type';
 import { PresignedUpload } from '../types/presigned-upload.type';
 import { CreateDownloadUrlInput } from '../types/create-download-url.type';
@@ -10,24 +10,24 @@ import { PresignedDownload } from '../types/presigned-download.type';
 import { StoredObjectMetadata } from '../types/stored-object.type';
 
 @Injectable()
-export class S3ObjectStorageProvider implements ObjectStorageProvider {
-    private readonly client: S3Client;
-    private readonly bucket: string;
+export class S3ObjectStorageProvider implements IObjectStorageProvider {
+    private readonly _client: S3Client;
+    private readonly _bucket: string;
 
-    constructor(private readonly configService: ConfigService) {
-        this.bucket = this.configService.getOrThrow<string>('AWS_S3_BUCKET');
+    constructor(private readonly _configService: ConfigService) {
+        this._bucket = this._configService.getOrThrow<string>('AWS_S3_BUCKET');
 
-        this.client = new S3Client({ region: this.configService.getOrThrow<string>('AWS_REGION'), });
+        this._client = new S3Client({ region: this._configService.getOrThrow<string>('AWS_REGION'), });
     }
 
     async createUploadUrl(input: CreateUploadUrlInput,): Promise<PresignedUpload> {
         const command = new PutObjectCommand({
-            Bucket: this.bucket,
+            Bucket: this._bucket,
             Key: input.key,
             ContentType: input.contentType,
         });
 
-        const uploadUrl = await getSignedUrl(this.client, command, {
+        const uploadUrl = await getSignedUrl(this._client, command, {
             expiresIn: input.expiresInSeconds,
         });
 
@@ -40,11 +40,11 @@ export class S3ObjectStorageProvider implements ObjectStorageProvider {
 
     async createDownloadUrl(input: CreateDownloadUrlInput,): Promise<PresignedDownload> {
         const command = new GetObjectCommand({
-            Bucket: this.bucket,
+            Bucket: this._bucket,
             Key: input.key,
         });
 
-        const viewUrl = await getSignedUrl(this.client, command, {
+        const viewUrl = await getSignedUrl(this._client, command, {
             expiresIn: input.expiresInSeconds,
         });
 
@@ -57,9 +57,9 @@ export class S3ObjectStorageProvider implements ObjectStorageProvider {
 
     async getObjectMetadata(key: string,): Promise<StoredObjectMetadata | null> {
         try {
-            const result = await this.client.send(
+            const result = await this._client.send(
                 new HeadObjectCommand({
-                    Bucket: this.bucket,
+                    Bucket: this._bucket,
                     Key: key,
                 }),
             );
@@ -78,9 +78,9 @@ export class S3ObjectStorageProvider implements ObjectStorageProvider {
     }
 
     async deleteObject(key: string): Promise<void> {
-        await this.client.send(
+        await this._client.send(
             new DeleteObjectCommand({
-                Bucket: this.bucket,
+                Bucket: this._bucket,
                 Key: key,
             }),
         );

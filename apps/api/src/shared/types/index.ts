@@ -18,18 +18,18 @@ export class MessageOnlyHttpResponse {
     message: string
 }
 
-export interface HTTP_PAGINATED_RESPONSE {
+export interface IHTTP_PAGINATED_RESPONSE {
     total?: number;
     limit?: number;
     page?: number;
 }
 
-export interface JWTPayload {
+export interface IJWTPayload {
     sub: string;
     role: Array<'user' | 'admin'>;
 }
 
-export interface RequestUser {
+export interface IRequestUser {
     id: string;
     role: 'user' | 'admin';
 }

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, } from '@nestjs/swagger';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../../entities/instructor-profile.entity';
 import { PaginationMetaDto } from '@/shared/dto/response/pagination-meta.dto';
-import { PaginatedResult } from '@/shared/types';
+import { IPaginatedResult } from '@/shared/types';
 
 const MEDIA_TYPES = ['IMAGE', 'VIDEO'] as const;
 const OFFERING_STATUSES = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'CHANGES_REQUESTED', 'ARCHIVED',] as const;
@@ -434,7 +434,7 @@ export class PaginatedInstructorApplicationsResponseDto {
     @ApiProperty({ type: PaginatedInstructorApplicationsDataDto, })
     data!: PaginatedInstructorApplicationsDataDto;
 
-    static fromResult(message: string, result: PaginatedResult<InstructorApplicationEntity>,): PaginatedInstructorApplicationsResponseDto {
+    static fromResult(message: string, result: IPaginatedResult<InstructorApplicationEntity>,): PaginatedInstructorApplicationsResponseDto {
         return {
             success: true,
             message,

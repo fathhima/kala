@@ -13,8 +13,6 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
-import { PublicCatalogModule } from './modules/public-catelog/public-catelog.module';
-import { SchedulingModule } from './modules/slot/slot.module';
 
 @Module({
   imports: [
@@ -25,15 +23,26 @@ import { SchedulingModule } from './modules/slot/slot.module';
         limit: 60,
       },
     ]),
-    JwtModule, ConfigModule, PrismaModule, RedisModule, MailerModule, AuthModule, UserModule, CategoryModule, AdminModule, InstructorModule, PublicCatalogModule, SchedulingModule
+    JwtModule,
+    ConfigModule,
+    PrismaModule,
+    RedisModule,
+    MailerModule,
+    AuthModule,
+    UserModule,
+    CategoryModule,
+    AdminModule,
+    InstructorModule,
   ],
-  providers: [{
-    provide: APP_GUARD,
-    useClass: JwtAuthGuard,
-  },
-  {
-    provide: APP_GUARD,
-    useClass: RolesGuard,
-  }],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}

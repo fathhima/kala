@@ -1,21 +1,24 @@
 import { InstructorApplicationQueryDto } from "@/modules/instructor/dto/request/instructor-application-query.dto";
 import { InstructorApplicationEntity } from "@/modules/instructor/entities/instructor-profile.entity";
-import { ADMIN_INSTRUCTOR_REPOSITORY, type AdminInstructorRepository } from "@/modules/instructor/repositories/interfaces/admin-instructor.repositoty";
 import { ReviewableOfferingStatus } from "@/modules/instructor/types/offering-status.type";
 import { StorageService } from "@/shared/storage/storage.service";
-import { PaginatedResult } from "@/shared/types";
+import { IPaginatedResult } from "@/shared/types";
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { type IAdminInstructorService } from "./interfaces/admin-instructor.service.interface";
+import { ADMIN_INSTRUCTOR_REPOSITORY, type IAdminInstructorRepository } from "@/modules/instructor/repositories/interfaces/admin-instructor.interface";
+
 
 @Injectable()
-export class AdminInstructorService {
+export class AdminInstructorService implements IAdminInstructorService {
 
-    constructor(@Inject(ADMIN_INSTRUCTOR_REPOSITORY)
-    private readonly instructorReviewRepository: AdminInstructorRepository,
-        private readonly storageService: StorageService
+    constructor(
+        @Inject(ADMIN_INSTRUCTOR_REPOSITORY)
+        private readonly _instructorReviewRepository: IAdminInstructorRepository,
+        private readonly _storageService: StorageService
     ) { }
 
-    async getApplicationsForAdmin(query: InstructorApplicationQueryDto,): Promise<PaginatedResult<InstructorApplicationEntity>> {
-        return this.instructorReviewRepository.findApplicationsForAdmin({
+    async getApplicationsForAdmin(query: InstructorApplicationQueryDto,): Promise<IPaginatedResult<InstructorApplicationEntity>> {
+        return this._instructorReviewRepository.findApplicationsForAdmin({
             page: query.page,
             limit: query.limit,
             status: query.status,
@@ -24,7 +27,7 @@ export class AdminInstructorService {
     }
 
     async getApplicationForAdmin(applicationId: string,): Promise<InstructorApplicationEntity> {
-        const application = await this.instructorReviewRepository.findApplicationForAdmin(applicationId);
+        const application = await this._instructorReviewRepository.findApplicationForAdmin(applicationId);
 
         if (!application) {
             throw new NotFoundException('Instructor application not found');
@@ -44,7 +47,7 @@ export class AdminInstructorService {
             throw new BadRequestException('A review reason is required when rejecting or requesting changes',);
         }
 
-        const result = await this.instructorReviewRepository.reviewOffering(
+        const result = await this._instructorReviewRepository.reviewOffering(
             applicationId,
             offeringId,
             adminUserId,
@@ -60,7 +63,7 @@ export class AdminInstructorService {
     }
 
     async getOfferingMediaViewUrl(applicationId: string, offeringId: string, mediaId: string,) {
-        const application = await this.instructorReviewRepository.findApplicationForAdmin(applicationId);
+        const application = await this._instructorReviewRepository.findApplicationForAdmin(applicationId)
 
         if (!application) {
             throw new NotFoundException('Instructor application not found');
@@ -78,7 +81,7 @@ export class AdminInstructorService {
             throw new NotFoundException('Offering media not found');
         }
 
-        return this.storageService.createDownloadUrl({
+        return this._storageService.createDownloadUrl({
             key: media.storageKey,
             expiresInSeconds: 900,
         });

@@ -2,7 +2,7 @@ import { RefreshSessionRecord } from "@/shared/redis/types/refresh-session.type"
 
 export const REFRESH_SESSION_REPOSITORY = Symbol("REFRESH_SESSION_REPOSITORY",);
 
-export interface RefreshSessionRepository {
+export interface IRefreshSessionRepository {
     create(sessionId: string, userId: string, ttlSeconds: number,): Promise<void>;
 
     findById(sessionId: string,): Promise<RefreshSessionRecord | null>;

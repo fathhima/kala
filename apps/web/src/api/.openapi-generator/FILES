@@ -15,6 +15,7 @@ docs/AdminUserStatusResponseDto.md
 docs/AuthDataDto.md
 docs/AuthResponseDto.md
 docs/AuthenticationApi.md
+docs/CategoriesApi.md
 docs/CategoryDto.md
 docs/CategoryImageUploadDataDto.md
 docs/CategoryImageUploadResponseDto.md
@@ -31,6 +32,7 @@ docs/CreateSlotsDto.md
 docs/CreateSubcategoryDto.md
 docs/ForgotPasswordDto.md
 docs/GoogleSignInRequestDto.md
+docs/InstructorApi.md
 docs/InstructorApplicantUserDto.md
 docs/InstructorApplicationDto.md
 docs/InstructorApplicationProfileDto.md
@@ -39,7 +41,6 @@ docs/InstructorOfferingCategoryDto.md
 docs/InstructorOfferingDto.md
 docs/InstructorOfferingResponseDto.md
 docs/InstructorOfferingSubcategoryDto.md
-docs/InstructorOnboardingApi.md
 docs/InstructorProfileDto.md
 docs/InstructorProfileResponseDto.md
 docs/LoginDto.md
@@ -57,9 +58,6 @@ docs/PresignedDownloadDataDto.md
 docs/PresignedDownloadResponseDto.md
 docs/PresignedUploadDataDto.md
 docs/PresignedUploadResponseDto.md
-docs/PublicCatalogApi.md
-docs/PublicCategoryDto.md
-docs/PublicCategoryListResponseDto.md
 docs/PublicInstructorDto.md
 docs/PublicInstructorListDataDto.md
 docs/PublicInstructorListResponseDto.md
@@ -68,7 +66,6 @@ docs/PublicMediaDto.md
 docs/PublicOfferingCategoryDto.md
 docs/PublicOfferingDto.md
 docs/PublicOfferingSubcategoryDto.md
-docs/PublicSchedulingApi.md
 docs/PublicSubcategoryDto.md
 docs/RefreshDataDto.md
 docs/RefreshResponseDto.md

@@ -8,6 +8,7 @@ All URIs are relative to *http://localhost:4000*
 |[**instructorControllerCancelApplication**](#instructorcontrollercancelapplication) | **POST** /api/instructor/onboarding/applications/{applicationId}/cancel | Cancel the current pending instructor application|
 |[**instructorControllerConfirmMediaUpload**](#instructorcontrollerconfirmmediaupload) | **POST** /api/instructor/onboarding/offerings/{offeringId}/media/confirm | Confirm offering media upload|
 |[**instructorControllerCreateMediaUploadUrl**](#instructorcontrollercreatemediauploadurl) | **POST** /api/instructor/onboarding/offerings/{offeringId}/media/upload-url | Create offering media upload URL|
+|[**instructorControllerGetInstructor**](#instructorcontrollergetinstructor) | **GET** /api/instructor/onboarding/{profileId} | Get one approved instructor profile|
 |[**instructorControllerGetMediaViewUrl**](#instructorcontrollergetmediaviewurl) | **GET** /api/instructor/onboarding/offerings/{offeringId}/media/{mediaId}/view-url | Get offering media view URL|
 |[**instructorControllerGetWorkspace**](#instructorcontrollergetworkspace) | **GET** /api/instructor/onboarding | Get instructor onboarding workspace|
 |[**instructorControllerRemoveMedia**](#instructorcontrollerremovemedia) | **DELETE** /api/instructor/onboarding/offerings/{offeringId}/media/{mediaId} | Remove offering media|
@@ -222,6 +223,57 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **instructorControllerGetInstructor**
+> PublicInstructorResponseDto instructorControllerGetInstructor()
+
+
+### Example
+
+```typescript
+import {
+    InstructorOnboardingApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new InstructorOnboardingApi(configuration);
+
+let profileId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.instructorControllerGetInstructor(
+    profileId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **profileId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**PublicInstructorResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**404** | Instructor not found |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

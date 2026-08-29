@@ -9,22 +9,22 @@ import {
 import { Reflector } from "@nestjs/core";
 import { Request } from "express";
 
-import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.repository";
-import type { UserRepository } from "@/modules/user/repositories/interfaces/user.repository";
+import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
+import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import { IS_PUBLIC_KEY } from "@/shared/decorators/public.decorator";
 import { JwtService } from "@/shared/jwt/jwt.service";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
+    private readonly _reflector: Reflector,
+    private readonly _jwtService: JwtService,
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: UserRepository,
+    private readonly _userRepository: IUserRepository,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+    const isPublic = this._reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -34,16 +34,16 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromHeader(request);
+    const token = this._extractTokenFromHeader(request);
 
     if (!token) {
       throw new UnauthorizedException("Access token is missing");
     }
 
     try {
-      const payload = await this.jwtService.verifyAccessToken(token);
+      const payload = await this._jwtService.verifyAccessToken(token);
 
-      const user = await this.userRepository.findById(payload.sub);
+      const user = await this._userRepository.findById(payload.sub);
 
       if (!user) {
         throw new UnauthorizedException("User not found");
@@ -76,7 +76,7 @@ export class JwtAuthGuard implements CanActivate {
     }
   }
 
-  private extractTokenFromHeader(request: Request): string | null {
+  private _extractTokenFromHeader(request: Request): string | null {
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {

@@ -53,7 +53,7 @@ const toUpdateSubcategoryPayload = (values: UpdateSubcategoryFormValues,): Updat
 })
 
 export const getAdminCategories = async (query: AdminCategoriesQuery,): Promise<PaginatedCategoryDataDto> => {
-    const response = await adminCategoriesApi.categoryControllerFindAll(
+    const response = await adminCategoriesApi.adminCategoryControllerFindAll(
         query.page,
         query.limit,
         query.search,
@@ -64,22 +64,22 @@ export const getAdminCategories = async (query: AdminCategoriesQuery,): Promise<
 }
 
 export const createAdminCategory = async (values: CategoryFormValues,): Promise<CategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerCreateCategory(toCreatePayload(values),)
+    const response = await adminCategoriesApi.adminCategoryControllerCreateCategory(toCreatePayload(values),)
     return response.data.data
 }
 
 export const updateAdminCategory = async (params: { categoryId: string, values: UpdateCategoryFormValues }): Promise<CategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerUpdateCategory(params.categoryId, toUpdateCategoryPayload(params.values),)
+    const response = await adminCategoriesApi.adminCategoryControllerUpdateCategory(params.categoryId, toUpdateCategoryPayload(params.values),)
     return response.data.data
 }
 
 export const createAdminSubcategory = async (params: { categoryId: string, values: SubcategoryFormValues }): Promise<SubcategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerCreateSubcategory(params.categoryId, toCreateSubcategoryPayload(params.values),)
+    const response = await adminCategoriesApi.adminCategoryControllerCreateSubcategory(params.categoryId, toCreateSubcategoryPayload(params.values),)
     return response.data.data
 }
 
 export const updateAdminSubcategory = async (params: { categoryId: string, subcategoryId: string, values: UpdateSubcategoryFormValues }): Promise<SubcategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerUpdateSubcategory(
+    const response = await adminCategoriesApi.adminCategoryControllerUpdateSubcategory(
         params.categoryId,
         params.subcategoryId,
         toUpdateSubcategoryPayload(params.values),
@@ -88,12 +88,12 @@ export const updateAdminSubcategory = async (params: { categoryId: string, subca
 }
 
 export const getCategoryImageViewUrl = async (categoryId: string) => {
-    const response = await adminCategoriesApi.categoryControllerGetCategoryImageViewUrl(categoryId)
+    const response = await adminCategoriesApi.adminCategoryControllerGetCategoryImageViewUrl(categoryId)
     return response.data.data
 }
 
 export const getSubcategoryImageViewUrl = async (categoryId: string, subcategoryId: string,) => {
-    const response = await adminCategoriesApi.categoryControllerGetSubcategoryImageViewUrl(
+    const response = await adminCategoriesApi.adminCategoryControllerGetSubcategoryImageViewUrl(
         categoryId,
         subcategoryId,
     )
@@ -116,7 +116,7 @@ const uploadFileToSignedUrl = async (uploadUrl: string, file: File) => {
 }
 
 export const uploadCategoryImage = async (params: { categoryId: string, file: File }): Promise<CategoryDto> => {
-    const uploadResponse = await adminCategoriesApi.categoryControllerCreateCategoryImageUploadUrl(
+    const uploadResponse = await adminCategoriesApi.adminCategoryControllerCreateCategoryImageUploadUrl(
         params.categoryId,
         {
             mimeType: params.file.type as RequestCategoryImageUploadDtoMimeTypeEnum,
@@ -131,7 +131,7 @@ export const uploadCategoryImage = async (params: { categoryId: string, file: Fi
         storageKey: upload.storageKey,
     }
 
-    const confirmResponse = await adminCategoriesApi.categoryControllerConfirmCategoryImageUpload(
+    const confirmResponse = await adminCategoriesApi.adminCategoryControllerConfirmCategoryImageUpload(
         params.categoryId,
         confirmPayload,
     )
@@ -140,12 +140,12 @@ export const uploadCategoryImage = async (params: { categoryId: string, file: Fi
 }
 
 export const removeCategoryImage = async (categoryId: string): Promise<CategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerRemoveCategoryImage(categoryId)
+    const response = await adminCategoriesApi.adminCategoryControllerRemoveCategoryImage(categoryId)
     return response.data.data
 }
 
 export const uploadSubcategoryImage = async (params: { categoryId: string, subcategoryId: string, file: File }): Promise<SubcategoryDto> => {
-    const uploadResponse = await adminCategoriesApi.categoryControllerCreateSubcategoryImageUploadUrl(
+    const uploadResponse = await adminCategoriesApi.adminCategoryControllerCreateSubcategoryImageUploadUrl(
         params.categoryId,
         params.subcategoryId,
         {
@@ -157,7 +157,7 @@ export const uploadSubcategoryImage = async (params: { categoryId: string, subca
     const upload: SubcategoryImageUploadDataDto = uploadResponse.data.data
     await uploadFileToSignedUrl(upload.uploadUrl, params.file)
 
-    const confirmResponse = await adminCategoriesApi.categoryControllerConfirmSubcategoryImageUpload(
+    const confirmResponse = await adminCategoriesApi.adminCategoryControllerConfirmSubcategoryImageUpload(
         params.categoryId,
         params.subcategoryId,
         { storageKey: upload.storageKey },
@@ -167,7 +167,7 @@ export const uploadSubcategoryImage = async (params: { categoryId: string, subca
 }
 
 export const removeSubcategoryImage = async (params: { categoryId: string, subcategoryId: string }): Promise<SubcategoryDto> => {
-    const response = await adminCategoriesApi.categoryControllerRemoveSubcategoryImage(
+    const response = await adminCategoriesApi.adminCategoryControllerRemoveSubcategoryImage(
         params.categoryId,
         params.subcategoryId,
     )

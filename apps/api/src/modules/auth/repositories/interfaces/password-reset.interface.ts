@@ -2,7 +2,7 @@ import { PasswordResetRecord } from "@/shared/redis/types/password-reset-record"
 
 export const PASSWORD_RESET_REPOSITORY = Symbol("PASSWORD_RESET_REPOSITORY",);
 
-export interface PasswordResetRepository {
+export interface IPasswordResetRepository {
     create(tokenHash: string, userId: string, ttlSeconds: number,): Promise<void>;
 
     findByTokenHash(tokenHash: string,): Promise<PasswordResetRecord | null>;

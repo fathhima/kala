@@ -1,4 +1,3 @@
-
 export type PendingSignup = {
     id: string,
     name: string,

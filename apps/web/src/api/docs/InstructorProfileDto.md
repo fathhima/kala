@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **userId** | **string** |  | [default to undefined]
 **bio** | **string** |  | [optional] [default to undefined]
 **location** | **string** |  | [optional] [default to undefined]
+**portfolioUrl** | **string** |  | [optional] [default to undefined]
 **status** | **string** |  | [default to undefined]
 **createdAt** | **string** |  | [default to undefined]
 **updatedAt** | **string** |  | [default to undefined]
@@ -25,6 +26,7 @@ const instance: InstructorProfileDto = {
     userId,
     bio,
     location,
+    portfolioUrl,
     status,
     createdAt,
     updatedAt,

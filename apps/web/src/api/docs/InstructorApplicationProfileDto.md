@@ -8,6 +8,7 @@ Name | Type | Description | Notes
 **id** | **string** |  | [default to undefined]
 **bio** | **string** |  | [optional] [default to undefined]
 **location** | **string** |  | [optional] [default to undefined]
+**portfolioUrl** | **string** |  | [optional] [default to undefined]
 **status** | **string** |  | [default to undefined]
 **user** | [**InstructorApplicantUserDto**](InstructorApplicantUserDto.md) |  | [default to undefined]
 
@@ -20,6 +21,7 @@ const instance: InstructorApplicationProfileDto = {
     id,
     bio,
     location,
+    portfolioUrl,
     status,
     user,
 };

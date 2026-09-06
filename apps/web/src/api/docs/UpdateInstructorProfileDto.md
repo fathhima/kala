@@ -5,8 +5,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**bio** | **string** |  | [optional] [default to undefined]
-**location** | **string** |  | [optional] [default to undefined]
+**bio** | **string** |  | [default to undefined]
+**location** | **string** |  | [default to undefined]
+**portfolioUrl** | **string** |  | [default to undefined]
 
 ## Example
 
@@ -16,6 +17,7 @@ import { UpdateInstructorProfileDto } from './api';
 const instance: UpdateInstructorProfileDto = {
     bio,
     location,
+    portfolioUrl,
 };
 ```
 

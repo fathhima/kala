@@ -32,5 +32,6 @@ export type PublicInstructorProfile = {
     imageUrl: string | null;
     bio: string | null;
     location: string | null;
+    portfolioUrl: string | null;
     offerings: PublicInstructorOffering[];
 };

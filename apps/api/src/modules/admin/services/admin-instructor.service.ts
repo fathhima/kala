@@ -36,24 +36,12 @@ export class AdminInstructorService implements IAdminInstructorService {
         return application;
     }
 
-    async reviewOffering(
-        applicationId: string,
-        offeringId: string,
-        adminUserId: string,
-        decision: ReviewableOfferingStatus,
-        reviewNote?: string,
-    ): Promise<InstructorApplicationEntity> {
+    async reviewOffering(applicationId: string, offeringId: string, adminUserId: string, decision: ReviewableOfferingStatus, reviewNote?: string,): Promise<InstructorApplicationEntity> {
         if ((decision === 'REJECTED' || decision === 'CHANGES_REQUESTED') && !reviewNote?.trim()) {
             throw new BadRequestException('A review reason is required when rejecting or requesting changes',);
         }
 
-        const result = await this._instructorReviewRepository.reviewOffering(
-            applicationId,
-            offeringId,
-            adminUserId,
-            decision,
-            reviewNote?.trim(),
-        );
+        const result = await this._instructorReviewRepository.reviewOffering(applicationId, offeringId, adminUserId, decision, reviewNote?.trim(),);
 
         if (!result) {
             throw new ConflictException('This offering is not pending in this instructor application',);

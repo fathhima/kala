@@ -16,7 +16,7 @@ export interface IInstructorRepository {
 
     findWorkspaceByUserId(userId: string): Promise<InstructorProfileEntity | null>;
 
-    upsertProfile(userId: string, input: { bio?: string; location?: string },): Promise<InstructorProfileEntity>;
+    upsertProfile(userId: string, input: { bio?: string; location?: string; portfolioUrl?: string },): Promise<InstructorProfileEntity>;
 
     isSelectableSubcategory(subcategoryId: string): Promise<boolean>;
 

@@ -109,6 +109,7 @@ model InstructorProfile {
   userId    String                  @unique
   bio       String?
   location  String?
+  portfolioUrl String?
   status    InstructorProfileStatus @default(DRAFT)
   createdAt DateTime                @default(now())
   updatedAt DateTime                @updatedAt

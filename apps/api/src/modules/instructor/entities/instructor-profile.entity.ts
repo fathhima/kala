@@ -59,6 +59,7 @@ export class InstructorApplicationEntity {
         id: string;
         bio?: string | null;
         location?: string | null;
+        portfolioUrl:string | null;
         status: InstructorProfileStatus;
         user: {
             id: string;
@@ -75,6 +76,7 @@ export class InstructorProfileEntity {
     userId!: string;
     bio?: string | null;
     location?: string | null;
+    portfolioUrl?: string | null;
     status!: InstructorProfileStatus;
     createdAt!: Date;
     updatedAt!: Date;

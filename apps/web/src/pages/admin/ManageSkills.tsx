@@ -546,7 +546,7 @@ export function ManageSkills() {
                     })
                   }
                 >
-                  {category.isActive ? 'Hide' : 'Show'}
+                  {category.isActive ? 'Unlist' : 'List'}
                 </Button>
               </div>
             </div>
@@ -647,7 +647,7 @@ export function ManageSkills() {
                           })
                         }
                       >
-                        {subcategory.isActive ? 'Hide' : 'Show'}
+                        {subcategory.isActive ? 'Unlist' : 'List'}
                       </Button>
                     </div>
                   </div>
@@ -685,8 +685,25 @@ export function ManageSkills() {
         />
       )}
 
-      <CategoryFormModal state={categoryModal} onClose={() => setCategoryModal(null)} />
-      <SubcategoryFormModal state={subcategoryModal} onClose={() => setSubcategoryModal(null)} />
+      {categoryModal && (
+        <CategoryFormModal
+          key={categoryModal.mode === 'edit' ? categoryModal.category.id : 'create-category'}
+          state={categoryModal}
+          onClose={() => setCategoryModal(null)}
+        />
+      )}
+
+      {subcategoryModal && (
+        <SubcategoryFormModal
+          key={
+            subcategoryModal.mode === 'edit'
+              ? subcategoryModal.subcategory.id
+              : `create-subcategory-${subcategoryModal.category.id}`
+          }
+          state={subcategoryModal}
+          onClose={() => setSubcategoryModal(null)}
+        />
+      )}
     </div>
   )
 }

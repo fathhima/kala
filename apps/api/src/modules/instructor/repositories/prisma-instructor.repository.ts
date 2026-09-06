@@ -65,7 +65,7 @@ const publicProfileInclude = {
     },
 } satisfies Prisma.InstructorProfileInclude;
 
-type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{include: typeof publicProfileInclude;}>;
+type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{ include: typeof publicProfileInclude; }>;
 
 @Injectable()
 export class PrismaInstructorRepository implements IInstructorRepository, IAdminInstructorRepository {
@@ -154,6 +154,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
             imageUrl: profile.user.imageUrl,
             bio: profile.bio,
             location: profile.location,
+            portfolioUrl: profile.portfolioUrl,
             offerings: profile.offerings.map((offering) => ({
                 id: offering.id,
                 title: offering.title,
@@ -199,13 +200,14 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         return profile ? InstructorMapper.toProfileEntity(profile) : null;
     }
 
-    async upsertProfile(userId: string, input: { bio?: string; location?: string },): Promise<InstructorProfileEntity> {
+    async upsertProfile(userId: string, input: { bio?: string; location?: string; portfolioUrl?: string },): Promise<InstructorProfileEntity> {
         const profile = await this._prisma.instructorProfile.upsert({
             where: { userId },
             create: {
                 userId,
                 bio: input.bio,
                 location: input.location,
+                portfolioUrl: input.portfolioUrl
             },
             update: input,
             include: {

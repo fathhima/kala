@@ -193,6 +193,9 @@ export class InstructorApplicationProfileDto {
     @ApiPropertyOptional({ type: String, nullable: true })
     location?: string | null;
 
+    @ApiPropertyOptional({ type: String, nullable: true })
+    portfolioUrl?: string | null;
+
     @ApiProperty()
     status!: string;
 
@@ -204,6 +207,7 @@ export class InstructorApplicationProfileDto {
             id: entity.id,
             bio: entity.bio,
             location: entity.location,
+            portfolioUrl: entity.portfolioUrl,
             status: entity.status,
             user: {
                 id: entity.user.id,
@@ -298,6 +302,9 @@ export class InstructorProfileDto {
     @ApiPropertyOptional({ type: String, nullable: true })
     location?: string | null;
 
+    @ApiPropertyOptional({ type: String, nullable: true })
+    portfolioUrl?: string | null;
+
     @ApiProperty()
     status!: string;
 
@@ -328,6 +335,7 @@ export class InstructorProfileDto {
             userId: entity.userId,
             bio: entity.bio,
             location: entity.location,
+            portfolioUrl: entity.portfolioUrl,
             status: entity.status,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 import { useChangeMyPasswordMutation, useUpdateMyProfileMutation, } from '@/features/account/hooks'
 import { useAuthStore } from '@/features/auth/store'
 import { getApiErrorResponse } from '@/lib/api-error'
@@ -24,6 +25,7 @@ export function AccountSettings() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [profileMessage, setProfileMessage] = useState('')
     const [passwordError, setPasswordError] = useState('')
+    const [passwordModalOpen, setPasswordModalOpen] = useState(false)
 
     useEffect(() => {
         setName(user?.name ?? '')
@@ -69,6 +71,7 @@ export function AccountSettings() {
                 newPassword,
             })
 
+            setPasswordModalOpen(false)
             clearAuth()
             navigate('/login', { replace: true })
         } catch (error) {
@@ -76,6 +79,14 @@ export function AccountSettings() {
                 getApiErrorResponse(error, 'Could not update password.'),
             )
         }
+    }
+
+    const openPasswordModal = () => {
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+        setPasswordError('')
+        setPasswordModalOpen(true)
     }
 
     return (
@@ -121,24 +132,33 @@ export function AccountSettings() {
                         <p className="text-sm text-stone-600">{profileMessage}</p>
                     )}
 
-                    <Button type="submit" loading={updateProfileMutation.isPending}>
-                        Save profile
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button type="submit" loading={updateProfileMutation.isPending}>
+                            Save profile
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={openPasswordModal}
+                        >
+                            {user.hasPassword ? 'Change password' : 'Set password'}
+                        </Button>
+                    </div>
                 </form>
             </Card>
 
-            <Card className="p-6">
+            <Modal
+                open={passwordModalOpen}
+                onClose={() => setPasswordModalOpen(false)}
+                title={user.hasPassword ? 'Change password' : 'Set password'}
+            >
                 <form className="space-y-4" onSubmit={handlePasswordSubmit}>
-                    <div>
-                        <h2 className="text-lg font-semibold text-stone-800">
-                            {user.hasPassword ? 'Change password' : 'Set a password'}
-                        </h2>
-                        <p className="mt-1 text-sm text-stone-500">
-                            {user.hasPassword
-                                ? 'This signs you out on all devices.'
-                                : 'You can continue using Google sign-in after setting a password.'}
-                        </p>
-                    </div>
+                    <p className="text-sm text-stone-500">
+                        {user.hasPassword
+                            ? 'This signs you out after your password is changed.'
+                            : 'You can continue using Google sign-in after setting a password.'}
+                    </p>
 
                     {user.hasPassword && (
                         <Input
@@ -181,7 +201,7 @@ export function AccountSettings() {
                         {user.hasPassword ? 'Change password' : 'Set password'}
                     </Button>
                 </form>
-            </Card>
+            </Modal>
         </div>
     )
 }

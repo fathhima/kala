@@ -105,6 +105,7 @@ export class InstructorService implements IInstructorService {
         return this._instructorRepository.upsertProfile(userId, {
             bio: dto.bio?.trim(),
             location: dto.location?.trim(),
+            portfolioUrl: dto.portfolioUrl?.trim(),
         });
     }
 
@@ -258,6 +259,10 @@ export class InstructorService implements IInstructorService {
 
         if (!workspace) {
             throw new BadRequestException('Create your instructor profile first');
+        }
+
+        if (!workspace.portfolioUrl?.trim()) {
+            throw new BadRequestException('Add your portfolio URL before submitting');
         }
 
         if (workspace.latestApplication?.status === 'PENDING') {

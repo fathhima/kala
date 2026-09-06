@@ -44,9 +44,13 @@ const editableStatuses = new Set([
   'CHANGES_REQUESTED',
 ])
 
-const statusVariant = (
-  status: string,
-): 'default' | 'success' | 'warning' | 'error' => {
+type ProfileFormErrors = {
+  bio?: string
+  location?: string
+  portfolioUrl?: string
+}
+
+const statusVariant = (status: string,): 'default' | 'success' | 'warning' | 'error' => {
   if (status === 'APPROVED') return 'success'
   if (status === 'REJECTED') return 'error'
   if (status === 'PENDING' || status === 'CHANGES_REQUESTED') return 'warning'
@@ -286,20 +290,23 @@ export function BecomeInstructor({
 
   const [bio, setBio] = useState('')
   const [location, setLocation] = useState('')
+  const [portfolioUrl, setPortfolioUrl] = useState('')
+  const [profileErrors, setProfileErrors] = useState<ProfileFormErrors>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   const workspace = workspaceQuery.data
   const offerings = workspace?.offerings ?? []
   const categories = categoriesQuery.data ?? []
   const latestApplication = workspace?.latestApplication
   const isPending = latestApplication?.status === 'PENDING'
-
   useEffect(() => {
     setBio(workspace?.bio ?? '')
     setLocation(workspace?.location ?? '')
-  }, [workspace?.bio, workspace?.location])
+    setPortfolioUrl(workspace?.portfolioUrl ?? '')
+  }, [workspace?.bio, workspace?.location, workspace?.portfolioUrl])
 
   if (workspaceQuery.isLoading || categoriesQuery.isLoading) {
     return <div className="text-sm text-stone-500">Loading onboarding…</div>
@@ -332,11 +339,40 @@ export function BecomeInstructor({
   const saveProfile = async (event: React.FormEvent) => {
     event.preventDefault()
     setError('')
+    setSubmitError('')
+
+    const errors: ProfileFormErrors = {}
+
+    if (!bio.trim()) {
+      errors.bio = 'Bio is required.'
+    }
+
+    if (!location.trim()) {
+      errors.location = 'Location is required.'
+    }
+
+    if (!portfolioUrl.trim()) {
+      errors.portfolioUrl = 'Portfolio URL is required.'
+    } else {
+      try {
+        new URL(portfolioUrl.trim())
+      } catch {
+        errors.portfolioUrl = 'Enter a valid portfolio URL.'
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setProfileErrors(errors)
+      return
+    }
+
+    setProfileErrors({})
 
     try {
       await saveProfileMutation.mutateAsync({
-        bio: bio.trim() || undefined,
-        location: location.trim() || undefined,
+        bio: bio.trim(),
+        location: location.trim(),
+        portfolioUrl: portfolioUrl.trim(),
       })
     } catch (requestError) {
       setError(getApiErrorResponse(requestError, 'Could not save profile.'))
@@ -344,6 +380,8 @@ export function BecomeInstructor({
   }
 
   const saveOffering = async (form: OfferingForm) => {
+    setSubmitError('')
+
     const payload = {
       subcategoryId: form.subcategoryId,
       title: form.title.trim(),
@@ -368,13 +406,11 @@ export function BecomeInstructor({
     setAdding(false)
   }
 
-  const uploadMedia = async (
-    offeringId: string,
-    files: FileList | null,
-  ) => {
+  const uploadMedia = async (offeringId: string, files: FileList | null,) => {
     if (!files) return
 
     setError('')
+    setSubmitError('')
 
     try {
       for (const [index, file] of Array.from(files).entries()) {
@@ -398,6 +434,18 @@ export function BecomeInstructor({
       await cancelMutation.mutateAsync(latestApplication.id)
     } catch (requestError) {
       setError(getApiErrorResponse(requestError, 'Could not cancel application.'))
+    }
+  }
+
+  const submitApplication = async () => {
+    setSubmitError('')
+
+    try {
+      await submitMutation.mutateAsync()
+    } catch (requestError) {
+      setSubmitError(
+        getApiErrorResponse(requestError, 'Could not submit application.'),
+      )
     }
   }
 
@@ -489,13 +537,33 @@ export function BecomeInstructor({
               label="Bio"
               rows={4}
               value={bio}
-              onChange={(event) => setBio(event.target.value)}
+              onChange={(event) => {
+                setBio(event.target.value)
+                setProfileErrors((prev) => ({ ...prev, bio: undefined }))
+              }}
+              error={profileErrors.bio}
             />
 
             <Input
               label="Location"
               value={location}
-              onChange={(event) => setLocation(event.target.value)}
+              onChange={(event) => {
+                setLocation(event.target.value)
+                setProfileErrors((prev) => ({ ...prev, location: undefined }))
+              }}
+              error={profileErrors.location}
+
+            />
+
+            <Input
+              label="Portfolio URL"
+              type="url"
+              value={portfolioUrl}
+              onChange={(event) => {
+                setPortfolioUrl(event.target.value)
+                setProfileErrors((prev) => ({ ...prev, portfolioUrl: undefined }))
+              }}
+              error={profileErrors.portfolioUrl}
             />
 
             <Button type="submit" loading={saveProfileMutation.isPending}>
@@ -514,7 +582,10 @@ export function BecomeInstructor({
         </div>
 
         {!adding && !editingId && (
-          <Button onClick={() => setAdding(true)}>
+          <Button onClick={() => {
+            setSubmitError('')
+            setAdding(true)
+          }}>
             <Plus size={16} /> Add offering
           </Button>
         )}
@@ -643,12 +714,18 @@ export function BecomeInstructor({
         )
       })}
 
+      {submitError && (
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
+          {submitError}
+        </div>
+      )}
+
       <Button
         size="lg"
         className="w-full"
         loading={submitMutation.isPending}
         disabled={offerings.length === 0}
-        onClick={() => void submitMutation.mutateAsync()}
+        onClick={() => void submitApplication()}
       >
         Submit application
       </Button>

@@ -62,6 +62,7 @@ export class InstructorMapper {
                 id: application.profile.id,
                 bio: application.profile.bio,
                 location: application.profile.location,
+                portfolioUrl: application.profile.portfolioUrl,
                 status: application.profile.status,
                 user: {
                     id: application.profile.user.id,
@@ -81,6 +82,7 @@ export class InstructorMapper {
             userId: profile.userId,
             bio: profile.bio,
             location: profile.location,
+            portfolioUrl: profile.portfolioUrl,
             status: profile.status,
             createdAt: profile.createdAt,
             updatedAt: profile.updatedAt,

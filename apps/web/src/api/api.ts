@@ -218,6 +218,7 @@ export interface InstructorApplicationProfileDto {
     'id': string;
     'bio'?: string | null;
     'location'?: string | null;
+    'portfolioUrl'?: string | null;
     'status': string;
     'user': InstructorApplicantUserDto;
 }
@@ -278,6 +279,7 @@ export interface InstructorProfileDto {
     'userId': string;
     'bio'?: string | null;
     'location'?: string | null;
+    'portfolioUrl'?: string | null;
     'status': string;
     'createdAt': string;
     'updatedAt': string;
@@ -639,8 +641,9 @@ export interface UpdateCategoryDto {
     'sortOrder'?: number;
 }
 export interface UpdateInstructorProfileDto {
-    'bio'?: string;
-    'location'?: string;
+    'bio': string;
+    'location': string;
+    'portfolioUrl': string;
 }
 export interface UpdateOfferingDto {
     'subcategoryId'?: string;

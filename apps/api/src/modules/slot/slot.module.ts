@@ -1,10 +1,23 @@
 import { Module } from '@nestjs/common';
-import { SchedulingController } from './slot.controller';
-import { PublicSchedulingController } from './public-slot.controller';
-import { SchedulingService } from './slot.service';
+import { PrismaSlotRepository } from './repositories/prisma-slot.repository';
+import { SLOT_REPOSITORY } from './repositories/interfaces/slot.interface';
+import { SlotController } from './slot.controller';
+import { SLOT_SERVICE } from './services/interfaces/slot.service.interface';
+import { SlotService } from './services/slot.service';
 
 @Module({
-  controllers: [SchedulingController, PublicSchedulingController],
-  providers: [SchedulingService],
+  controllers: [SlotController],
+  providers: [
+    {
+      provide: SLOT_SERVICE,
+      useClass: SlotService,
+    },
+    PrismaSlotRepository,
+    {
+      provide: SLOT_REPOSITORY,
+      useExisting: PrismaSlotRepository,
+    },
+  ],
+  exports: [SLOT_SERVICE, SLOT_REPOSITORY],
 })
-export class SchedulingModule {}
+export class SlotModule {}

@@ -153,8 +153,8 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
             name: profile.user.name,
             imageUrl: profile.user.imageUrl,
             bio: profile.bio,
+            portfolioUrl:profile.portfolioUrl,
             location: profile.location,
-            portfolioUrl: profile.portfolioUrl,
             offerings: profile.offerings.map((offering) => ({
                 id: offering.id,
                 title: offering.title,

@@ -13,6 +13,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
+import { SlotModule } from './modules/slot/slot.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { InstructorModule } from './modules/instructor/instructor.module';
     CategoryModule,
     AdminModule,
     InstructorModule,
+    SlotModule,
   ],
   providers: [
     {
@@ -45,4 +47,4 @@ import { InstructorModule } from './modules/instructor/instructor.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

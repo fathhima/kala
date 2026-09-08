@@ -52,11 +52,19 @@ enum SlotStatus {
   CANCELLED
 }
 
-enum BookingStatus {
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-  NO_SHOW
+enum AvailabilityRuleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AvailabilityExceptionType {
+  BLOCK
+  EXTRA
+}
+
+enum AvailabilityExceptionStatus {
+  ACTIVE
+  INACTIVE
 }
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -75,7 +83,6 @@ model User {
   updatedAt  DateTime @updatedAt
 
   instructorProfile InstructorProfile?
-  studentBookings   Booking[]          @relation("StudentBookings")
 
   @@map("users")
 }
@@ -119,19 +126,21 @@ model Subcategory {
 }
 
 model InstructorProfile {
-  id        String                  @id @default(cuid())
-  userId    String                  @unique
-  bio       String?
-  location  String?
+  id           String                  @id @default(cuid())
+  userId       String                  @unique
+  bio          String?
+  location     String?
   portfolioUrl String?
-  status    InstructorProfileStatus @default(DRAFT)
-  createdAt DateTime                @default(now())
-  updatedAt DateTime                @updatedAt
+  status       InstructorProfileStatus @default(DRAFT)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
 
-  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  applications InstructorApplication[]
-  offerings    InstructorOffering[]
-  slots        AvailabilitySlot[]
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications           InstructorApplication[]
+  offerings              InstructorOffering[]
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
+  availabilitySlots      AvailabilitySlot[]
 
   @@index([status])
   @@map("instructor_profiles")
@@ -173,11 +182,13 @@ model InstructorOffering {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  profile     InstructorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  application InstructorApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-  subcategory Subcategory            @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
-  media       OfferingMedia[]
-  slots       AvailabilitySlot[]
+  profile                InstructorProfile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  application            InstructorApplication?  @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  subcategory            Subcategory             @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
+  media                  OfferingMedia[]
+  slots                  AvailabilitySlot[]
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
 
   @@index([profileId, status])
   @@index([subcategoryId, status])
@@ -203,43 +214,76 @@ model OfferingMedia {
 }
 
 model AvailabilitySlot {
-  id         String     @id @default(cuid())
-  profileId  String
-  offeringId String
-  title      String?
-  startTime  DateTime
-  endTime    DateTime
-  timezone   String     @default("Asia/Kolkata")
-  status     SlotStatus @default(AVAILABLE)
-  bookedAt   DateTime?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  profileId   String
+  offeringId  String
+  ruleId      String?
+  exceptionId String?
+  title       String?
+  startTime   DateTime
+  endTime     DateTime
+  timezone    String     @default("Asia/Kolkata")
+  status      SlotStatus @default(AVAILABLE)
+  bookedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  profile   InstructorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  offering  InstructorOffering     @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  rule      AvailabilityRule?      @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  exception AvailabilityException? @relation(fields: [exceptionId], references: [id], onDelete: SetNull)
 
   @@index([offeringId, status, startTime])
-  @@index([profileId, startTime])
+  @@index([profileId, status, startTime])
+  @@index([ruleId, status, startTime])
+  @@index([exceptionId, status, startTime])
   @@map("availability_slots")
 }
 
-model Booking {
-  id          String        @id @default(cuid())
-  slotId      String
-  studentId   String
-  status      BookingStatus @default(CONFIRMED)
-  amount      Decimal       @db.Decimal(10, 2)
-  currency    String
-  cancelledAt DateTime?
-  cancelledBy String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+model AvailabilityRule {
+  id                  String                 @id @default(cuid())
+  profileId           String
+  offeringId          String
+  title               String?
+  weekday             Int
+  startMinute         Int
+  endMinute           Int
+  timezone            String                 @default("Asia/Kolkata")
+  slotDurationMinutes Int
+  effectiveFrom       DateTime
+  effectiveUntil      DateTime?
+  status              AvailabilityRuleStatus @default(ACTIVE)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
 
-  slot    AvailabilitySlot @relation(fields: [slotId], references: [id], onDelete: Restrict)
-  student User             @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Restrict)
+  profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  slots    AvailabilitySlot[]
 
-  @@index([studentId, status, createdAt])
-  @@index([slotId, status])
-  @@map("bookings")
+  @@index([profileId, status, weekday])
+  @@index([offeringId, status])
+  @@map("availability_rules")
+}
+
+model AvailabilityException {
+  id                  String                      @id @default(cuid())
+  profileId           String
+  offeringId          String?
+  type                AvailabilityExceptionType
+  title               String?
+  startTime           DateTime
+  endTime             DateTime
+  timezone            String                      @default("Asia/Kolkata")
+  slotDurationMinutes Int?
+  status              AvailabilityExceptionStatus @default(ACTIVE)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  profile  InstructorProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  offering InstructorOffering? @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  slots    AvailabilitySlot[]
+
+  @@index([profileId, status, startTime])
+  @@index([offeringId, status])
+  @@map("availability_exceptions")
 }

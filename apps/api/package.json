@@ -51,6 +51,19 @@
     "rxjs": "^7.8.1",
     "winston": "^3.19.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@prisma/client",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "bcrypt",
+      "esbuild",
+      "inotify",
+      "prisma",
+      "unrs-resolver"
+    ]
+  },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",

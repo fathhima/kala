@@ -5,9 +5,8 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-<<<<<<< HEAD
 import { cn, formatTime } from '@/lib/utils'
-import { usePublicInstructorQuery } from '@/features/public-catelog/hooks'
+import { usePublicInstructorQuery } from '@/features/instructor/hooks'
 import { usePublicAvailabilityQuery } from '@/features/slots/hooks'
 
 function todayInIndia() {
@@ -18,9 +17,6 @@ function todayInIndia() {
     day: '2-digit',
   }).format(new Date())
 }
-=======
-import { usePublicInstructorQuery } from '@/features/instructor/hooks'
->>>>>>> dev
 
 export function InstructorProfile() {
   const { profileId } = useParams()

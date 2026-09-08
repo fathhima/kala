@@ -159,10 +159,36 @@ export interface CreateOfferingDto {
     'currency'?: string;
     'experienceYears'?: number;
 }
-export interface CreateSlotsDto {
-    'offeringId': string;
+export interface CreateSlotExceptionDto {
+    'type': CreateSlotExceptionDtoTypeEnum;
+    'offeringId'?: string;
+    'title'?: string;
+    'startTime': string;
+    'endTime': string;
     'timezone'?: string;
-    'slots': Array<SlotInputDto>;
+    'slotDurationMinutes'?: number;
+}
+
+export const CreateSlotExceptionDtoTypeEnum = {
+    Block: 'BLOCK',
+    Extra: 'EXTRA'
+} as const;
+
+export type CreateSlotExceptionDtoTypeEnum = typeof CreateSlotExceptionDtoTypeEnum[keyof typeof CreateSlotExceptionDtoTypeEnum];
+
+export interface CreateSlotRuleDto {
+    'offeringId': string;
+    'title'?: string;
+    /**
+     * 0 = Sunday, 1 = Monday
+     */
+    'weekday': number;
+    'startMinute': number;
+    'endMinute': number;
+    'slotDurationMinutes': number;
+    'timezone'?: string;
+    'effectiveFrom': string;
+    'effectiveUntil'?: string;
 }
 export interface CreateSubcategoryDto {
     /**
@@ -570,11 +596,6 @@ export interface SafeUserDto {
     'isActive': boolean;
     'hasPassword': boolean;
 }
-export interface SlotInputDto {
-    'startTime': string;
-    'endTime': string;
-    'title'?: string;
-}
 export interface SubcategoryDto {
     'id': string;
     'categoryId': string;
@@ -653,10 +674,12 @@ export interface UpdateOfferingDto {
     'currency'?: string;
     'experienceYears'?: number;
 }
-export interface UpdateSlotDto {
-    'startTime'?: string;
-    'endTime'?: string;
+export interface UpdateSlotRuleDto {
     'title'?: string;
+    'startMinute'?: number;
+    'endMinute'?: number;
+    'slotDurationMinutes'?: number;
+    'effectiveUntil'?: string;
 }
 export interface UpdateSubcategoryDto {
     /**
@@ -4367,27 +4390,20 @@ export class InstructorApi extends BaseAPI {
 
 
 /**
- * PublicSchedulingApi - axios parameter creator
+ * SlotApi - axios parameter creator
  */
-export const PublicSchedulingApiAxiosParamCreator = function (configuration?: Configuration) {
+export const SlotApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {string} profileId 
-         * @param {string} offeringId 
-         * @param {string} date 
+         * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        publicSchedulingControllerGetAvailability: async (profileId: string, offeringId: string, date: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'profileId' is not null or undefined
-            assertParamExists('publicSchedulingControllerGetAvailability', 'profileId', profileId)
-            // verify required parameter 'offeringId' is not null or undefined
-            assertParamExists('publicSchedulingControllerGetAvailability', 'offeringId', offeringId)
-            // verify required parameter 'date' is not null or undefined
-            assertParamExists('publicSchedulingControllerGetAvailability', 'date', date)
-            const localVarPath = `/api/public/instructors/{profileId}/availability`
-                .replace(`{${"profileId"}}`, encodeURIComponent(String(profileId)));
+        slotControllerCreateException: async (createSlotExceptionDto: CreateSlotExceptionDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createSlotExceptionDto' is not null or undefined
+            assertParamExists('slotControllerCreateException', 'createSlotExceptionDto', createSlotExceptionDto)
+            const localVarPath = `/api/instructor/availability/exceptions`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -4395,109 +4411,66 @@ export const PublicSchedulingApiAxiosParamCreator = function (configuration?: Co
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            if (offeringId !== undefined) {
-                localVarQueryParameter['offeringId'] = offeringId;
-            }
-
-            if (date !== undefined) {
-                localVarQueryParameter['date'] = date;
-            }
-
+            localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createSlotExceptionDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
                 options: localVarRequestOptions,
             };
         },
-    }
-};
-
-/**
- * PublicSchedulingApi - functional programming interface
- */
-export const PublicSchedulingApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = PublicSchedulingApiAxiosParamCreator(configuration)
-    return {
         /**
          * 
-         * @param {string} profileId 
-         * @param {string} offeringId 
-         * @param {string} date 
+         * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async publicSchedulingControllerGetAvailability(profileId: string, offeringId: string, date: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.publicSchedulingControllerGetAvailability(profileId, offeringId, date, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PublicSchedulingApi.publicSchedulingControllerGetAvailability']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        slotControllerCreateRule: async (createSlotRuleDto: CreateSlotRuleDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createSlotRuleDto' is not null or undefined
+            assertParamExists('slotControllerCreateRule', 'createSlotRuleDto', createSlotRuleDto)
+            const localVarPath = `/api/instructor/availability/rules`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createSlotRuleDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
         },
-    }
-};
-
-/**
- * PublicSchedulingApi - factory interface
- */
-export const PublicSchedulingApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = PublicSchedulingApiFp(configuration)
-    return {
         /**
          * 
-         * @param {string} profileId 
-         * @param {string} offeringId 
-         * @param {string} date 
+         * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        publicSchedulingControllerGetAvailability(profileId: string, offeringId: string, date: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.publicSchedulingControllerGetAvailability(profileId, offeringId, date, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * PublicSchedulingApi - object-oriented interface
- */
-export class PublicSchedulingApi extends BaseAPI {
-    /**
-     * 
-     * @param {string} profileId 
-     * @param {string} offeringId 
-     * @param {string} date 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public publicSchedulingControllerGetAvailability(profileId: string, offeringId: string, date: string, options?: RawAxiosRequestConfig) {
-        return PublicSchedulingApiFp(this.configuration).publicSchedulingControllerGetAvailability(profileId, offeringId, date, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-
-/**
- * SchedulingApi - axios parameter creator
- */
-export const SchedulingApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {string} slotId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        schedulingControllerCancel: async (slotId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'slotId' is not null or undefined
-            assertParamExists('schedulingControllerCancel', 'slotId', slotId)
-            const localVarPath = `/api/instructor/slots/{slotId}`
-                .replace(`{${"slotId"}}`, encodeURIComponent(String(slotId)));
+        slotControllerDisableRule: async (ruleId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'ruleId' is not null or undefined
+            assertParamExists('slotControllerDisableRule', 'ruleId', ruleId)
+            const localVarPath = `/api/instructor/availability/rules/{ruleId}`
+                .replace(`{${"ruleId"}}`, encodeURIComponent(String(ruleId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -4521,47 +4494,18 @@ export const SchedulingApiAxiosParamCreator = function (configuration?: Configur
         },
         /**
          * 
-         * @param {CreateSlotsDto} createSlotsDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        schedulingControllerCreate: async (createSlotsDto: CreateSlotsDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'createSlotsDto' is not null or undefined
-            assertParamExists('schedulingControllerCreate', 'createSlotsDto', createSlotsDto)
-            const localVarPath = `/api/instructor/slots/bulk`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createSlotsDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {SchedulingControllerListStatusEnum} [status] 
+         * @param {string} profileId 
+         * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerList: async (status?: SchedulingControllerListStatusEnum, from?: string, to?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/instructor/slots`;
+        slotControllerGetPublicAvailability: async (profileId: string, offeringId?: string, from?: string, to?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileId' is not null or undefined
+            assertParamExists('slotControllerGetPublicAvailability', 'profileId', profileId)
+            const localVarPath = `/api/public/instructors/{profileId}/availability`
+                .replace(`{${"profileId"}}`, encodeURIComponent(String(profileId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -4573,8 +4517,8 @@ export const SchedulingApiAxiosParamCreator = function (configuration?: Configur
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            if (status !== undefined) {
-                localVarQueryParameter['status'] = status;
+            if (offeringId !== undefined) {
+                localVarQueryParameter['offeringId'] = offeringId;
             }
 
             if (from !== undefined) {
@@ -4597,18 +4541,61 @@ export const SchedulingApiAxiosParamCreator = function (configuration?: Configur
         },
         /**
          * 
-         * @param {string} slotId 
-         * @param {UpdateSlotDto} updateSlotDto 
+         * @param {string} [offeringId] 
+         * @param {string} [from] 
+         * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerUpdate: async (slotId: string, updateSlotDto: UpdateSlotDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'slotId' is not null or undefined
-            assertParamExists('schedulingControllerUpdate', 'slotId', slotId)
-            // verify required parameter 'updateSlotDto' is not null or undefined
-            assertParamExists('schedulingControllerUpdate', 'updateSlotDto', updateSlotDto)
-            const localVarPath = `/api/instructor/slots/{slotId}`
-                .replace(`{${"slotId"}}`, encodeURIComponent(String(slotId)));
+        slotControllerListInstructorAvailability: async (offeringId?: string, from?: string, to?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructor/availability`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (offeringId !== undefined) {
+                localVarQueryParameter['offeringId'] = offeringId;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} ruleId 
+         * @param {UpdateSlotRuleDto} updateSlotRuleDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slotControllerUpdateRule: async (ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'ruleId' is not null or undefined
+            assertParamExists('slotControllerUpdateRule', 'ruleId', ruleId)
+            // verify required parameter 'updateSlotRuleDto' is not null or undefined
+            assertParamExists('slotControllerUpdateRule', 'updateSlotRuleDto', updateSlotRuleDto)
+            const localVarPath = `/api/instructor/availability/rules/{ruleId}`
+                .replace(`{${"ruleId"}}`, encodeURIComponent(String(ruleId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -4625,7 +4612,7 @@ export const SchedulingApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateSlotDto, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(updateSlotRuleDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4636,167 +4623,232 @@ export const SchedulingApiAxiosParamCreator = function (configuration?: Configur
 };
 
 /**
- * SchedulingApi - functional programming interface
+ * SlotApi - functional programming interface
  */
-export const SchedulingApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = SchedulingApiAxiosParamCreator(configuration)
+export const SlotApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = SlotApiAxiosParamCreator(configuration)
     return {
         /**
          * 
-         * @param {string} slotId 
+         * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async schedulingControllerCancel(slotId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.schedulingControllerCancel(slotId, options);
+        async slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerCreateException(createSlotExceptionDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SchedulingApi.schedulingControllerCancel']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerCreateException']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {CreateSlotsDto} createSlotsDto 
+         * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async schedulingControllerCreate(createSlotsDto: CreateSlotsDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.schedulingControllerCreate(createSlotsDto, options);
+        async slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerCreateRule(createSlotRuleDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SchedulingApi.schedulingControllerCreate']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerCreateRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {SchedulingControllerListStatusEnum} [status] 
+         * @param {string} ruleId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerDisableRule(ruleId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerDisableRule']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} profileId 
+         * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async schedulingControllerList(status?: SchedulingControllerListStatusEnum, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.schedulingControllerList(status, from, to, options);
+        async slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerGetPublicAvailability(profileId, offeringId, from, to, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SchedulingApi.schedulingControllerList']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerGetPublicAvailability']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {string} slotId 
-         * @param {UpdateSlotDto} updateSlotDto 
+         * @param {string} [offeringId] 
+         * @param {string} [from] 
+         * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async schedulingControllerUpdate(slotId: string, updateSlotDto: UpdateSlotDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.schedulingControllerUpdate(slotId, updateSlotDto, options);
+        async slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerListInstructorAvailability(offeringId, from, to, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SchedulingApi.schedulingControllerUpdate']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerListInstructorAvailability']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} ruleId 
+         * @param {UpdateSlotRuleDto} updateSlotRuleDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerUpdateRule(ruleId, updateSlotRuleDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerUpdateRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
 
 /**
- * SchedulingApi - factory interface
+ * SlotApi - factory interface
  */
-export const SchedulingApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = SchedulingApiFp(configuration)
+export const SlotApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = SlotApiFp(configuration)
     return {
         /**
          * 
-         * @param {string} slotId 
+         * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerCancel(slotId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.schedulingControllerCancel(slotId, options).then((request) => request(axios, basePath));
+        slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerCreateException(createSlotExceptionDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {CreateSlotsDto} createSlotsDto 
+         * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerCreate(createSlotsDto: CreateSlotsDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.schedulingControllerCreate(createSlotsDto, options).then((request) => request(axios, basePath));
+        slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerCreateRule(createSlotRuleDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {SchedulingControllerListStatusEnum} [status] 
+         * @param {string} ruleId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerDisableRule(ruleId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} profileId 
+         * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerList(status?: SchedulingControllerListStatusEnum, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.schedulingControllerList(status, from, to, options).then((request) => request(axios, basePath));
+        slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerGetPublicAvailability(profileId, offeringId, from, to, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} slotId 
-         * @param {UpdateSlotDto} updateSlotDto 
+         * @param {string} [offeringId] 
+         * @param {string} [from] 
+         * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        schedulingControllerUpdate(slotId: string, updateSlotDto: UpdateSlotDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.schedulingControllerUpdate(slotId, updateSlotDto, options).then((request) => request(axios, basePath));
+        slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerListInstructorAvailability(offeringId, from, to, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} ruleId 
+         * @param {UpdateSlotRuleDto} updateSlotRuleDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.slotControllerUpdateRule(ruleId, updateSlotRuleDto, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * SchedulingApi - object-oriented interface
+ * SlotApi - object-oriented interface
  */
-export class SchedulingApi extends BaseAPI {
+export class SlotApi extends BaseAPI {
     /**
      * 
-     * @param {string} slotId 
+     * @param {CreateSlotExceptionDto} createSlotExceptionDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public schedulingControllerCancel(slotId: string, options?: RawAxiosRequestConfig) {
-        return SchedulingApiFp(this.configuration).schedulingControllerCancel(slotId, options).then((request) => request(this.axios, this.basePath));
+    public slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerCreateException(createSlotExceptionDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {CreateSlotsDto} createSlotsDto 
+     * @param {CreateSlotRuleDto} createSlotRuleDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public schedulingControllerCreate(createSlotsDto: CreateSlotsDto, options?: RawAxiosRequestConfig) {
-        return SchedulingApiFp(this.configuration).schedulingControllerCreate(createSlotsDto, options).then((request) => request(this.axios, this.basePath));
+    public slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerCreateRule(createSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {SchedulingControllerListStatusEnum} [status] 
+     * @param {string} ruleId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerDisableRule(ruleId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} profileId 
+     * @param {string} [offeringId] 
      * @param {string} [from] 
      * @param {string} [to] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public schedulingControllerList(status?: SchedulingControllerListStatusEnum, from?: string, to?: string, options?: RawAxiosRequestConfig) {
-        return SchedulingApiFp(this.configuration).schedulingControllerList(status, from, to, options).then((request) => request(this.axios, this.basePath));
+    public slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerGetPublicAvailability(profileId, offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} slotId 
-     * @param {UpdateSlotDto} updateSlotDto 
+     * @param {string} [offeringId] 
+     * @param {string} [from] 
+     * @param {string} [to] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public schedulingControllerUpdate(slotId: string, updateSlotDto: UpdateSlotDto, options?: RawAxiosRequestConfig) {
-        return SchedulingApiFp(this.configuration).schedulingControllerUpdate(slotId, updateSlotDto, options).then((request) => request(this.axios, this.basePath));
+    public slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerListInstructorAvailability(offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} ruleId 
+     * @param {UpdateSlotRuleDto} updateSlotRuleDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig) {
+        return SlotApiFp(this.configuration).slotControllerUpdateRule(ruleId, updateSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
-export const SchedulingControllerListStatusEnum = {
-    Available: 'AVAILABLE',
-    Booked: 'BOOKED',
-    Cancelled: 'CANCELLED'
-} as const;
-export type SchedulingControllerListStatusEnum = typeof SchedulingControllerListStatusEnum[keyof typeof SchedulingControllerListStatusEnum];
 
 
 /**

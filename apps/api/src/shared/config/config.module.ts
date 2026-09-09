@@ -13,6 +13,8 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         PORT: Joi.number().default(4000),
         CORS_ORIGINS: Joi.string().default('http://localhost:5173'),
         REDIS_URI: Joi.string().default('redis://localhost:6379'),
+        NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
+        LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'http', 'verbose', 'debug').default('debug'),
         SMTP_HOST: Joi.string().allow('').optional(),
         SMTP_PORT: Joi.number().integer().positive().default(587),
         SMTP_USER: Joi.string().allow('').optional(),

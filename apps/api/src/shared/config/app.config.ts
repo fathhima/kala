@@ -6,15 +6,17 @@ import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from '@/app.module';
-import { Logger } from '@/shared/logger/winston-logger';
 import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
 import helmet from 'helmet';
+import { LoggerService } from '../logger/logger.service';
 
 export async function setupApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule, {
-    logger: Logger,
+    bufferLogs: true,
   });
+
+  app.useLogger(app.get(LoggerService))
 
   const configService = app.get(ConfigService);
 

@@ -14,6 +14,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
 import { SlotModule } from './modules/slot/slot.module';
+import { LoggerModule } from './shared/logger/logger.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SlotModule } from './modules/slot/slot.module';
     ]),
     JwtModule,
     ConfigModule,
+    LoggerModule,
     PrismaModule,
     RedisModule,
     MailerModule,

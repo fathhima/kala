@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger/dist/decorators/api-property.decorator"
+import { ApiProperty } from "@nestjs/swagger"
 import { Transform } from "class-transformer"
-import { IsEmail, IsString, Length, Matches, MinLength } from "class-validator"
+import { IsEmail, IsString, Length, Matches, } from "class-validator"
 
 export class RegisterDto {
     @ApiProperty({

@@ -10,8 +10,6 @@ RUN pnpm i
 
 COPY . .
 
-RUN npx prisma generate
+EXPOSE 5173
 
-EXPOSE 4000
-
-CMD [ "pnpm","run","dev" ]
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]

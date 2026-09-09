@@ -1,0 +1,5 @@
+# apps/web/pnpm-workspace.yaml
+allowBuilds:
+  esbuild: true
+  "@parcel/watcher": true
+  "@openapitools/openapi-generator-cli": true

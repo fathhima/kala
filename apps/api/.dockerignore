@@ -1,2 +1,13 @@
 node_modules
 README.md
+dist
+coverage
+.git*
+.env
+.env.*
+*.md
+test
+nest-cli.json
+.prettierrc
+eslint*
+.dockerignore

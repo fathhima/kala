@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MapPin, Search } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useCategoriesQuery } from '@/features/categories/hooks'
 import { usePublicInstructorsQuery } from '@/features/instructor/hooks'
+import { useDebouncedSearchParam } from '@/hooks/use-debounced-search-param'
 
 const PAGE_SIZE = 12
 
@@ -14,11 +14,11 @@ export function BrowseInstructors() {
 
   const page = Math.max(Number(searchParams.get('page') || '1'), 1)
   const subcategoryId = searchParams.get('subcategoryId') || undefined
-  const committedSearch = searchParams.get('search') || ''
-
-  const [search, setSearch] = useState(committedSearch)
+  const { searchInput, setSearchInput, committedSearch, commitSearchNow } =
+    useDebouncedSearchParam()
 
   const categoriesQuery = useCategoriesQuery()
+
   const instructorsQuery = usePublicInstructorsQuery({
     page,
     limit: PAGE_SIZE,
@@ -26,21 +26,9 @@ export function BrowseInstructors() {
     subcategoryId,
   })
 
-  useEffect(() => {
-    setSearch(committedSearch)
-  }, [committedSearch])
-
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault()
-
-    const next = new URLSearchParams(searchParams)
-    const value = search.trim()
-
-    if (value) next.set('search', value)
-    else next.delete('search')
-
-    next.set('page', '1')
-    setSearchParams(next)
+    commitSearchNow()
   }
 
   const updateSkill = (value: string) => {
@@ -59,23 +47,7 @@ export function BrowseInstructors() {
     setSearchParams(next)
   }
 
-  if (instructorsQuery.isLoading) {
-    return (
-      <div className="page-container py-12 text-sm text-stone-500">
-        Loading instructors…
-      </div>
-    )
-  }
-
-  if (instructorsQuery.isError || !instructorsQuery.data) {
-    return (
-      <div className="page-container py-12 text-sm text-red-500">
-        Could not load instructors.
-      </div>
-    )
-  }
-
-  const { items, meta } = instructorsQuery.data
+  const { items = [], meta } = instructorsQuery.data ?? {}
   const skills =
     categoriesQuery.data?.flatMap((category) =>
       category.subcategories.map((subcategory) => ({
@@ -84,15 +56,20 @@ export function BrowseInstructors() {
       })),
     ) ?? []
 
+  const subtitle = instructorsQuery.isError
+    ? 'Could not load instructors.'
+    : instructorsQuery.isLoading
+      ? 'Loading instructors…'
+      : `${meta?.total ?? 0} approved instructor${meta?.total === 1 ? '' : 's'} available.${instructorsQuery.isFetching ? ' Refreshing…' : ''}`
+
   return (
     <div className="page-container py-12">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-kala-brown">
           Browse Instructors
         </h1>
-        <p className="mt-2 text-stone-500">
-          {meta.total} approved instructor{meta.total === 1 ? '' : 's'}{' '}
-          available.
+        <p className={`mt-2 text-sm ${instructorsQuery.isError ? 'text-red-500' : 'text-stone-500'}`}>
+          {subtitle}
         </p>
       </div>
 
@@ -103,8 +80,8 @@ export function BrowseInstructors() {
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
           />
           <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search instructor, skill, or style…"
             className="w-full rounded-xl border border-stone-200 bg-white py-3 pl-10 pr-4 text-sm"
           />
@@ -124,7 +101,15 @@ export function BrowseInstructors() {
         </select>
       </div>
 
-      {items.length === 0 ? (
+      {instructorsQuery.isLoading && !instructorsQuery.data ? (
+        <Card className="p-10 text-center text-sm text-stone-500">
+          Loading instructors…
+        </Card>
+      ) : instructorsQuery.isError || !instructorsQuery.data ? (
+        <Card className="p-10 text-center text-sm text-red-500">
+          Could not load instructors.
+        </Card>
+      ) : items.length === 0 ? (
         <Card className="p-10 text-center text-sm text-stone-500">
           No instructors match your search.
         </Card>
@@ -198,22 +183,24 @@ export function BrowseInstructors() {
         </div>
       )}
 
-      <div className="mt-8 flex justify-between">
-        <Button
-          variant="outline"
-          disabled={!meta.hasPrevPage}
-          onClick={() => updatePage(page - 1)}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!meta.hasNextPage}
-          onClick={() => updatePage(page + 1)}
-        >
-          Next
-        </Button>
-      </div>
+      {meta && (
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            disabled={!meta.hasPrevPage}
+            onClick={() => updatePage(page - 1)}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!meta.hasNextPage}
+            onClick={() => updatePage(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

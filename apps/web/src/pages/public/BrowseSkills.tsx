@@ -1,40 +1,30 @@
 import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { useCategoriesQuery } from '@/features/categories/hooks'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 
 export function BrowseSkills() {
   const { data: categories = [], isLoading, isError } = useCategoriesQuery()
 
   const [search, setSearch] = useState('')
-  const normalizedSearch = search.trim().toLowerCase()
+  const debouncedSearch = useDebouncedValue(search, 200)
+  const normalizedSearch = debouncedSearch.trim().toLowerCase()
 
-  const skills = categories.flatMap((category) =>
-    category.subcategories
-      .filter((subcategory) =>
-        [category.name, subcategory.name, subcategory.description]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(normalizedSearch)),
-      )
-      .map((subcategory) => ({ category, subcategory })),
+  const skills = useMemo(
+    () =>
+      categories.flatMap((category) =>
+        category.subcategories
+          .filter((subcategory) =>
+            [category.name, subcategory.name, subcategory.description]
+              .filter(Boolean)
+              .some((value) => value!.toLowerCase().includes(normalizedSearch)),
+          )
+          .map((subcategory) => ({ category, subcategory })),
+      ),
+    [categories, normalizedSearch],
   )
-
-  if (isLoading) {
-    return (
-      <div className="page-container py-12 text-sm text-stone-500">
-        Loading skills…
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="page-container py-12 text-sm text-red-500">
-        Could not load skills.
-      </div>
-    )
-  }
 
   return (
     <div className="page-container py-12">
@@ -60,7 +50,15 @@ export function BrowseSkills() {
         />
       </div>
 
-      {skills.length === 0 ? (
+      {isLoading ? (
+        <Card className="p-10 text-center text-sm text-stone-500">
+          Loading skills…
+        </Card>
+      ) : isError ? (
+        <Card className="p-10 text-center text-sm text-red-500">
+          Could not load skills.
+        </Card>
+      ) : skills.length === 0 ? (
         <Card className="p-10 text-center text-sm text-stone-500">
           No skills match your search.
         </Card>

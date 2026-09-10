@@ -16,6 +16,7 @@ export const usePublicInstructorsQuery = (params: {
     useQuery({
         queryKey: ['instructors', 'public', params],
         queryFn: () => getPublicInstructors(params),
+        placeholderData: (previousData) => previousData,
     })
 
 export const usePublicInstructorQuery = (profileId: string) =>

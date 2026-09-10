@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { getApiErrorResponse } from '@/lib/api-error'
 import { useAdminUsersQuery, useUpdateAdminUserStatusMutation, } from '@/features/admin/users/hooks'
+import { useDebouncedSearchParam } from '@/hooks/use-debounced-search-param'
 
 const PAGE_SIZE = 10
 
@@ -23,7 +24,6 @@ export function ManageUsers() {
   const statusMutation = useUpdateAdminUserStatusMutation()
 
   const page = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
-  const committedSearch = searchParams.get('search')?.trim() ?? ''
 
   const rawRole = searchParams.get('role')
   const role = Object.values(RoleEnum).includes(rawRole as Role)
@@ -35,42 +35,16 @@ export function ManageUsers() {
     ? (rawStatus as UserStatus)
     : undefined
 
-  const [searchInput, setSearchInput] = useState(committedSearch)
+  const { searchInput, setSearchInput, committedSearch } = useDebouncedSearchParam()
 
-  useEffect(() => {
-    setSearchInput(committedSearch)
-  }, [committedSearch])
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const nextSearch = searchInput.trim()
-
-      if (nextSearch === committedSearch) {
-        return
-      }
-
-      const nextParams = new URLSearchParams(searchParams)
-
-      if (nextSearch) {
-        nextParams.set('search', nextSearch)
-      } else {
-        nextParams.delete('search')
-      }
-
-      nextParams.set('page', '1')
-      setSearchParams(nextParams, { replace: true })
-    }, 400)
-
-    return () => window.clearTimeout(timeout)
-  }, [searchInput, committedSearch, searchParams, setSearchParams])
-
-  const query = useMemo(() => ({
-    page,
-    limit: PAGE_SIZE,
-    search: committedSearch || undefined,
-    role,
-    status,
-  }),
+  const query = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: committedSearch || undefined,
+      role,
+      status,
+    }),
     [page, committedSearch, role, status],
   )
 

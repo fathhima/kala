@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useSearchParams } from 'react-router-dom'
 import { Pagination } from '@/components/ui/Pagination'
 import { CategoryFormFields, validateCategoryForm, validateSubcategoryForm } from '@/features/admin/categories/validation'
+import { useDebouncedSearchParam } from '@/hooks/use-debounced-search-param'
 
 const PAGE_SIZE = 10
 
@@ -318,44 +319,19 @@ export function ManageSkills() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const page = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
-  const committedSearch = searchParams.get('search')?.trim() ?? ''
 
   const rawIsActive = searchParams.get('isActive')
   const isActive = rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined
 
-  const [searchInput, setSearchInput] = useState(committedSearch)
+  const { searchInput, setSearchInput, committedSearch } = useDebouncedSearchParam()
 
-  useEffect(() => {
-    setSearchInput(committedSearch)
-  }, [committedSearch])
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const nextSearch = searchInput.trim()
-
-      if (nextSearch === committedSearch) return
-
-      const nextParams = new URLSearchParams(searchParams)
-
-      if (nextSearch) {
-        nextParams.set('search', nextSearch)
-      } else {
-        nextParams.delete('search')
-      }
-
-      nextParams.set('page', '1')
-      setSearchParams(nextParams, { replace: true })
-    }, 400)
-
-    return () => window.clearTimeout(timeout)
-  }, [searchInput, committedSearch, searchParams, setSearchParams])
-
-  const query = useMemo(() => ({
-    page,
-    limit: PAGE_SIZE,
-    search: committedSearch || undefined,
-    isActive,
-  }),
+  const query = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: committedSearch || undefined,
+      isActive
+    }),
     [page, committedSearch, isActive],
   )
 

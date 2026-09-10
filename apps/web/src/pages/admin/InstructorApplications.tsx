@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useInstructorApplicationsQuery } from '@/features/admin/instructor-applications/hooks'
 import { getApiErrorResponse } from '@/lib/api-error'
+import { useDebouncedSearchParam } from '@/hooks/use-debounced-search-param'
 
 const PAGE_SIZE = 10
 
@@ -20,45 +21,24 @@ const statusVariant = (status: string) => {
 export function InstructorApplications() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(Number(searchParams.get('page') || '1'), 1)
-  const committedSearch = searchParams.get('search')?.trim() ?? ''
 
   const rawStatus = searchParams.get('status')
   const status = Object.values(AdminInstructorControllerFindAllStatusEnum).includes(rawStatus as ApplicationStatus,)
     ? (rawStatus as ApplicationStatus)
     : undefined
 
-  const [searchInput, setSearchInput] = useState(committedSearch)
+  const { searchInput, setSearchInput, committedSearch } = useDebouncedSearchParam()
 
-  useEffect(() => {
-    setSearchInput(committedSearch)
-  }, [committedSearch])
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const nextSearch = searchInput.trim()
-
-      if (nextSearch === committedSearch) return
-
-      const next = new URLSearchParams(searchParams)
-
-      if (nextSearch) next.set('search', nextSearch)
-      else next.delete('search')
-
-      next.set('page', '1')
-      setSearchParams(next, { replace: true })
-    }, 400)
-
-    return () => window.clearTimeout(timeout)
-  }, [searchInput, committedSearch, searchParams, setSearchParams])
-
-  const query = useMemo(() => ({
+  const query = useMemo(
+    () => ({
       page,
       limit: PAGE_SIZE,
-      status,
       search: committedSearch || undefined,
+      status,
     }),
-    [page, status, committedSearch],
+    [page, committedSearch, status],
   )
+
 
   const { data, isLoading, isError, error, isFetching } = useInstructorApplicationsQuery(query)
 

@@ -49,4 +49,4 @@ import { LoggerModule } from './shared/logger/logger.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

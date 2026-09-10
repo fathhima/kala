@@ -10,7 +10,7 @@ async function bootstrap() {
   const port = configService.getOrThrow<number>('PORT');
 
   await app.listen(port);
-  loggerService.log(`Server started listening on ${port}`, 'Bootstrap')
+  loggerService.log(`Server started listening on ${port}`, 'Bootstrap');
 }
 
 bootstrap().catch((error: unknown) => {

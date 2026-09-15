@@ -1,82 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import * as nodemailer from 'nodemailer'
+import { Inject, Injectable } from "@nestjs/common";
+import { MAILER_PROVIDER, type IMailerProvider, IMailerService } from "./repositories/interfaces/mailer.interface";
 
 @Injectable()
-export class MailerService {
-  private readonly _transporter: nodemailer.Transporter
-  private readonly _from: string
+export class MailerService implements IMailerService {
+  constructor(
+    @Inject(MAILER_PROVIDER)
+    private readonly _mailerProvider: IMailerProvider,
+  ) { }
 
-  constructor(private readonly _configService: ConfigService) {
-
-    const host = this._configService.getOrThrow<string>('SMTP_HOST')
-    const port = this._configService.getOrThrow<number>('SMTP_PORT')
-    const user = this._configService.getOrThrow<string>('SMTP_USER')
-    const pass = this._configService.getOrThrow<string>('SMTP_PASS')
-    this._from = this._configService.getOrThrow<string>('SMTP_FROM')
-
-    this._transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass
-      }
-    })
+  sendOtpEmail(email: string, otp: string, ttlSeconds: number): Promise<void> {
+    return this._mailerProvider.sendOtpEmail(email, otp, ttlSeconds);
   }
 
-  async sendOtpEmail(email: string, otp: string, ttlSeconds: number): Promise<void> {
-    const expiresInMinutes = Math.ceil(ttlSeconds / 60)
-
-    await this._transporter.sendMail({
-      from: this._from,
-      to: email,
-      subject: 'Verify your email',
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Email Verification</h2>
-          <p>Your OTP for registration is:</p>
-          <h1 style="letter-spacing: 4px;">${otp}</h1>
-          <p>
-          This OTP will expire in 
-          ${expiresInMinutes} minute${expiresInMinutes > 1 ? 's' : ''}.
-        </p>
-        </div>
-      `,
-    })
+  sendPasswordResetEmail(email: string, resetLink: string, ttlSeconds: number): Promise<void> {
+    return this._mailerProvider.sendPasswordResetEmail(email, resetLink, ttlSeconds);
   }
-
-  async sendPasswordResetEmail(
-    email: string,
-    resetLink: string,
-    ttlSeconds: number,
-  ): Promise<void> {
-    const expiresInMinutes = Math.ceil(ttlSeconds / 60);
-
-    await this._transporter.sendMail({
-      from: this._from,
-      to: email,
-      subject: "Reset your password",
-      html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Password Reset</h2>
-        <p>We received a request to reset your password.</p>
-        <p>
-          <a
-            href="${resetLink}"
-            style="display:inline-block;padding:10px 16px;background:#111827;color:#ffffff;text-decoration:none;border-radius:6px;"
-          >
-            Reset Password
-          </a>
-        </p>
-        <p>If the button does not work, use this link:</p>
-        <p><a href="${resetLink}">${resetLink}</a></p>
-        <p>This link expires in ${expiresInMinutes} minute(s).</p>
-        <p>If you did not request this, you can safely ignore this email.</p>
-      </div>
-    `,
-    });
-  }
-
 }

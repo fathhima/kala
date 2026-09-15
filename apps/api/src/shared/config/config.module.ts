@@ -39,6 +39,8 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         AWS_S3_DOWNLOAD_URL_TTL_SECONDS: Joi.number().integer().min(60).max(3600).default(900),
         AWS_ACCESS_KEY_ID: Joi.string().optional(),
         AWS_SECRET_ACCESS_KEY: Joi.string().optional(),
+        SLOT_DEFAULT_TIMEZONE: Joi.string().default('Asia/Kolkata'),
+        SLOT_GENERATION_DAYS: Joi.number().integer().positive().default(90),
       }),
     }),
   ],

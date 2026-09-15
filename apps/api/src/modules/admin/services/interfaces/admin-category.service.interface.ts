@@ -1,42 +1,41 @@
-import { CategoryQueryDto } from "@/modules/category/dto/request/category-query.dto";
-import { ConfirmCategoryImageUploadDto } from "@/modules/category/dto/request/confirm-category-image-upload.dto";
-import { RequestCategoryImageUploadDto } from "@/modules/category/dto/request/create-category-image-upload.dto";
-import { CreateCategoryDto } from "@/modules/category/dto/request/create-category.dto";
-import { CreateSubcategoryDto } from "@/modules/category/dto/request/create-subcategory.dto";
-import { UpdateCategoryDto } from "@/modules/category/dto/request/update-category.dto";
-import { UpdateSubcategoryDto } from "@/modules/category/dto/request/update-subcategory.dto";
-import { CategoryEntity } from "@/modules/category/entities/category.entity";
-import { SubcategoryEntity } from "@/modules/category/entities/subcategory.entity";
-import { PresignedDownload } from "@/shared/storage/types/presigned-download.type";
-import { PresignedUpload } from "@/shared/storage/types/presigned-upload.type";
-import { IPaginatedResult } from "@/shared/types";
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { SubcategoryEntity } from '@/modules/category/entities/subcategory.entity';
+import { CategoryListParams } from '@/modules/category/types/category-list-params.type';
+import { CreateCategoryInput } from '@/modules/category/types/create-category-input.type';
+import { UpdateCategoryInput } from '@/modules/category/types/update-category-input.type';
+import { CreateSubcategoryInput } from '@/modules/category/types/create-subcategory-input.type';
+import { UpdateSubcategoryInput } from '@/modules/category/types/update-subcategory-input.type';
+import { ConfirmCategoryImageUploadInput, RequestCategoryImageUploadInput, } from '@/modules/category/types/request-category-image-upload.input';
+import { PresignedDownload } from '@/shared/storage/types/presigned-download.type';
+import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
+import { IPaginatedResult } from '@/shared/types';
 
 export const ADMIN_CATEGORY_SERVICE = Symbol('ADMIN_CATEGORY_SERVICE');
 
 export interface IAdminCategoryService {
-    findManyForAdmin(query: CategoryQueryDto): Promise<IPaginatedResult<CategoryEntity>>;
+    findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>>;
 
     findSubcategories(categoryId: string): Promise<SubcategoryEntity[]>;
 
-    createCategory(dto: CreateCategoryDto): Promise<CategoryEntity>;
+    createCategory(input: CreateCategoryInput): Promise<CategoryEntity>;
 
-    updateCategory(categoryId: string, dto: UpdateCategoryDto): Promise<CategoryEntity>;
+    updateCategory(categoryId: string, input: UpdateCategoryInput): Promise<CategoryEntity>;
 
-    createSubcategory(categoryId: string, dto: CreateSubcategoryDto,): Promise<SubcategoryEntity>;
+    createSubcategory(categoryId: string, input: CreateSubcategoryInput): Promise<SubcategoryEntity>;
 
-    updateSubcategory(categoryId: string, subcategoryId: string, dto: UpdateSubcategoryDto,): Promise<SubcategoryEntity>;
+    updateSubcategory(categoryId: string, subcategoryId: string, input: UpdateSubcategoryInput): Promise<SubcategoryEntity>;
 
-    createCategoryImageUploadUrl(categoryId: string, dto: RequestCategoryImageUploadDto): Promise<PresignedUpload>;
+    createCategoryImageUploadUrl(categoryId: string, input: RequestCategoryImageUploadInput): Promise<PresignedUpload>;
 
-    confirmCategoryImageUpload(categoryId: string, dto: ConfirmCategoryImageUploadDto): Promise<CategoryEntity>;
+    confirmCategoryImageUpload(categoryId: string, input: ConfirmCategoryImageUploadInput): Promise<CategoryEntity>;
 
     getCategoryImageViewUrl(categoryId: string): Promise<PresignedDownload>;
 
     removeCategoryImage(categoryId: string): Promise<CategoryEntity>;
 
-    createSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, dto: RequestCategoryImageUploadDto): Promise<PresignedUpload>;
+    createSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, input: RequestCategoryImageUploadInput): Promise<PresignedUpload>;
 
-    confirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, dto: ConfirmCategoryImageUploadDto): Promise<SubcategoryEntity>;
+    confirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, input: ConfirmCategoryImageUploadInput): Promise<SubcategoryEntity>;
 
     getSubcategoryImageViewUrl(categoryId: string, subcategoryId: string): Promise<PresignedDownload>;
 

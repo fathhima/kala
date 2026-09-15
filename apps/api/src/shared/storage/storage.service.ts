@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OBJECT_STORAGE_PROVIDER, type IObjectStorageProvider, } from './repositories/interfaces/storage.interface';
+import { IStorageService, OBJECT_STORAGE_PROVIDER, type IObjectStorageProvider, } from './repositories/interfaces/storage.interface';
 import { CreateUploadUrlInput } from './types/create-upload-url.type';
 import { PresignedUpload } from './types/presigned-upload.type';
 import { CreateDownloadUrlInput } from './types/create-download-url.type';
@@ -7,7 +7,7 @@ import { PresignedDownload } from './types/presigned-download.type';
 import { StoredObjectMetadata } from './types/stored-object.type';
 
 @Injectable()
-export class StorageService {
+export class StorageService implements IStorageService {
     constructor(
         @Inject(OBJECT_STORAGE_PROVIDER)
         private readonly _objectStorageProvider: IObjectStorageProvider,

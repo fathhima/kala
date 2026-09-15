@@ -1,0 +1,9 @@
+export type RegisterInput = { name: string; email: string; password: string };
+export type VerifyOtpInput = { pendingSignupId: string; otp: string };
+export type ResendOtpInput = { pendingSignupId: string };
+export type LoginInput = { email: string; password: string };
+export type ForgotPasswordInput = { email: string };
+export type ValidateResetTokenInput = { token: string };
+export type ResetPasswordInput = { token: string; newPassword: string };
+export type GoogleSignInInput = { idToken: string };
+export type ChangePasswordInput = { currentPassword?: string; newPassword: string };

@@ -1,4 +1,4 @@
-import { PasswordResetRecord } from "@/shared/redis/types/password-reset-record";
+import { PasswordResetRecord } from "@/modules/auth/types/password-reset-record";
 
 export const PASSWORD_RESET_REPOSITORY = Symbol("PASSWORD_RESET_REPOSITORY",);
 

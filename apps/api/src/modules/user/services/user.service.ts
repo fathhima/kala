@@ -1,16 +1,8 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
-import {
-    CATEGORY_REPOSITORY,
-    type ICategoryRepository,
-} from '../../category/repositories/interfaces/category.interface'
-import { CategoryEntity } from '../../category/entities/category.entity'
-import {
-    USER_REPOSITORY,
-    type IUserRepository,
-} from '../repositories/interfaces/user.interface'
+import { USER_REPOSITORY, type IUserRepository, } from '../repositories/interfaces/user.interface'
 import { UserEntity } from '../entities/user.entity'
-import { UpdateUserProfileDto } from '../dto/request/update-user-profile.request.dto'
 import { IUserService } from './interfaces/user.service.interface'
+import { UpdateUserProfileInput } from '../types/update-user-profile.input.type'
 
 @Injectable()
 export class UserService implements IUserService {
@@ -29,7 +21,7 @@ export class UserService implements IUserService {
         return user;
     }
 
-    async updateMyProfile(userId: string, dto: UpdateUserProfileDto,): Promise<UserEntity> {
+    async updateMyProfile(userId: string, input: UpdateUserProfileInput): Promise<UserEntity> {
         const user = await this._userRepository.findById(userId)
 
         if (!user) {
@@ -37,8 +29,8 @@ export class UserService implements IUserService {
         }
 
         return this._userRepository.updateProfile(userId, {
-            name: dto.name?.trim(),
-            imageUrl: dto.imageUrl?.trim() || null,
+            name: input.name?.trim(),
+            imageUrl: input.imageUrl?.trim() || null,
         })
     }
 }

@@ -1,6 +1,6 @@
-import { MediaType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsString, Max, MaxLength, Min } from 'class-validator';
+import { MediaType } from '../../enums/instructor.enum';
 
 export class ConfirmOfferingMediaUploadDto {
     @ApiProperty({ enum: MediaType })

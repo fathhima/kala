@@ -4,7 +4,7 @@ import { AuthService } from "./services/auth.service";
 import { UserModule } from "../user/user.module";
 import { MailerModule } from "@/shared/mailer/mailer.module";
 import { RedisModule } from "@/shared/redis/redis.module";
-import { GoogleOAuthService } from "./services/google-oauth.service";
+import { GoogleOAuthRepository } from "./repositories/google-oauth.repository";
 import { JwtModule } from "@/shared/jwt/jwt.module";
 import { REFRESH_SESSION_REPOSITORY } from "./repositories/interfaces/refresh-session.interface";
 import { RedisRefreshSessionRepository } from "./repositories/redis-refresh-session.repository";
@@ -13,7 +13,7 @@ import { RedisPendingSignupRepository } from "./repositories/redis-pending-signu
 import { PASSWORD_RESET_REPOSITORY } from "./repositories/interfaces/password-reset.interface";
 import { RedisPasswordResetRepository } from "./repositories/redis-password-reset.repository";
 import { AUTH_SERVICE } from "./services/interfaces/auth.service.interface";
-import { GOOGLE_OAUTH_SERVICE } from "./services/interfaces/google-oauth.service.interface";
+import { GOOGLE_OAUTH_PROVIDER } from "./services/interfaces/google-oauth.interface";
 
 @Module({
     imports: [UserModule, MailerModule, RedisModule, JwtModule],
@@ -23,9 +23,10 @@ import { GOOGLE_OAUTH_SERVICE } from "./services/interfaces/google-oauth.service
             provide: AUTH_SERVICE,
             useClass: AuthService
         },
+        GoogleOAuthRepository,
         {
-            provide: GOOGLE_OAUTH_SERVICE,
-            useClass: GoogleOAuthService
+            provide: GOOGLE_OAUTH_PROVIDER,
+            useExisting: GoogleOAuthRepository,
         },
         {
             provide: REFRESH_SESSION_REPOSITORY,

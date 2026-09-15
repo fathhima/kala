@@ -10,7 +10,6 @@ import { UserId } from "@/shared/decorators/user-id.decorator";
 import { ResendOtpDto } from "./dto/request/resend-otp.dto";
 import type { CookieOptions, Request, Response } from "express";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@/shared/jwt/jwt.service";
 import { RegisterResponseDto } from "./dto/response/register-response.dto";
 import { ResendOtpResponseDto } from "./dto/response/resend-otp-response.dto";
 import { ForgotPasswordDto } from "./dto/request/forgot-password.dto";
@@ -22,6 +21,7 @@ import { ValidateResetTokenResponseDto } from "./dto/response/validate-reset-tok
 import { Throttle } from "@nestjs/throttler";
 import { ChangePasswordDto } from "./dto/request/change-password.dto";
 import { AUTH_SERVICE, type IAuthService } from "./services/interfaces/auth.service.interface";
+import { JWT_SERVICE, type IJwtService } from "@/shared/jwt/repositories/interfaces/token.interface";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -29,8 +29,9 @@ export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
         private _authService: IAuthService,
+        @Inject(JWT_SERVICE)
+        private readonly _jwtService: IJwtService,
         private readonly _configService: ConfigService,
-        private readonly _jwtService: JwtService
     ) { }
 
     @Public()
@@ -40,7 +41,11 @@ export class AuthController {
     @ApiOkResponse({ type: RegisterResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid data or email already exists' })
     async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
-        const result = await this._authService.register(dto)
+        const result = await this._authService.register({
+            name: dto.name,
+            email: dto.email,
+            password: dto.password,
+        });
 
         return RegisterResponseDto.fromResult({
             message: 'OTP sent successfully',
@@ -58,7 +63,10 @@ export class AuthController {
     @ApiOkResponse({ type: AuthResponseDto })
     @ApiBadRequestResponse({ description: 'Invalid OTP or expired registration' })
     async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
-        const result = await this._authService.verifyOtp(dto)
+        const result = await this._authService.verifyOtp({
+            pendingSignupId: dto.pendingSignupId,
+            otp: dto.otp,
+        });
         this._setRefreshCookie(response, result.refreshToken)
 
         return AuthResponseDto.fromResult({
@@ -75,7 +83,9 @@ export class AuthController {
     @ApiOkResponse({ type: ResendOtpResponseDto })
     @ApiBadRequestResponse({ description: 'Registration not found or already verified' })
     async resendOtp(@Body() dto: ResendOtpDto): Promise<ResendOtpResponseDto> {
-        const result = await this._authService.resendOtp(dto)
+        const result = await this._authService.resendOtp({
+            pendingSignupId: dto.pendingSignupId,
+        });
 
         return ResendOtpResponseDto.fromResult({
             message: 'OTP resent successfully',
@@ -92,8 +102,10 @@ export class AuthController {
     @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
     @ApiForbiddenResponse({ description: 'Account not verified or blocked' })
     async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
-        const result = await this._authService.login(dto)
-        this._setRefreshCookie(response, result.refreshToken)
+        const result = await this._authService.login({
+            email: dto.email,
+            password: dto.password,
+        }); this._setRefreshCookie(response, result.refreshToken)
 
         return AuthResponseDto.fromResult({
             message: 'Login successfull',
@@ -125,7 +137,9 @@ export class AuthController {
     @ApiOperation({ summary: "Send password reset link to email" })
     @ApiOkResponse({ type: MessageResponseDto })
     async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<MessageResponseDto> {
-        await this._authService.forgotPassword(dto);
+        await this._authService.forgotPassword({
+            email: dto.email,
+        });
 
         return MessageResponseDto.success(
             'if an account exists, a password reset link has been sent'
@@ -137,7 +151,9 @@ export class AuthController {
     @ApiOperation({ summary: "Validate password reset token" })
     @ApiOkResponse({ type: ValidateResetTokenResponseDto })
     async validateResetToken(@Body() dto: ValidateResetTokenDto): Promise<ValidateResetTokenResponseDto> {
-        const result = await this._authService.validateResetToken(dto);
+        const result = await this._authService.validateResetToken({
+            token: dto.token,
+        });
 
         return ValidateResetTokenResponseDto.fromResult({
             message: 'Reset link is valid',
@@ -150,7 +166,10 @@ export class AuthController {
     @ApiOperation({ summary: "Reset password using reset token" })
     @ApiOkResponse({ type: MessageResponseDto })
     async resetPassword(@Body() dto: ResetPasswordDto): Promise<MessageResponseDto> {
-        await this._authService.resetPassword(dto);
+        await this._authService.resetPassword({
+            token: dto.token,
+            newPassword: dto.newPassword,
+        });
 
         return MessageResponseDto.success("Password reset successfully")
     }
@@ -162,7 +181,9 @@ export class AuthController {
     @ApiUnauthorizedResponse({ description: "Invalid Google token" })
     @ApiForbiddenResponse({ description: "Account is blocked" })
     async googleSignin(@Body() dto: GoogleSignInRequestDto, @Res({ passthrough: true }) response: Response): Promise<AuthResponseDto> {
-        const result = await this._authService.googleSignin(dto);
+        const result = await this._authService.googleSignin({
+            idToken: dto.idToken,
+        });
         this._setRefreshCookie(response, result.refreshToken);
 
         return AuthResponseDto.fromResult({
@@ -199,7 +220,10 @@ export class AuthController {
     @ApiOperation({ summary: 'Set or change the current account password', })
     @ApiOkResponse({ type: MessageResponseDto })
     async changePassword(@UserId() userId: string, @Body() dto: ChangePasswordDto,): Promise<MessageResponseDto> {
-        await this._authService.changePassword(userId, dto)
+        await this._authService.changePassword(userId, {
+            currentPassword: dto.currentPassword,
+            newPassword: dto.newPassword,
+        });
 
         return MessageResponseDto.success('Password updated. Please sign in again.',)
     }

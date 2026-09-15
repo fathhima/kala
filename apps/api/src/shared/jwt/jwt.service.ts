@@ -1,68 +1,31 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { TOKEN_PROVIDER, type ITokenProvider, IJwtService } from "./repositories/interfaces/token.interface";
 import { AccessTokenPayload, RefreshTokenPayload } from "./types/jwt-payload.type";
-import { ConfigService } from "@nestjs/config";
-import * as jwt from 'jsonwebtoken';
-import { parseDurationToSeconds } from "./utils/parse-duration-seconds";
 
 @Injectable()
-export class JwtService {
-  constructor(private readonly _configService: ConfigService) { }
-
-  private _getAccessTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
-    return this._configService.getOrThrow<string>('ACCESS_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
-  }
-
-  private _getRefreshTokenExpiresIn(): jwt.SignOptions['expiresIn'] {
-    return this._configService.getOrThrow<string>('REFRESH_TOKEN_EXPIRES_IN') as jwt.SignOptions['expiresIn']
-  }
-
-  private _getRefreshTokenExpiresInRaw(): string {
-    return this._configService.getOrThrow<string>("REFRESH_TOKEN_EXPIRES_IN");
-  }
+export class JwtService implements IJwtService {
+  constructor(
+    @Inject(TOKEN_PROVIDER)
+    private readonly _tokenProvider: ITokenProvider,
+  ) { }
 
   getRefreshTokenTtlSeconds(): number {
-    return parseDurationToSeconds(this._getRefreshTokenExpiresInRaw())
+    return this._tokenProvider.getRefreshTokenTtlSeconds();
   }
 
-  async signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): Promise<string> {
-    return jwt.sign({
-      ...payload,
-      type: 'access'
-    }, this._configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'), { expiresIn: this._getAccessTokenExpiresIn() })
+  signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): Promise<string> {
+    return this._tokenProvider.signAccessToken(payload);
   }
 
-  async signRefreshToken(payload: Omit<RefreshTokenPayload, 'type'>): Promise<string> {
-    return jwt.sign({
-      ...payload,
-      type: 'refresh'
-    }, this._configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'), { expiresIn: this._getRefreshTokenExpiresIn() })
+  signRefreshToken(payload: Omit<RefreshTokenPayload, 'type'>): Promise<string> {
+    return this._tokenProvider.signRefreshToken(payload);
   }
 
-  async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
-    try {
-      const payload = jwt.verify(token, this._configService.getOrThrow<string>('ACCESS_TOKEN_SECRET')) as AccessTokenPayload
-
-      if (payload.type !== 'access' || !payload.sub || !Array.isArray(payload.roles)) {
-        throw new UnauthorizedException('Invalid access token')
-      }
-
-      return payload
-    } catch (error) {
-      throw new UnauthorizedException('Invalid access token')
-    }
+  verifyAccessToken(token: string): Promise<AccessTokenPayload> {
+    return this._tokenProvider.verifyAccessToken(token);
   }
 
-  async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
-    try {
-      const payload = jwt.verify(token, this._configService.getOrThrow<string>('REFRESH_TOKEN_SECRET')) as RefreshTokenPayload
-
-      if (payload.type !== 'refresh' || !payload.sub || !payload.sessionId) {
-        throw new UnauthorizedException('Invalid refresh token')
-      }
-
-      return payload
-    } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token')
-    }
+  verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
+    return this._tokenProvider.verifyRefreshToken(token);
   }
 }

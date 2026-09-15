@@ -1,4 +1,4 @@
-import { MediaType } from '@prisma/client';
+import { MediaType } from "../enums/instructor.enum";
 
 export type PublicInstructorMedia = {
     id: string;
@@ -34,4 +34,14 @@ export type PublicInstructorProfile = {
     location: string | null;
     portfolioUrl: string | null;
     offerings: PublicInstructorOffering[];
+};
+
+export type PublicInstructorResponse = Omit<PublicInstructorProfile, 'offerings'> & {
+    offerings: (Omit<PublicInstructorOffering, 'media'> & {
+        media: {
+            id: string;
+            type: MediaType;
+            viewUrl: string;
+        }[];
+    })[];
 };

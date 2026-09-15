@@ -1,21 +1,21 @@
 import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
-import { AvailabilityExceptionType, AvailabilityRuleStatus, Prisma, SlotStatus, } from '@prisma/client';
 import { type ISlotRepository, SLOT_REPOSITORY } from '../repositories/interfaces/slot.interface';
-import { ISlotService } from './interfaces/slot.service.interface';
+import { CreateSlotExceptionCommand, ISlotService } from './interfaces/slot.service.interface';
 import { SlotRuleEntity } from '../entities/slot.entity';
-import { CreateSlotExceptionDto, CreateSlotRuleDto, SlotAvailabilityQueryDto, UpdateSlotRuleDto } from '../dto/request/slot.request.dto';
-
-const DEFAULT_TIMEZONE = 'Asia/Kolkata';
-const GENERATION_DAYS = 90;
+import { AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
+import { CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
+import { SlotAvailabilityQueryInput } from '../types/slot-availability-query.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SlotService implements ISlotService {
     constructor(
         @Inject(SLOT_REPOSITORY)
         private readonly _slotRepository: ISlotRepository,
+        private readonly _configService: ConfigService
     ) { }
 
-    async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryDto) {
+    async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryInput) {
         const profile = await this._getApprovedProfile(userId);
         const range = this._rangeFromQuery(query);
 
@@ -27,22 +27,22 @@ export class SlotService implements ISlotService {
         });
     }
 
-    async createRule(userId: string, dto: CreateSlotRuleDto) {
+    async createRule(userId: string, input: Omit<CreateSlotRuleInput, 'profileId'>) {
         const profile = await this._getApprovedProfile(userId);
-        await this._assertApprovedOffering(profile.id, dto.offeringId);
-        this._assertValidMinutes(dto.startMinute, dto.endMinute, dto.slotDurationMinutes);
+        await this._assertApprovedOffering(profile.id, input.offeringId);
+        this._assertValidMinutes(input.startMinute, input.endMinute, input.slotDurationMinutes);
 
         const rule = await this._slotRepository.createRule({
             profileId: profile.id,
-            offeringId: dto.offeringId,
-            title: dto.title?.trim() || null,
-            weekday: dto.weekday,
-            startMinute: dto.startMinute,
-            endMinute: dto.endMinute,
-            timezone: dto.timezone?.trim() || DEFAULT_TIMEZONE,
-            slotDurationMinutes: dto.slotDurationMinutes,
-            effectiveFrom: new Date(dto.effectiveFrom),
-            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
+            offeringId: input.offeringId,
+            title: input.title?.trim() || null,
+            weekday: input.weekday,
+            startMinute: input.startMinute,
+            endMinute: input.endMinute,
+            timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+            slotDurationMinutes: input.slotDurationMinutes,
+            effectiveFrom: new Date(input.effectiveFrom),
+            effectiveUntil: input.effectiveUntil ? new Date(input.effectiveUntil) : null,
         })
 
         await this._materializeRuleSlots(rule);
@@ -50,7 +50,7 @@ export class SlotService implements ISlotService {
         return rule;
     }
 
-    async updateRule(userId: string, ruleId: string, dto: UpdateSlotRuleDto) {
+    async updateRule(userId: string, ruleId: string, input: UpdateSlotRuleInput & { title?: string | null; effectiveUntil?: Date | null }) {
         const profile = await this._getApprovedProfile(userId);
         const existing = await this._slotRepository.findOwnedActiveRule(profile.id, ruleId);
 
@@ -58,20 +58,20 @@ export class SlotService implements ISlotService {
             throw new NotFoundException('Availability rule not found');
         }
 
-        const startMinute = dto.startMinute ?? existing.startMinute;
-        const endMinute = dto.endMinute ?? existing.endMinute;
-        const duration = dto.slotDurationMinutes ?? existing.slotDurationMinutes;
+        const startMinute = input.startMinute ?? existing.startMinute;
+        const endMinute = input.endMinute ?? existing.endMinute;
+        const duration = input.slotDurationMinutes ?? existing.slotDurationMinutes;
 
         this._assertValidMinutes(startMinute, endMinute, duration);
 
         await this._slotRepository.cancelFutureAvailableSlotsByRule(ruleId);
 
         const updated = await this._slotRepository.updateRule(ruleId, {
-            title: dto.title === undefined ? undefined : dto.title.trim() || null,
+            title: input.title == null ? input.title : input.title.trim() || null,
             startMinute,
             endMinute,
             slotDurationMinutes: duration,
-            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : undefined,
+            effectiveUntil: input.effectiveUntil ? new Date(input.effectiveUntil) : undefined,
         })
 
         await this._materializeRuleSlots(updated);
@@ -94,57 +94,57 @@ export class SlotService implements ISlotService {
         await this._slotRepository.cancelFutureAvailableSlotsByRule(ruleId);
     }
 
-    async createException(userId: string, dto: CreateSlotExceptionDto) {
+    async createException(userId: string, input: CreateSlotExceptionCommand) {
         const profile = await this._getApprovedProfile(userId);
-        const startTime = new Date(dto.startTime);
-        const endTime = new Date(dto.endTime);
+        const startTime = new Date(input.startTime);
+        const endTime = new Date(input.endTime);
 
         if (startTime <= new Date() || endTime <= startTime) {
             throw new BadRequestException('Use a future start time and valid end time');
         }
 
-        if (dto.offeringId) {
-            await this._assertApprovedOffering(profile.id, dto.offeringId);
+        if (input.offeringId) {
+            await this._assertApprovedOffering(profile.id, input.offeringId);
         }
 
-        if (dto.type === AvailabilityExceptionType.EXTRA && !dto.offeringId) {
+        if (input.type === AvailabilityExceptionType.EXTRA && !input.offeringId) {
             throw new BadRequestException('Extra availability requires an offering');
         }
 
-        if (dto.type === AvailabilityExceptionType.EXTRA && !dto.slotDurationMinutes) {
+        if (input.type === AvailabilityExceptionType.EXTRA && !input.slotDurationMinutes) {
             throw new BadRequestException('Extra availability requires slot duration');
         }
 
         const exception = await this._slotRepository.createException({
             profileId: profile.id,
-            offeringId: dto.offeringId ?? null,
-            type: dto.type,
-            title: dto.title?.trim() || null,
+            offeringId: input.offeringId ?? null,
+            type: input.type,
+            title: input.title?.trim() || null,
             startTime,
             endTime,
-            timezone: dto.timezone?.trim() || DEFAULT_TIMEZONE,
-            slotDurationMinutes: dto.slotDurationMinutes ?? null,
+            timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+            slotDurationMinutes: input.slotDurationMinutes ?? null,
         });
 
-        if (dto.type === AvailabilityExceptionType.BLOCK) {
+        if (input.type === AvailabilityExceptionType.BLOCK) {
             await this._slotRepository.cancelAvailableSlotsInRange({
                 profileId: profile.id,
-                offeringId: dto.offeringId,
+                offeringId: input.offeringId,
                 startTime,
                 endTime,
             });
         }
 
-        if (dto.type === AvailabilityExceptionType.EXTRA) {
+        if (input.type === AvailabilityExceptionType.EXTRA) {
             const slots = this._splitRangeIntoSlots({
                 profileId: profile.id,
-                offeringId: dto.offeringId!,
+                offeringId: input.offeringId!,
                 exceptionId: exception.id,
-                title: dto.title,
+                title: input.title,
                 startTime,
                 endTime,
-                timezone: dto.timezone?.trim() || DEFAULT_TIMEZONE,
-                durationMinutes: dto.slotDurationMinutes!,
+                timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+                durationMinutes: input.slotDurationMinutes!,
             });
 
             await this._slotRepository.createSlots(slots);
@@ -153,7 +153,7 @@ export class SlotService implements ISlotService {
         return exception;
     }
 
-    async getPublicAvailability(profileId: string, query: SlotAvailabilityQueryDto) {
+    async getPublicAvailability(profileId: string, query: SlotAvailabilityQueryInput) {
         const range = this._rangeFromQuery(query);
 
         return this._slotRepository.findPublicSlots({
@@ -203,7 +203,7 @@ export class SlotService implements ISlotService {
 
     private async _materializeRuleSlots(rule: SlotRuleEntity) {
         const generationEnd = new Date();
-        generationEnd.setDate(generationEnd.getDate() + GENERATION_DAYS);
+        generationEnd.setDate(generationEnd.getDate() + this._configService.getOrThrow<number>('SLOT_GENERATION_DAYS'));
 
         const effectiveFrom = new Date(rule.effectiveFrom);
         const effectiveUntil = rule.effectiveUntil
@@ -213,7 +213,7 @@ export class SlotService implements ISlotService {
         const end = effectiveUntil < generationEnd ? effectiveUntil : generationEnd;
         const cursor = new Date(effectiveFrom > new Date() ? effectiveFrom : new Date());
 
-        const slots: Prisma.AvailabilitySlotCreateManyInput[] = [];
+        const slots: CreateSlotInput[] = [];
 
         while (cursor <= end) {
             if (cursor.getDay() === rule.weekday) {
@@ -255,8 +255,8 @@ export class SlotService implements ISlotService {
         endTime: Date;
         timezone: string;
         durationMinutes: number;
-    }): Prisma.AvailabilitySlotCreateManyInput[] {
-        const slots: Prisma.AvailabilitySlotCreateManyInput[] = [];
+    }): CreateSlotInput[] {
+        const slots: CreateSlotInput[] = [];
         let cursor = new Date(input.startTime);
 
         while (cursor < input.endTime) {
@@ -289,7 +289,7 @@ export class SlotService implements ISlotService {
         return new Date(`${date}T${hours}:${mins}:00+05:30`);
     }
 
-    private _rangeFromQuery(query: SlotAvailabilityQueryDto) {
+    private _rangeFromQuery(query: SlotAvailabilityQueryInput) {
         const from = query.from ? new Date(query.from) : new Date();
         const to = query.to ? new Date(query.to) : new Date();
 

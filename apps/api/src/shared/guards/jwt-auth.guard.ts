@@ -1,14 +1,6 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException, } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Request } from "express";
-
 import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
 import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import { IS_PUBLIC_KEY } from "@/shared/decorators/public.decorator";
@@ -62,7 +54,7 @@ export class JwtAuthGuard implements CanActivate {
         roles: user.roles,
         type: 'access'
       }
-      
+
       return true;
     } catch (error) {
       if (

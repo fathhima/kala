@@ -1,7 +1,7 @@
 import { GoogleProfile } from '../../types/google-profile.type';
 
-export const GOOGLE_OAUTH_SERVICE = Symbol('GOOGLE_OAUTH_SERVICE');
+export const GOOGLE_OAUTH_PROVIDER = Symbol('GOOGLE_OAUTH_PROVIDER');
 
-export interface IGoogleOAuthService {
+export interface IGoogleOAuthProvider {
     verifyIdToken(idToken: string): Promise<GoogleProfile>;
 }

@@ -1,5 +1,5 @@
-import { MediaType, } from '@prisma/client';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../../entities/instructor-profile.entity';
+import { MediaType } from '../../enums/instructor.enum';
 import { PublicInstructorProfile } from '../../types/public-instructor.type';
 
 export const INSTRUCTOR_REPOSITORY = Symbol('INSTRUCTOR_REPOSITORY');

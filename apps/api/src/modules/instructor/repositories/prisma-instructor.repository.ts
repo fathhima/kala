@@ -1,5 +1,4 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, Prisma, Role, } from '@prisma/client';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { IPaginatedResult } from '@/shared/types';
 import { InstructorMapper } from '../mappers/instructor.mapper';
@@ -8,6 +7,9 @@ import { IInstructorRepository } from './interfaces/instructor.interface';
 import { ReviewableOfferingStatus } from '../types/offering-status.type';
 import { IAdminInstructorRepository } from './interfaces/admin-instructor.interface';
 import { PublicInstructorProfile } from '../types/public-instructor.type';
+import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus } from '../enums/instructor.enum';
+import { UserRole } from '@/shared/enums/role.enum';
+import { Prisma } from '@prisma/client';
 
 const offeringInclude = {
     media: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
@@ -582,7 +584,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
 
             if (
                 decision === OfferingStatus.APPROVED &&
-                !offering.application.profile.user.roles.includes(Role.INSTRUCTOR)
+                !offering.application.profile.user.roles.includes(UserRole.INSTRUCTOR)
             ) {
                 await tx.user.update({
                     where: { id: offering.application.profile.user.id },
@@ -590,7 +592,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
                         roles: {
                             set: [
                                 ...offering.application.profile.user.roles,
-                                Role.INSTRUCTOR,
+                                UserRole.INSTRUCTOR,
                             ],
                         },
                     },

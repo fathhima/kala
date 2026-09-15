@@ -1,4 +1,4 @@
-import { RefreshSessionRecord } from "@/shared/redis/types/refresh-session.type";
+import { RefreshSessionRecord } from "@/modules/auth/types/refresh-session.type";
 
 export const REFRESH_SESSION_REPOSITORY = Symbol("REFRESH_SESSION_REPOSITORY",);
 

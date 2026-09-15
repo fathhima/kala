@@ -1,38 +1,30 @@
-import { ChangePasswordDto } from "../../dto/request/change-password.dto";
-import { ForgotPasswordDto } from "../../dto/request/forgot-password.dto";
-import { GoogleSignInRequestDto } from "../../dto/request/google-signin.dto";
-import { LoginDto } from "../../dto/request/login.dto";
-import { RegisterDto } from "../../dto/request/register.dto";
-import { ResendOtpDto } from "../../dto/request/resend-otp.dto";
-import { ResetPasswordDto } from "../../dto/request/reset-password.dto";
-import { ValidateResetTokenDto } from "../../dto/request/validate-reset-token.dto";
-import { VerifyOtpDto } from "../../dto/request/verify-otp.dto";
 import { AuthResult, RefreshResult, RegisterResult, ResendOtpResult, ValidateResetTokenResult } from "../../types/auth-result.type";
+import { ChangePasswordInput, ForgotPasswordInput, GoogleSignInInput, LoginInput, RegisterInput, ResendOtpInput, ResetPasswordInput, ValidateResetTokenInput, VerifyOtpInput } from "../../types/auth.type";
 
 export const AUTH_SERVICE = Symbol('AUTH_SERVICE');
 
 export interface IAuthService {
-    register(dto: RegisterDto): Promise<RegisterResult>;
+    register(input: RegisterInput): Promise<RegisterResult>;
 
-    verifyOtp(dto: VerifyOtpDto): Promise<AuthResult>;
+    verifyOtp(input: VerifyOtpInput): Promise<AuthResult>;
 
-    resendOtp(dto: ResendOtpDto): Promise<ResendOtpResult>;
+    resendOtp(input: ResendOtpInput): Promise<ResendOtpResult>;
 
-    login(dto: LoginDto): Promise<AuthResult>;
+    login(input: LoginInput): Promise<AuthResult>;
 
     refresh(refreshToken: string): Promise<RefreshResult>;
 
-    forgotPassword(dto: ForgotPasswordDto): Promise<void>;
+    forgotPassword(input: ForgotPasswordInput): Promise<void>;
 
-    validateResetToken(dto: ValidateResetTokenDto): Promise<ValidateResetTokenResult>;
+    validateResetToken(input: ValidateResetTokenInput): Promise<ValidateResetTokenResult>;
 
-    resetPassword(dto: ResetPasswordDto): Promise<void>;
+    resetPassword(input: ResetPasswordInput): Promise<void>;
 
-    googleSignin(dto: GoogleSignInRequestDto): Promise<AuthResult>;
+    googleSignin(input: GoogleSignInInput): Promise<AuthResult>;
 
     logout(refreshToken?: string): Promise<void>;
 
     logoutAll(userId: string): Promise<void>;
 
-    changePassword(userId: string, dto: ChangePasswordDto): Promise<void>;
+    changePassword(userId: string, input: ChangePasswordInput): Promise<void>;
 }

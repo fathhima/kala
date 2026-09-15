@@ -2,12 +2,13 @@ import { PrismaService } from "@/shared/prisma/prisma.service";
 import { IUserRepository } from "./interfaces/user.interface";
 import { UserMapper } from "../mappers/user.mapper";
 import { CreateUserInput } from "../types/create-user-input.type";
-import { Prisma, Role } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { UserEntity } from "../entities/user.entity";
 import { AdminUserListParams } from "../types/admin-user-list-params.type";
 import { IPaginatedResult } from "@/shared/types";
 import { IAdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.interface";
+import { UserRole } from "@/shared/enums/role.enum";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository, IAdminUserRepository {
@@ -35,20 +36,29 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
   }
 
   async create(data: CreateUserInput) {
-    const user = await this._prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        googleId: data.googleId ?? null,
-        roles: data.roles ?? [Role.STUDENT],
-        imageUrl: data.imageUrl ?? null,
-        isVerified: data.isVerified ?? false,
-        isActive: data.isActive ?? true
-      }
-    })
+    try {
+      const user = await this._prisma.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          googleId: data.googleId ?? null,
+          roles: data.roles ?? [UserRole.STUDENT],
+          imageUrl: data.imageUrl ?? null,
+          isVerified: data.isVerified ?? false,
+          isActive: data.isActive ?? true
+        }
+      })
 
-    return UserMapper.toEntity(user)
+      return UserMapper.toEntity(user)
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new DuplicateEmailError(); // domain error in user/errors or shared/errors
+      }
+      throw error;
+    }
+
+
   }
 
   async updateProfile(userId: string, data: { name?: string; imageUrl?: string | null }): Promise<UserEntity> {

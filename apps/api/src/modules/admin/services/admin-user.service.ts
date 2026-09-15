@@ -1,13 +1,15 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from "@nestjs/common";
 import { USER_REPOSITORY, type IUserRepository, } from "@/modules/user/repositories/interfaces/user.interface";
 import { REFRESH_SESSION_REPOSITORY, type IRefreshSessionRepository, } from "@/modules/auth/repositories/interfaces/refresh-session.interface";
-import { UserQueryDto, UserStatusFilter, } from "@/modules/user/dto/request/user-query.dto";
+import { UserStatusFilter, } from "@/modules/user/dto/request/user-query.dto";
 import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-status.request.dto";
 import { UserEntity } from "@/modules/user/entities/user.entity";
 import { UserRole } from "@/shared/enums/role.enum";
 import { IPaginatedResult } from "@/shared/types";
 import { ADMIN_USER_REPOSITORY, type IAdminUserRepository } from "../../user/repositories/interfaces/admin-user.interface";
 import { IAdminUserService } from "./interfaces/admin-user.service.interface";
+import { AdminUserListParams } from "@/modules/user/types/admin-user-list-params.type";
+import { UpdateUserStatusInput } from "@/modules/user/types/update-user-status.type";
 
 @Injectable()
 export class AdminUserService implements IAdminUserService {
@@ -22,7 +24,7 @@ export class AdminUserService implements IAdminUserService {
         private readonly _refreshSessionRepository: IRefreshSessionRepository,
     ) { }
 
-    async getUsers(query: UserQueryDto,): Promise<IPaginatedResult<UserEntity>> {
+    async getUsers(query: AdminUserListParams,): Promise<IPaginatedResult<UserEntity>> {
         const isActive =
             query.status === UserStatusFilter.ACTIVE
                 ? true
@@ -49,14 +51,14 @@ export class AdminUserService implements IAdminUserService {
         return user;
     }
 
-    async updateUserStatus(targetUserId: string, dto: UpdateUserStatusDto, adminUserId: string,): Promise<UserEntity> {
+    async updateUserStatus(targetUserId: string, input: UpdateUserStatusInput, adminUserId: string,): Promise<UserEntity> {
         const targetUser = await this._userRepository.findById(targetUserId);
 
         if (!targetUser) {
             throw new NotFoundException("User not found");
         }
 
-        if (!dto.isActive) {
+        if (!input.isActive) {
             if (targetUser.id === adminUserId) {
                 throw new BadRequestException("You cannot block your own account",);
             }
@@ -66,7 +68,7 @@ export class AdminUserService implements IAdminUserService {
             }
         }
 
-        const updatedUser = targetUser.isActive === dto.isActive ? targetUser : await this._adminUserRepository.updateStatus(targetUserId, dto.isActive,);
+        const updatedUser = targetUser.isActive === input.isActive ? targetUser : await this._adminUserRepository.updateStatus(targetUserId, input.isActive,);
 
         if (!updatedUser.isActive) {
             await this._refreshSessionRepository.revokeAllForUser(updatedUser.id,);

@@ -1,30 +1,26 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
-import { MediaType, } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { StorageService } from '@/shared/storage/storage.service';
-import { UpdateInstructorProfileDto } from '../dto/request/update-instructor-profile.dto';
-import { CreateOfferingDto } from '../dto/request/create-offering.dto';
-import { UpdateOfferingDto } from '../dto/request/update-offering.dto';
-import { OFFERING_MEDIA_MIME_TYPES, RequestOfferingMediaUploadDto, } from '../dto/request/request-offering-media-upload.dto';
-import { ConfirmOfferingMediaUploadDto } from '../dto/request/confirm-offering-media-upload.dto';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
 import { isEditableOfferingStatus } from '../types/offering-status.type';
 import { IInstructorService } from './interfaces/instructor.service.interface';
-import { PublicInstructorQueryDto } from '../dto/request/public-instructor-query.dto';
-import { PaginationMetaDto } from '@/shared/dto/response/pagination-meta.dto';
 import { type IInstructorRepository, INSTRUCTOR_REPOSITORY } from '../repositories/interfaces/instructor.interface';
 import { PublicInstructorProfile } from '../types/public-instructor.type';
-import { PublicInstructorDto, PublicInstructorListDataDto } from '../dto/response/public-catelog-response.dto';
+import { OFFERING_MEDIA_MIME_TYPES } from '../constants/media-mime-types';
+import { MediaType } from '../enums/instructor.enum';
+import { type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
+import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
+import { IPaginatedResult } from '@/shared/types/paginated-result';
+import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
 
 @Injectable()
 export class InstructorService implements IInstructorService {
     constructor(
         @Inject(INSTRUCTOR_REPOSITORY)
         private readonly _instructorRepository: IInstructorRepository,
-        private readonly _storageService: StorageService,
+        private readonly _storageService: IStorageService,
     ) { }
 
-    async getPublicInstructors(query: PublicInstructorQueryDto,): Promise<PublicInstructorListDataDto> {
+    async getPublicInstructors(query: PublicInstructorQueryInput): Promise<IPaginatedResult<PublicInstructorProfile>> {
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
 
@@ -35,13 +31,10 @@ export class InstructorService implements IInstructorService {
             subcategoryId: query.subcategoryId,
         });
 
-        return {
-            items: await Promise.all(result.profiles.map((profile) => this._toPublicInstructor(profile)),),
-            meta: PaginationMetaDto.create(page, limit, result.total),
-        };
+        return { items: result.profiles, total: result.total, page, limit };
     }
 
-    async getPublicInstructor(profileId: string): Promise<PublicInstructorDto> {
+    async getPublicInstructor(profileId: string): Promise<PublicInstructorProfile> {
         const profile = await this._instructorRepository.findPublicInstructor(profileId);
 
         if (!profile) {
@@ -99,23 +92,23 @@ export class InstructorService implements IInstructorService {
         return this._instructorRepository.findWorkspaceByUserId(userId);
     }
 
-    async saveProfile(userId: string, dto: UpdateInstructorProfileDto,): Promise<InstructorProfileEntity> {
+    async saveProfile(userId: string, input: UpdateInstructorProfileInput): Promise<InstructorProfileEntity> {
         await this._assertNoPendingApplication(userId);
 
         return this._instructorRepository.upsertProfile(userId, {
-            bio: dto.bio?.trim(),
-            location: dto.location?.trim(),
-            portfolioUrl: dto.portfolioUrl?.trim(),
+            bio: input.bio?.trim(),
+            location: input.location?.trim(),
+            portfolioUrl: input.portfolioUrl?.trim(),
         });
     }
 
-    async addOffering(userId: string, dto: CreateOfferingDto,): Promise<InstructorOfferingEntity> {
+    async addOffering(userId: string, input: CreateOfferingInput): Promise<InstructorOfferingEntity> {
         await this._assertNoPendingApplication(userId);
 
         const profile = await this._getOrCreateDraftProfile(userId);
-        await this._assertSubcategoryIsSelectable(dto.subcategoryId);
+        await this._assertSubcategoryIsSelectable(input.subcategoryId);
 
-        return this._instructorRepository.createOffering(profile.id, dto);
+        return this._instructorRepository.createOffering(profile.id, input);
     }
 
     async cancelApplication(userId: string, applicationId: string,): Promise<void> {
@@ -136,14 +129,14 @@ export class InstructorService implements IInstructorService {
         }
     }
 
-    async updateOffering(userId: string, offeringId: string, dto: UpdateOfferingDto,): Promise<InstructorOfferingEntity> {
+    async updateOffering(userId: string, offeringId: string, input: UpdateOfferingInput): Promise<InstructorOfferingEntity> {
         const offering = await this._getOwnedEditableOffering(userId, offeringId);
 
-        if (dto.subcategoryId) {
-            await this._assertSubcategoryIsSelectable(dto.subcategoryId);
+        if (input.subcategoryId) {
+            await this._assertSubcategoryIsSelectable(input.subcategoryId);
         }
 
-        return this._instructorRepository.updateOffering(offering.id, dto);
+        return this._instructorRepository.updateOffering(offering.id, input);
     }
 
     async removeOffering(userId: string, offeringId: string): Promise<void> {
@@ -156,39 +149,39 @@ export class InstructorService implements IInstructorService {
         await this._instructorRepository.deleteOffering(offering.id);
     }
 
-    async createMediaUploadUrl(userId: string, offeringId: string, dto: RequestOfferingMediaUploadDto,) {
+    async createMediaUploadUrl(userId: string, offeringId: string, input: RequestOfferingMediaUploadInput): Promise<PresignedUpload> {
         await this._getOwnedPortfolioOffering(userId, offeringId);
 
-        this._assertMediaTypeMatchesMimeType(dto.type, dto.mimeType);
+        this._assertMediaTypeMatchesMimeType(input.type, input.mimeType);
 
-        const currentCount = await this._instructorRepository.countMedia(offeringId, dto.type,);
+        const currentCount = await this._instructorRepository.countMedia(offeringId, input.type,);
 
-        const maximum = dto.type === MediaType.IMAGE ? 10 : 3;
+        const maximum = input.type === MediaType.IMAGE ? 10 : 3;
 
         if (currentCount >= maximum) {
-            throw new BadRequestException(`An offering can have at most ${maximum} ${dto.type.toLowerCase()} files`,);
+            throw new BadRequestException(`An offering can have at most ${maximum} ${input.type.toLowerCase()} files`,);
         }
 
-        const extension = this._extensionForMimeType(dto.mimeType);
-        const storageKey = `instructor-offerings/${offeringId}/${dto.type.toLowerCase()}/${randomUUID()}.${extension}`;
+        const extension = this._extensionForMimeType(input.mimeType);
+        const storageKey = `instructor-offerings/${offeringId}/${input.type.toLowerCase()}/${randomUUID()}.${extension}`;
 
         return this._storageService.createUploadUrl({
             key: storageKey,
-            contentType: dto.mimeType,
+            contentType: input.mimeType,
             expiresInSeconds: 300,
         });
     }
 
-    async confirmMediaUpload(userId: string, offeringId: string, dto: ConfirmOfferingMediaUploadDto,): Promise<OfferingMediaEntity> {
+    async confirmMediaUpload(userId: string, offeringId: string, input: ConfirmOfferingMediaUploadInput): Promise<OfferingMediaEntity> {
         await this._getOwnedPortfolioOffering(userId, offeringId)
 
-        const expectedPrefix = `instructor-offerings/${offeringId}/${dto.type.toLowerCase()}/`;
+        const expectedPrefix = `instructor-offerings/${offeringId}/${input.type.toLowerCase()}/`;
 
-        if (!dto.storageKey.startsWith(expectedPrefix)) {
+        if (!input.storageKey.startsWith(expectedPrefix)) {
             throw new BadRequestException('Invalid offering media storage key');
         }
 
-        const object = await this._storageService.getObjectMetadata(dto.storageKey);
+        const object = await this._storageService.getObjectMetadata(input.storageKey);
 
         if (!object) {
             throw new BadRequestException('Uploaded media was not found');
@@ -198,33 +191,33 @@ export class InstructorService implements IInstructorService {
             throw new BadRequestException('Uploaded media has no content type');
         }
 
-        this._assertMediaTypeMatchesMimeType(dto.type, object.contentType);
+        this._assertMediaTypeMatchesMimeType(input.type, object.contentType);
 
         const maxBytes =
-            dto.type === MediaType.IMAGE ? 5 * 1024 * 1024 : 100 * 1024 * 1024;
+            input.type === MediaType.IMAGE ? 5 * 1024 * 1024 : 100 * 1024 * 1024;
 
         if (object.sizeBytes < 1 || object.sizeBytes > maxBytes) {
-            throw new BadRequestException(dto.type === MediaType.IMAGE
+            throw new BadRequestException(input.type === MediaType.IMAGE
                 ? 'Image must be 5 MB or smaller'
                 : 'Video must be 100 MB or smaller',
             );
         }
 
-        const currentCount = await this._instructorRepository.countMedia(offeringId, dto.type,);
+        const currentCount = await this._instructorRepository.countMedia(offeringId, input.type,);
 
-        const maximum = dto.type === MediaType.IMAGE ? 10 : 3;
+        const maximum = input.type === MediaType.IMAGE ? 10 : 3;
 
         if (currentCount >= maximum) {
-            throw new BadRequestException(`An offering can have at most ${maximum} ${dto.type.toLowerCase()} files`,);
+            throw new BadRequestException(`An offering can have at most ${maximum} ${input.type.toLowerCase()} files`,);
         }
 
         return this._instructorRepository.createMedia({
             offeringId,
-            type: dto.type,
-            storageKey: dto.storageKey,
+            type: input.type,
+            storageKey: input.storageKey,
             mimeType: object.contentType,
             sizeBytes: object.sizeBytes,
-            sortOrder: dto.sortOrder,
+            sortOrder: input.sortOrder,
         });
     }
 

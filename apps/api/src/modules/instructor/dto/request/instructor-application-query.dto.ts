@@ -1,7 +1,7 @@
-import { InstructorApplicationStatus } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '@/shared/dto/request/pagination-query.dto';
+import { InstructorApplicationStatus } from '../../enums/instructor.enum';
 
 export class InstructorApplicationQueryDto extends PaginationQueryDto {
     @ApiPropertyOptional({ enum: InstructorApplicationStatus })

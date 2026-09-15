@@ -30,7 +30,12 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Get paginated categories and subcategories for admin management' })
     @ApiOkResponse({ type: PaginatedCategoryResponseDto })
     async findAll(@Query() query: CategoryQueryDto): Promise<PaginatedCategoryResponseDto> {
-        const result = await this._categoryService.findManyForAdmin(query)
+        const result = await this._categoryService.findManyForAdmin({
+            page: query.page ?? 1,
+            limit: query.limit ?? 10,
+            search: query.search,
+            isActive: query.isActive === 'true' ? true : query.isActive === 'false' ? false : undefined,
+        });
 
         return PaginatedCategoryResponseDto.fromResult('Categories fetched successfully', result,)
     }
@@ -40,8 +45,12 @@ export class AdminCategoryController {
     @ApiCreatedResponse({ type: CategoryResponseDto })
     @ApiConflictResponse({ description: 'A category with this slug already exists', })
     async createCategory(@Body() dto: CreateCategoryDto,): Promise<CategoryResponseDto> {
-        const category = await this._categoryService.createCategory(dto);
-
+        const category = await this._categoryService.createCategory({
+            name: dto.name,
+            slug: dto.slug ?? dto.name,
+            description: dto.description,
+            sortOrder: dto.sortOrder ?? 0,
+        });
         return CategoryResponseDto.fromEntity('Category created successfully', category,);
     }
 
@@ -74,7 +83,12 @@ export class AdminCategoryController {
     @ApiNotFoundResponse({ description: 'Category not found' })
     @ApiConflictResponse({ description: 'A subcategory with this slug already exists in this category', })
     async createSubcategory(@Param('categoryId') categoryId: string, @Body() dto: CreateSubcategoryDto,): Promise<SubcategoryResponseDto> {
-        const subcategory = await this._categoryService.createSubcategory(categoryId, dto);
+        const subcategory = await this._categoryService.createSubcategory(categoryId, {
+            name: dto.name,
+            slug: dto.slug ?? dto.name,
+            description: dto.description,
+            sortOrder: dto.sortOrder ?? 0,
+        });
 
         return SubcategoryResponseDto.fromEntity('Subcategory created successfully', subcategory,);
     }

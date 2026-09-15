@@ -19,9 +19,6 @@ export class CategoryController {
     async findSelectable(): Promise<CategoryListResponseDto> {
         const categories = await this._categoryService.findSelectable();
 
-        return CategoryListResponseDto.fromEntities(
-            'Selectable categories fetched successfully',
-            categories,
-        );
+        return CategoryListResponseDto.fromEntities('Selectable categories fetched successfully', categories,);
     }
 }

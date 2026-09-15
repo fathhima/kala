@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
-import { AvailabilityExceptionType } from '@prisma/client';
+import { AvailabilityExceptionType } from '../../enums/slot.enum';
 
 export class CreateSlotRuleDto {
   @ApiProperty()

@@ -1,8 +1,7 @@
-import { MediaType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsIn, IsInt, Max, Min } from 'class-validator';
-
-export const OFFERING_MEDIA_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm',] as const;
+import { MediaType } from '../../enums/instructor.enum';
+import { OFFERING_MEDIA_MIME_TYPES } from '../../constants/media-mime-types';
 
 export class RequestOfferingMediaUploadDto {
     @ApiProperty({ enum: MediaType })

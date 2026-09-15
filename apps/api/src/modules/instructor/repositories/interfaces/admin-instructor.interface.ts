@@ -1,7 +1,7 @@
-import type { InstructorApplicationStatus } from '@prisma/client';
 import { InstructorApplicationEntity } from '@/modules/instructor/entities/instructor-profile.entity';
 import { ReviewableOfferingStatus } from '@/modules/instructor/types/offering-status.type';
 import { IPaginatedResult } from '@/shared/types';
+import { InstructorApplicationStatus } from '../../enums/instructor.enum';
 
 export const ADMIN_INSTRUCTOR_REPOSITORY = Symbol('ADMIN_INSTRUCTOR_REPOSITORY');
 

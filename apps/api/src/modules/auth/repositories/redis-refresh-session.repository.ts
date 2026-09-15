@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "@/shared/redis/redis.service";
-import { RefreshSessionRecord } from "@/shared/redis/types/refresh-session.type";
 import { IRefreshSessionRepository } from "./interfaces/refresh-session.interface";
+import { RefreshSessionRecord } from "../types/refresh-session.type";
 
 @Injectable()
 export class RedisRefreshSessionRepository implements IRefreshSessionRepository {

@@ -1,4 +1,4 @@
-import { AvailabilityExceptionStatus, AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '@prisma/client';
+import { AvailabilityExceptionStatus, AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from "../enums/slot.enum";
 
 export class SlotRuleEntity {
     id!: string;

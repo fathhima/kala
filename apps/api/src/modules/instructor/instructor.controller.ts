@@ -25,7 +25,12 @@ export class InstructorController {
     @ApiOperation({ summary: 'List approved instructors and offerings' })
     @ApiOkResponse({ type: PublicInstructorListResponseDto })
     async getInstructors(@Query() query: PublicInstructorQueryDto,): Promise<PublicInstructorListResponseDto> {
-        const data = await this._instructorService.getPublicInstructors(query);
+        const data = await this._instructorService.getPublicInstructors({
+            page: query.page,
+            limit: query.limit,
+            search: query.search,
+            subcategoryId: query.subcategoryId,
+        });
 
         return {
             success: true,
@@ -71,7 +76,14 @@ export class InstructorController {
     @ApiOperation({ summary: 'Create an instructor offering', })
     @ApiOkResponse({ type: InstructorOfferingResponseDto, })
     async addOffering(@UserId() userId: string, @Body() dto: CreateOfferingDto,): Promise<InstructorOfferingResponseDto> {
-        const offering = await this._instructorService.addOffering(userId, dto,);
+        const offering = await this._instructorService.addOffering(userId, {
+            subcategoryId: dto.subcategoryId,
+            title: dto.title,
+            description: dto.description,
+            hourlyRate: dto.hourlyRate,
+            currency: dto.currency,
+            experienceYears: dto.experienceYears,
+        });
 
         return InstructorOfferingResponseDto.fromEntity('Offering created successfully', offering,);
     }

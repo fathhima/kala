@@ -25,14 +25,30 @@ export class SlotController {
     @Post('instructor/availability/rules')
     @Roles(UserRole.INSTRUCTOR)
     async createRule(@UserId() userId: string, @Body() dto: CreateSlotRuleDto) {
-        const rule = await this._slotService.createRule(userId, dto);
+        const rule = await this._slotService.createRule(userId, {
+            offeringId: dto.offeringId,
+            title: dto.title,
+            weekday: dto.weekday,
+            startMinute: dto.startMinute,
+            endMinute: dto.endMinute,
+            timezone: dto.timezone ?? 'Asia/Kolkata',
+            slotDurationMinutes: dto.slotDurationMinutes,
+            effectiveFrom: new Date(dto.effectiveFrom),
+            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
+        });
         return SlotRuleResponseDto.fromEntity('Availability rule created successfully', rule);
     }
 
     @Patch('instructor/availability/rules/:ruleId')
     @Roles(UserRole.INSTRUCTOR)
     async updateRule(@UserId() userId: string, @Param('ruleId') ruleId: string, @Body() dto: UpdateSlotRuleDto) {
-        const rule = await this._slotService.updateRule(userId, ruleId, dto);
+        const rule = await this._slotService.updateRule(userId, ruleId, {
+            title: dto.title,
+            startMinute: dto.startMinute,
+            endMinute: dto.endMinute,
+            slotDurationMinutes: dto.slotDurationMinutes,
+            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
+        });
         return SlotRuleResponseDto.fromEntity('Availability rule updated successfully', rule);
     }
 

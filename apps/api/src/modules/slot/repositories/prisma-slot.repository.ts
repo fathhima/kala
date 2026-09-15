@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { AvailabilityRuleStatus, InstructorProfileStatus, OfferingStatus, Prisma, SlotStatus } from '@prisma/client';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { SlotMapper } from '../mappers/slot.mapper';
 import { ISlotRepository } from './interfaces/slot.interface';
+import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/enums/instructor.enum';
+import { AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
+import { CreateSlotExceptionInput, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
+import { SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';
 
 @Injectable()
 export class PrismaSlotRepository implements ISlotRepository {
@@ -22,13 +25,34 @@ export class PrismaSlotRepository implements ISlotRepository {
         });
     }
 
-    async createRule(data: Prisma.AvailabilityRuleUncheckedCreateInput) {
-        const rule = await this._prisma.availabilityRule.create({ data });
+    async createRule(data: CreateSlotRuleInput): Promise<SlotRuleEntity> {
+        const rule = await this._prisma.availabilityRule.create({
+            data: {
+                profileId: data.profileId,
+                offeringId: data.offeringId,
+                title: data.title ?? null,
+                weekday: data.weekday,
+                startMinute: data.startMinute,
+                endMinute: data.endMinute,
+                timezone: data.timezone,
+                slotDurationMinutes: data.slotDurationMinutes,
+                effectiveFrom: data.effectiveFrom,
+                effectiveUntil: data.effectiveUntil ?? null,
+            },
+        });;
         return SlotMapper.toRuleEntity(rule);
     }
 
-    async updateRule(ruleId: string, data: Prisma.AvailabilityRuleUpdateInput) {
-        const rule = await this._prisma.availabilityRule.update({ where: { id: ruleId }, data });
+    async updateRule(ruleId: string, data: UpdateSlotRuleInput): Promise<SlotRuleEntity> {
+        const rule = await this._prisma.availabilityRule.update({
+            where: { id: ruleId }, data: {
+                title: data.title ?? null,
+                startMinute: data.startMinute,
+                endMinute: data.endMinute,
+                slotDurationMinutes: data.slotDurationMinutes,
+                effectiveUntil: data.effectiveUntil ?? null,
+            }
+        });
         return SlotMapper.toRuleEntity(rule);
     }
 
@@ -40,14 +64,38 @@ export class PrismaSlotRepository implements ISlotRepository {
         return rule ? SlotMapper.toRuleEntity(rule) : null;
     }
 
-    async createException(data: Prisma.AvailabilityExceptionUncheckedCreateInput) {
-        const exception = await this._prisma.availabilityException.create({ data });
+    async createException(data: CreateSlotExceptionInput): Promise<SlotExceptionEntity> {
+        const exception = await this._prisma.availabilityException.create({
+            data: {
+                profileId: data.profileId,
+                offeringId: data.offeringId,
+                title: data.title,
+                startTime: data.startTime,
+                endTime: data.endTime,
+                timezone: data.timezone,
+                slotDurationMinutes: data.slotDurationMinutes,
+                type: data.type
+            }
+        });
         return SlotMapper.toExceptionEntity(exception);
     }
 
-    async createSlots(data: Prisma.AvailabilitySlotCreateManyInput[]) {
+    async createSlots(data: CreateSlotInput[]): Promise<void> {
         if (!data.length) return;
-        await this._prisma.availabilitySlot.createMany({ data, skipDuplicates: true });
+        await this._prisma.availabilitySlot.createMany({
+            data: data.map((slot) => ({
+                profileId: slot.profileId,
+                offeringId: slot.offeringId,
+                ruleId: slot.ruleId,
+                exceptionId: slot.exceptionId,
+                title: slot.title,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                timezone: slot.timezone,
+                status: slot.status,
+            })),
+            skipDuplicates: true,
+        });;
     }
 
     async cancelFutureAvailableSlotsByRule(ruleId: string) {

@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client';
 import { InstructorSlotAvailabilityEntity, SlotEntity, SlotExceptionEntity, SlotRuleEntity } from '../../entities/slot.entity';
+import { CreateSlotExceptionInput, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../../types/slot.type';
 
 export const SLOT_REPOSITORY = Symbol('SLOT_REPOSITORY');
 
@@ -8,15 +8,15 @@ export interface ISlotRepository {
 
     findApprovedOfferingForProfile(profileId: string, offeringId: string): Promise<{ id: string } | null>;
 
-    createRule(data: Prisma.AvailabilityRuleUncheckedCreateInput): Promise<SlotRuleEntity>;
+    createRule(data: CreateSlotRuleInput): Promise<SlotRuleEntity>;
 
-    updateRule(ruleId: string, data: Prisma.AvailabilityRuleUpdateInput): Promise<SlotRuleEntity>;
+    updateRule(ruleId: string, data: UpdateSlotRuleInput): Promise<SlotRuleEntity>;
 
     findOwnedActiveRule(profileId: string, ruleId: string): Promise<SlotRuleEntity | null>;
 
-    createException(data: Prisma.AvailabilityExceptionUncheckedCreateInput): Promise<SlotExceptionEntity>;
+    createException(data: CreateSlotExceptionInput): Promise<SlotExceptionEntity>;
 
-    createSlots(data: Prisma.AvailabilitySlotCreateManyInput[]): Promise<void>;
+    createSlots(data: CreateSlotInput[]): Promise<void>;
 
     cancelFutureAvailableSlotsByRule(ruleId: string): Promise<void>;
 

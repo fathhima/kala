@@ -1,4 +1,4 @@
-import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, } from '@prisma/client';
+import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus } from "../enums/instructor.enum";
 
 export class OfferingMediaEntity {
     id!: string;

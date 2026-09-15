@@ -1,33 +1,24 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
-import { RegisterDto } from "../dto/request/register.dto";
 import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
 import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import * as bcrypt from 'bcrypt'
 import { PendingSignup } from "../types/pending-signup.type";
-import { MailerService } from "@/shared/mailer/mailer.service";
-import { VerifyOtpDto } from "../dto/request/verify-otp.dto";
-import { Prisma, Role } from "@prisma/client";
-import { JwtService } from "@/shared/jwt/jwt.service";
 import { ConfigService } from "@nestjs/config";
-import { LoginDto } from "../dto/request/login.dto";
 import { generateOtp } from "../utils/generate-otp";
 import { normalizeEmail } from "../utils/normalize-email";
-import { ResendOtpDto } from "../dto/request/resend-otp.dto";
 import { createHash, randomBytes, randomUUID } from "crypto";
 import { maskEmail } from "../utils/masked-email";
-import { ForgotPasswordDto } from "../dto/request/forgot-password.dto";
-import { ValidateResetTokenDto } from "../dto/request/validate-reset-token.dto";
-import { ResetPasswordDto } from "../dto/request/reset-password.dto";
-import { GoogleSignInRequestDto } from "../dto/request/google-signin.dto";
 import { AuthResult, RefreshResult } from "../types/auth-result.type";
 import { UserRole } from "@/shared/enums/role.enum";
 import { REFRESH_SESSION_REPOSITORY } from "../repositories/interfaces/refresh-session.interface";
 import type { IRefreshSessionRepository } from "../repositories/interfaces/refresh-session.interface";
 import { PENDING_SIGNUP_REPOSITORY, type IPendingSignupRepository } from "../repositories/interfaces/pending-signup.interface";
 import { PASSWORD_RESET_REPOSITORY, type IPasswordResetRepository } from "../repositories/interfaces/password-reset.interface";
-import { ChangePasswordDto } from "../dto/request/change-password.dto";
 import { IAuthService } from "./interfaces/auth.service.interface";
-import { GOOGLE_OAUTH_SERVICE, type IGoogleOAuthService } from "./interfaces/google-oauth.service.interface";
+import { GOOGLE_OAUTH_PROVIDER, type IGoogleOAuthProvider } from "./interfaces/google-oauth.interface";
+import { ChangePasswordInput, ForgotPasswordInput, GoogleSignInInput, LoginInput, RegisterInput, ResendOtpInput, ResetPasswordInput, ValidateResetTokenInput, VerifyOtpInput } from "../types/auth.type";
+import { MAILER_SERVICE, type IMailerService } from "@/shared/mailer/repositories/interfaces/mailer.interface";
+import { type IJwtService, JWT_SERVICE } from "@/shared/jwt/repositories/interfaces/token.interface";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -46,10 +37,12 @@ export class AuthService implements IAuthService {
         private readonly _pendingSignupRepository: IPendingSignupRepository,
         @Inject(PASSWORD_RESET_REPOSITORY)
         private readonly _passwordResetRepository: IPasswordResetRepository,
-        @Inject(GOOGLE_OAUTH_SERVICE)
-        private readonly _googleOAuthService: IGoogleOAuthService,
-        private readonly _mailerService: MailerService,
-        private readonly _jwtService: JwtService,
+        @Inject(GOOGLE_OAUTH_PROVIDER)
+        private readonly _googleOAuthProvider: IGoogleOAuthProvider,
+        @Inject(MAILER_SERVICE)
+        private readonly _mailerService: IMailerService,
+        @Inject(JWT_SERVICE)
+        private readonly _jwtService: IJwtService,
         private readonly _configService: ConfigService,
 
     ) {
@@ -62,8 +55,8 @@ export class AuthService implements IAuthService {
         this._otpResendCooldownSeconds = this._configService.getOrThrow<number>("OTP_RESEND_COOLDOWN_SECONDS");
     }
 
-    async register(dto: RegisterDto) {
-        const email = normalizeEmail(dto.email);
+    async register(input: RegisterInput) {
+        const email = normalizeEmail(input.email);
 
         const existingUser = await this._userRepository.findByEmail(email)
         if (existingUser?.isVerified) {
@@ -75,14 +68,14 @@ export class AuthService implements IAuthService {
             await this._pendingSignupRepository.delete(existingPendingId, email)
         }
 
-        const hashedPassword = await bcrypt.hash(dto.password, 10)
+        const hashedPassword = await bcrypt.hash(input.password, 10)
         const otp = generateOtp()
         const otpHash = await bcrypt.hash(otp, 10)
         const pendingSignupId = randomUUID()
 
         const pendingSignup: PendingSignup = {
             id: pendingSignupId,
-            name: dto.name,
+            name: input.name,
             email: email,
             hashedPassword: hashedPassword,
             otpHash,
@@ -105,8 +98,8 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async verifyOtp(dto: VerifyOtpDto): Promise<AuthResult> {
-        const pendingSignup = await this._pendingSignupRepository.findById(dto.pendingSignupId,);
+    async verifyOtp(input: VerifyOtpInput): Promise<AuthResult> {
+        const pendingSignup = await this._pendingSignupRepository.findById(input.pendingSignupId,);
 
         if (!pendingSignup) {
             throw new BadRequestException("OTP expired or registration not found");
@@ -116,10 +109,10 @@ export class AuthService implements IAuthService {
             throw new BadRequestException('Too many invalid OTP attempts')
         }
 
-        const isOtpValid = await bcrypt.compare(dto.otp, pendingSignup.otpHash)
+        const isOtpValid = await bcrypt.compare(input.otp, pendingSignup.otpHash)
 
         if (!isOtpValid) {
-            const ttl = await this._pendingSignupRepository.getTtl(dto.pendingSignupId)
+            const ttl = await this._pendingSignupRepository.getTtl(input.pendingSignupId)
 
             if (ttl <= 0) {
                 throw new BadRequestException('OTP expired or registration not found');
@@ -138,24 +131,14 @@ export class AuthService implements IAuthService {
 
         let user;
 
-        try {
-            user = await this._userRepository.create({
-                name: pendingSignup.name,
-                email: pendingSignup.email,
-                password: pendingSignup.hashedPassword,
-                roles: [UserRole.STUDENT],
-                isVerified: true,
-                isActive: true
-            })
-        } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
-
-                throw new BadRequestException('User already exists');
-            }
-
-            throw error;
-        }
+        user = await this._userRepository.create({
+            name: pendingSignup.name,
+            email: pendingSignup.email,
+            password: pendingSignup.hashedPassword,
+            roles: [UserRole.STUDENT],
+            isVerified: true,
+            isActive: true
+        });
 
         await this._pendingSignupRepository.delete(pendingSignup.id, pendingSignup.email,)
 
@@ -168,8 +151,8 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async resendOtp(dto: ResendOtpDto) {
-        const pendingSignup = await this._pendingSignupRepository.findById(dto.pendingSignupId,);
+    async resendOtp(input: ResendOtpInput) {
+        const pendingSignup = await this._pendingSignupRepository.findById(input.pendingSignupId,);
 
         if (!pendingSignup) {
             throw new BadRequestException("OTP expired or registration not found");
@@ -210,8 +193,8 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async login(dto: LoginDto): Promise<AuthResult> {
-        const email = normalizeEmail(dto.email)
+    async login(input: LoginInput): Promise<AuthResult> {
+        const email = normalizeEmail(input.email)
 
         const authUser = await this._userRepository.findAuthByEmail(email)
 
@@ -219,7 +202,7 @@ export class AuthService implements IAuthService {
             throw new UnauthorizedException('Invalid credentials')
         }
 
-        const isPasswordValid = await bcrypt.compare(dto.password, authUser.password)
+        const isPasswordValid = await bcrypt.compare(input.password, authUser.password)
         if (!isPasswordValid) {
             throw new UnauthorizedException('Invalid credentials')
         }
@@ -282,8 +265,8 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async forgotPassword(dto: ForgotPasswordDto) {
-        const email = normalizeEmail(dto.email)
+    async forgotPassword(input: ForgotPasswordInput) {
+        const email = normalizeEmail(input.email)
 
         const user = await this._userRepository.findAuthByEmail(email)
 
@@ -305,8 +288,8 @@ export class AuthService implements IAuthService {
         )
     }
 
-    async validateResetToken(dto: ValidateResetTokenDto) {
-        const tokenHash = this._hashPasswordResetToken(dto.token)
+    async validateResetToken(input: ValidateResetTokenInput) {
+        const tokenHash = this._hashPasswordResetToken(input.token)
         const record = await this._passwordResetRepository.findByTokenHash(tokenHash)
 
         if (!record) {
@@ -318,8 +301,8 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async resetPassword(dto: ResetPasswordDto) {
-        const tokenHash = this._hashPasswordResetToken(dto.token)
+    async resetPassword(input: ResetPasswordInput) {
+        const tokenHash = this._hashPasswordResetToken(input.token)
         const record = await this._passwordResetRepository.consume(tokenHash)
 
         if (!record) {
@@ -332,15 +315,15 @@ export class AuthService implements IAuthService {
             throw new BadRequestException("Reset link is invalid or expired");
         }
 
-        const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
+        const hashedPassword = await bcrypt.hash(input.newPassword, 10)
 
         await this._userRepository.updatePassword(user.id, hashedPassword);
         await this._passwordResetRepository.revokeAllForUser(user.id)
         await this._refreshSessionRepository.revokeAllForUser(user.id);
     }
 
-    async googleSignin(dto: GoogleSignInRequestDto) {
-        const googleProfile = await this._googleOAuthService.verifyIdToken(dto.idToken);
+    async googleSignin(input: GoogleSignInInput) {
+        const googleProfile = await this._googleOAuthProvider.verifyIdToken(input.idToken);
 
         const email = normalizeEmail(googleProfile.email);
         const existingAuthUser = await this._userRepository.findAuthByEmail(email);
@@ -394,7 +377,7 @@ export class AuthService implements IAuthService {
         await this._refreshSessionRepository.revokeAllForUser(userId)
     }
 
-    async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+    async changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
         const user = await this._userRepository.findAuthByEmail(
             (await this._userRepository.findById(userId))?.email ?? '',)
 
@@ -403,25 +386,25 @@ export class AuthService implements IAuthService {
         }
 
         if (user.password) {
-            if (!dto.currentPassword) {
+            if (!input.currentPassword) {
                 throw new BadRequestException('Current password is required')
             }
 
-            const matches = await bcrypt.compare(dto.currentPassword, user.password)
+            const matches = await bcrypt.compare(input.currentPassword, user.password)
 
             if (!matches) {
                 throw new BadRequestException('Current password is incorrect')
             }
         }
 
-        const hashedPassword = await bcrypt.hash(dto.newPassword, 10)
+        const hashedPassword = await bcrypt.hash(input.newPassword, 10)
 
         await this._userRepository.updatePassword(userId, hashedPassword)
         await this._passwordResetRepository.revokeAllForUser(userId)
         await this._refreshSessionRepository.revokeAllForUser(userId)
     }
 
-    private async _generateTokens(user: { id: string, roles: Role[] }) {
+    private async _generateTokens(user: { id: string, roles: UserRole[] }) {
         const sessionId = randomUUID()
 
         await this._refreshSessionRepository.create(sessionId, user.id, this._refreshTokenTtlSeconds)

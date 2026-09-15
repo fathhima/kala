@@ -1,11 +1,33 @@
+import { InstructorApplication, InstructorOffering, InstructorProfile, OfferingMedia } from '@prisma/client';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
+import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, } from '../enums/instructor.enum';
+
+type OfferingWithRelations = InstructorOffering & {
+    subcategory: {
+        id: string;
+        name: string;
+        slug: string;
+        category: { id: string; name: string; slug: string }
+    };
+    media: OfferingMedia[];
+};
+type ApplicationWithRelations = InstructorApplication & {
+    offerings: OfferingWithRelations[];
+    profile?: InstructorProfile & {
+        user: { id: string; name: string; email: string; imageUrl: string | null; roles: string[] }
+    };
+};
+type ProfileWithRelations = InstructorProfile & {
+    offerings: OfferingWithRelations[];
+    applications?: ApplicationWithRelations[];
+};
 
 export class InstructorMapper {
-    static toMediaEntity(media: any): OfferingMediaEntity {
+    static toMediaEntity(media: OfferingMedia): OfferingMediaEntity {
         return {
             id: media.id,
             offeringId: media.offeringId,
-            type: media.type,
+            type: media.type as MediaType,
             storageKey: media.storageKey,
             url: media.url,
             mimeType: media.mimeType,
@@ -15,7 +37,7 @@ export class InstructorMapper {
         };
     }
 
-    static toOfferingEntity(offering: any): InstructorOfferingEntity {
+    static toOfferingEntity(offering: OfferingWithRelations): InstructorOfferingEntity {
         return {
             id: offering.id,
             profileId: offering.profileId,
@@ -26,7 +48,7 @@ export class InstructorMapper {
             hourlyRate: offering.hourlyRate.toString(),
             currency: offering.currency,
             experienceYears: offering.experienceYears,
-            status: offering.status,
+            status: offering.status as OfferingStatus,
             reviewNote: offering.reviewNote,
             reviewedAt: offering.reviewedAt,
             reviewedBy: offering.reviewedBy,
@@ -46,11 +68,11 @@ export class InstructorMapper {
         };
     }
 
-    static toApplicationEntity(application: any): InstructorApplicationEntity {
+    static toApplicationEntity(application: ApplicationWithRelations): InstructorApplicationEntity {
         return {
             id: application.id,
             profileId: application.profileId,
-            status: application.status,
+            status: application.status as InstructorApplicationStatus,
             submittedAt: application.submittedAt,
             reviewedAt: application.reviewedAt,
             reviewedBy: application.reviewedBy,
@@ -63,7 +85,7 @@ export class InstructorMapper {
                 bio: application.profile.bio,
                 location: application.profile.location,
                 portfolioUrl: application.profile.portfolioUrl,
-                status: application.profile.status,
+                status: application.profile.status as InstructorProfileStatus,
                 user: {
                     id: application.profile.user.id,
                     name: application.profile.user.name,
@@ -76,14 +98,14 @@ export class InstructorMapper {
         };
     }
 
-    static toProfileEntity(profile: any): InstructorProfileEntity {
+    static toProfileEntity(profile: ProfileWithRelations): InstructorProfileEntity {
         return {
             id: profile.id,
             userId: profile.userId,
             bio: profile.bio,
             location: profile.location,
             portfolioUrl: profile.portfolioUrl,
-            status: profile.status,
+            status: profile.status as InstructorProfileStatus,
             createdAt: profile.createdAt,
             updatedAt: profile.updatedAt,
             offerings: profile.offerings.map(InstructorMapper.toOfferingEntity),

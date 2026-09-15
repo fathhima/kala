@@ -1,4 +1,4 @@
-import type { OfferingStatus } from '@prisma/client';
+import { OfferingStatus } from "../enums/instructor.enum";
 
 export const REVIEWABLE_OFFERING_STATUSES = ['APPROVED', 'REJECTED', 'CHANGES_REQUESTED',] as const;
 

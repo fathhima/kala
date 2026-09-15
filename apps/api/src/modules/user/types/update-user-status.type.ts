@@ -1,0 +1,1 @@
+export type UpdateUserStatusInput = { isActive: boolean };

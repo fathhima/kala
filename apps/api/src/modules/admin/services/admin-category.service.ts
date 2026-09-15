@@ -1,18 +1,19 @@
-import { BadRequestException, ConflictException, Inject, Injectable, Logger, NotFoundException, } from '@nestjs/common';
-import { StorageService } from '@/shared/storage/storage.service';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { CATEGORY_REPOSITORY, type ICategoryRepository } from '@/modules/category/repositories/interfaces/category.interface';
-import { CategoryQueryDto } from '@/modules/category/dto/request/category-query.dto';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
 import { SubcategoryEntity } from '@/modules/category/entities/subcategory.entity';
-import { CreateCategoryDto } from '@/modules/category/dto/request/create-category.dto';
-import { UpdateCategoryDto } from '@/modules/category/dto/request/update-category.dto';
-import { CreateSubcategoryDto } from '@/modules/category/dto/request/create-subcategory.dto';
-import { UpdateSubcategoryDto } from '@/modules/category/dto/request/update-subcategory.dto';
-import { ConfirmCategoryImageUploadDto } from '@/modules/category/dto/request/confirm-category-image-upload.dto';
-import { CATEGORY_IMAGE_MIME_TYPES, RequestCategoryImageUploadDto } from '@/modules/category/dto/request/create-category-image-upload.dto';
 import { IAdminCategoryService } from './interfaces/admin-category.service.interface';
+import { type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
+import { CategoryListParams } from '@/modules/category/types/category-list-params.type';
+import { CreateCategoryInput } from '@/modules/category/types/create-category-input.type';
+import { UpdateCategoryInput } from '@/modules/category/types/update-category-input.type';
+import { CreateSubcategoryInput } from '@/modules/category/types/create-subcategory-input.type';
+import { UpdateSubcategoryInput } from '@/modules/category/types/update-subcategory-input.type';
+import { ConfirmCategoryImageUploadInput, RequestCategoryImageUploadInput } from '@/modules/category/types/request-category-image-upload.input';
+import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
+import { CATEGORY_IMAGE_MIME_TYPES } from '@/modules/category/constants/image-mime-types';
 
 @Injectable()
 export class AdminCategoryService implements IAdminCategoryService {
@@ -20,20 +21,15 @@ export class AdminCategoryService implements IAdminCategoryService {
     constructor(
         @Inject(CATEGORY_REPOSITORY)
         private readonly _categoryRepository: ICategoryRepository,
-        private readonly _storageService: StorageService
+        private readonly _storageService: IStorageService
     ) { }
 
-    async findManyForAdmin(query: CategoryQueryDto): Promise<IPaginatedResult<CategoryEntity>> {
+    async findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>> {
         return this._categoryRepository.findManyForAdmin({
-            page: query.page ?? 1,
-            limit: query.limit ?? 10,
-            search: query.search,
-            isActive:
-                query.isActive === 'true'
-                    ? true
-                    : query.isActive === 'false'
-                        ? false
-                        : undefined,
+            page: params.page ?? 1,
+            limit: params.limit ?? 10,
+            search: params.search,
+            isActive: params.isActive === 'true' ? true : params.isActive === 'false' ? false : undefined,
         })
     }
 
@@ -47,8 +43,8 @@ export class AdminCategoryService implements IAdminCategoryService {
         return this._categoryRepository.findSubcategories(categoryId);
     }
 
-    async createCategory(dto: CreateCategoryDto,): Promise<CategoryEntity> {
-        const slug = this._slugify(dto.slug ?? dto.name);
+    async createCategory(input: CreateCategoryInput): Promise<CategoryEntity> {
+        const slug = this._slugify(input.slug ?? input.name);
 
         const existingCategory = await this._categoryRepository.findBySlug(slug);
 
@@ -57,17 +53,17 @@ export class AdminCategoryService implements IAdminCategoryService {
         }
 
         return this._categoryRepository.createCategory({
-            name: dto.name,
+            name: input.name,
             slug,
-            description: dto.description,
-            sortOrder: dto.sortOrder ?? 0,
+            description: input.description,
+            sortOrder: input.sortOrder ?? 0,
         });
     }
 
-    async updateCategory(categoryId: string, dto: UpdateCategoryDto,): Promise<CategoryEntity> {
+    async updateCategory(categoryId: string, input: UpdateCategoryInput): Promise<CategoryEntity> {
         await this._getCategoryOrThrow(categoryId);
 
-        const slug = dto.slug ? this._slugify(dto.slug) : undefined;
+        const slug = input.slug ? this._slugify(input.slug) : undefined;
 
         if (slug) {
             const existingCategory = await this._categoryRepository.findBySlug(slug);
@@ -78,18 +74,18 @@ export class AdminCategoryService implements IAdminCategoryService {
         }
 
         return this._categoryRepository.updateCategory(categoryId, {
-            name: dto.name,
+            name: input.name,
             slug,
-            description: dto.description,
-            isActive: dto.isActive,
-            sortOrder: dto.sortOrder,
+            description: input.description,
+            isActive: input.isActive,
+            sortOrder: input.sortOrder,
         });
     }
 
-    async createSubcategory(categoryId: string, dto: CreateSubcategoryDto,): Promise<SubcategoryEntity> {
+    async createSubcategory(categoryId: string, input: CreateSubcategoryInput): Promise<SubcategoryEntity> {
         await this._getCategoryOrThrow(categoryId);
 
-        const slug = this._slugify(dto.slug ?? dto.name);
+        const slug = this._slugify(input.slug ?? input.name);
 
         const existingSubcategory = await this._categoryRepository.findSubcategoryBySlug(
             categoryId,
@@ -102,14 +98,14 @@ export class AdminCategoryService implements IAdminCategoryService {
 
         return this._categoryRepository.createSubcategory({
             categoryId,
-            name: dto.name,
+            name: input.name,
             slug,
-            description: dto.description,
-            sortOrder: dto.sortOrder ?? 0,
+            description: input.description,
+            sortOrder: input.sortOrder ?? 0,
         });
     }
 
-    async updateSubcategory(categoryId: string, subcategoryId: string, dto: UpdateSubcategoryDto,): Promise<SubcategoryEntity> {
+    async updateSubcategory(categoryId: string, subcategoryId: string, input: UpdateSubcategoryInput): Promise<SubcategoryEntity> {
         const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
@@ -119,7 +115,7 @@ export class AdminCategoryService implements IAdminCategoryService {
             throw new NotFoundException('Subcategory not found');
         }
 
-        const slug = dto.slug ? this._slugify(dto.slug) : undefined;
+        const slug = input.slug ? this._slugify(input.slug) : undefined;
 
         if (slug) {
             const existingSubcategory = await this._categoryRepository.findSubcategoryBySlug(
@@ -133,37 +129,37 @@ export class AdminCategoryService implements IAdminCategoryService {
         }
 
         return this._categoryRepository.updateSubcategory(subcategoryId, {
-            name: dto.name,
+            name: input.name,
             slug,
-            description: dto.description,
-            isActive: dto.isActive,
-            sortOrder: dto.sortOrder,
+            description: input.description,
+            isActive: input.isActive,
+            sortOrder: input.sortOrder,
         });
     }
 
-    async createCategoryImageUploadUrl(categoryId: string, dto: RequestCategoryImageUploadDto,) {
+    async createCategoryImageUploadUrl(categoryId: string, input: RequestCategoryImageUploadInput): Promise<PresignedUpload> {
         await this._getCategoryOrThrow(categoryId);
 
-        const extension = this._imageExtension(dto.mimeType);
+        const extension = this._imageExtension(input.mimeType);
         const storageKey = `categories/${categoryId}/images/${randomUUID()}.${extension}`;
 
         return this._storageService.createUploadUrl({
             key: storageKey,
-            contentType: dto.mimeType,
+            contentType: input.mimeType,
             expiresInSeconds: 300,
         });
     }
 
-    async confirmCategoryImageUpload(categoryId: string, dto: ConfirmCategoryImageUploadDto,): Promise<CategoryEntity> {
+    async confirmCategoryImageUpload(categoryId: string, input: ConfirmCategoryImageUploadInput): Promise<CategoryEntity> {
         const category = await this._getCategoryOrThrow(categoryId);
         const expectedPrefix = `categories/${categoryId}/images/`;
 
-        if (!dto.storageKey.startsWith(expectedPrefix)) {
+        if (!input.storageKey.startsWith(expectedPrefix)) {
             throw new BadRequestException('Invalid category image key');
         }
 
         const object = await this._storageService.getObjectMetadata(
-            dto.storageKey,
+            input.storageKey,
         );
 
         if (!object) {
@@ -179,11 +175,11 @@ export class AdminCategoryService implements IAdminCategoryService {
         }
 
         const updatedCategory = await this._categoryRepository.updateCategory(categoryId, {
-            imageStorageKey: dto.storageKey,
+            imageStorageKey: input.storageKey,
             imageUrl: null,
         });
 
-        if (category.imageStorageKey && category.imageStorageKey !== dto.storageKey) {
+        if (category.imageStorageKey && category.imageStorageKey !== input.storageKey) {
             await this._deleteOldImage(category.imageStorageKey);
         }
 
@@ -226,7 +222,7 @@ export class AdminCategoryService implements IAdminCategoryService {
         return updatedCategory;
     }
 
-    async createSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, dto: RequestCategoryImageUploadDto,) {
+    async createSubcategoryImageUploadUrl(categoryId: string, subcategoryId: string, input: RequestCategoryImageUploadInput): Promise<PresignedUpload> {
         const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
@@ -236,17 +232,17 @@ export class AdminCategoryService implements IAdminCategoryService {
             throw new NotFoundException('Subcategory not found');
         }
 
-        const extension = this._imageExtension(dto.mimeType);
+        const extension = this._imageExtension(input.mimeType);
         const storageKey = `subcategories/${subcategoryId}/images/${randomUUID()}.${extension}`;
 
         return this._storageService.createUploadUrl({
             key: storageKey,
-            contentType: dto.mimeType,
+            contentType: input.mimeType,
             expiresInSeconds: 300,
         });
     }
 
-    async confirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, dto: ConfirmCategoryImageUploadDto,): Promise<SubcategoryEntity> {
+    async confirmSubcategoryImageUpload(categoryId: string, subcategoryId: string, input: ConfirmCategoryImageUploadInput): Promise<SubcategoryEntity> {
         const subcategory = await this._categoryRepository.findSubcategoryById(
             categoryId,
             subcategoryId,
@@ -258,12 +254,12 @@ export class AdminCategoryService implements IAdminCategoryService {
 
         const expectedPrefix = `subcategories/${subcategoryId}/images/`;
 
-        if (!dto.storageKey.startsWith(expectedPrefix)) {
+        if (!input.storageKey.startsWith(expectedPrefix)) {
             throw new BadRequestException('Invalid subcategory image key');
         }
 
         const object = await this._storageService.getObjectMetadata(
-            dto.storageKey,
+            input.storageKey,
         );
 
         if (!object) {
@@ -281,12 +277,12 @@ export class AdminCategoryService implements IAdminCategoryService {
         const updatedSubcategory = await this._categoryRepository.updateSubcategory(
             subcategoryId,
             {
-                imageStorageKey: dto.storageKey,
+                imageStorageKey: input.storageKey,
                 imageUrl: null,
             },
         );
 
-        if (subcategory.imageStorageKey && subcategory.imageStorageKey !== dto.storageKey) {
+        if (subcategory.imageStorageKey && subcategory.imageStorageKey !== input.storageKey) {
             await this._deleteOldImage(subcategory.imageStorageKey);
         }
 

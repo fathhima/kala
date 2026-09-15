@@ -28,11 +28,14 @@ export class UserController {
     @ApiOperation({ summary: 'Update the current user profile' })
     @ApiOkResponse({ type: MeResponseDto })
     async updateMe(@UserId() userId: string, @Body() dto: UpdateUserProfileDto,): Promise<MeResponseDto> {
-        const user = await this._userService.updateMyProfile(userId, dto)
+        const user = await this._userService.updateMyProfile(userId, {
+            name: dto.name,
+            imageUrl: dto.imageUrl
+        })
 
         return MeResponseDto.fromResult({
             message: 'Profile updated successfully',
-            user,
+            user
         })
     }
 }

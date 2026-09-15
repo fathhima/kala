@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsInt, Max, Min } from 'class-validator';
-
-export const CATEGORY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp',] as const;
+import { CATEGORY_IMAGE_MIME_TYPES } from '../../constants/image-mime-types';
 
 export class RequestCategoryImageUploadDto {
     @ApiProperty({

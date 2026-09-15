@@ -1,10 +1,10 @@
-import { Role } from "@prisma/client"
+import { UserRole } from "@/shared/enums/role.enum"
 
 export type TokenType = 'access' | 'refresh'
 
 export type AccessTokenPayload = {
     sub: string,
-    roles: Role[],
+    roles: UserRole[],
     type: 'access'
 }
 

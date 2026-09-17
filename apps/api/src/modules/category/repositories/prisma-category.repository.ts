@@ -8,9 +8,10 @@ import { CreateCategoryInput } from '../types/create-category-input.type';
 import { CreateSubcategoryInput } from '../types/create-subcategory-input.type';
 import { UpdateCategoryInput } from '../types/update-category-input.type';
 import { UpdateSubcategoryInput } from '../types/update-subcategory-input.type';
-import { ICategoryRepository } from './interfaces/category.interface';
 import { CategoryListParams } from '../types/category-list-params.type';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
+import { ICategoryRepository } from './interfaces/category.interface';
+import { IAdminCategoryRepository } from './interfaces/admin-category.interface';
 
 const categoryWithSubcategories = {
     subcategories: {
@@ -19,7 +20,7 @@ const categoryWithSubcategories = {
 } satisfies Prisma.CategoryInclude;
 
 @Injectable()
-export class PrismaCategoryRepository implements ICategoryRepository {
+export class PrismaCategoryRepository implements ICategoryRepository, IAdminCategoryRepository {
     constructor(private readonly _prisma: PrismaService) { }
 
     async findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>> {
@@ -165,9 +166,12 @@ export class PrismaCategoryRepository implements ICategoryRepository {
             : null;
     }
 
-    async createSubcategory(input: CreateSubcategoryInput,): Promise<SubcategoryEntity> {
+    async createSubcategory(categoryId: string, input: CreateSubcategoryInput,): Promise<SubcategoryEntity> {
         const subcategory = await this._prisma.subcategory.create({
-            data: input,
+            data: {
+                categoryId,
+                ...input
+            },
         });
 
         return CategoryMapper.toSubcategoryEntity(subcategory);

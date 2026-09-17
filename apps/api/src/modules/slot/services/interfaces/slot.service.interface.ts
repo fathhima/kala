@@ -1,6 +1,6 @@
 import { InstructorSlotAvailabilityEntity, SlotEntity, SlotExceptionEntity, SlotRuleEntity } from '../../entities/slot.entity';
 import { SlotAvailabilityQueryInput } from '../../types/slot-availability-query.type';
-import { CreateSlotRuleInput, UpdateSlotRuleInput } from '../../types/slot.type';
+import { CreateSlotExceptionCommand, CreateSlotRuleInput, UpdateSlotRuleInput } from '../../types/slot.type';
 
 export const SLOT_SERVICE = Symbol('SLOT_SERVICE');
 
@@ -9,7 +9,7 @@ export interface ISlotService {
 
   createRule(userId: string, input: Omit<CreateSlotRuleInput, 'profileId'>): Promise<SlotRuleEntity>;
 
-  updateRule(userId: string, ruleId: string, input: UpdateSlotRuleInput & { title?: string | null; effectiveUntil?: Date | null }): Promise<SlotRuleEntity>;
+  updateRule(userId: string, ruleId: string, input: UpdateSlotRuleInput): Promise<SlotRuleEntity>;
 
   disableRule(userId: string, ruleId: string): Promise<void>;
 
@@ -18,12 +18,3 @@ export interface ISlotService {
   getPublicAvailability(profileId: string, query: SlotAvailabilityQueryInput): Promise<SlotEntity[]>;
 }
 
-export type CreateSlotExceptionCommand = {
-  type: import('../../enums/slot.enum').AvailabilityExceptionType;
-  offeringId?: string;
-  title?: string;
-  startTime: string;
-  endTime: string;
-  timezone?: string;
-  slotDurationMinutes?: number;
-};

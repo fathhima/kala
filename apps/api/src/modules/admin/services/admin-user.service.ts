@@ -1,8 +1,6 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from "@nestjs/common";
 import { USER_REPOSITORY, type IUserRepository, } from "@/modules/user/repositories/interfaces/user.interface";
 import { REFRESH_SESSION_REPOSITORY, type IRefreshSessionRepository, } from "@/modules/auth/repositories/interfaces/refresh-session.interface";
-import { UserStatusFilter, } from "@/modules/user/dto/request/user-query.dto";
-import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-status.request.dto";
 import { UserEntity } from "@/modules/user/entities/user.entity";
 import { UserRole } from "@/shared/enums/role.enum";
 import { IPaginatedResult } from "@/shared/types";
@@ -10,6 +8,7 @@ import { ADMIN_USER_REPOSITORY, type IAdminUserRepository } from "../../user/rep
 import { IAdminUserService } from "./interfaces/admin-user.service.interface";
 import { AdminUserListParams } from "@/modules/user/types/admin-user-list-params.type";
 import { UpdateUserStatusInput } from "@/modules/user/types/update-user-status.type";
+import { AUTH_SERVICE, type IAuthService } from "@/modules/auth/services/interfaces/auth.service.interface";
 
 @Injectable()
 export class AdminUserService implements IAdminUserService {
@@ -20,24 +19,17 @@ export class AdminUserService implements IAdminUserService {
         @Inject(ADMIN_USER_REPOSITORY)
         private readonly _adminUserRepository: IAdminUserRepository,
 
-        @Inject(REFRESH_SESSION_REPOSITORY)
-        private readonly _refreshSessionRepository: IRefreshSessionRepository,
+        @Inject(AUTH_SERVICE)
+        private readonly _authService: IAuthService,
     ) { }
 
     async getUsers(query: AdminUserListParams,): Promise<IPaginatedResult<UserEntity>> {
-        const isActive =
-            query.status === UserStatusFilter.ACTIVE
-                ? true
-                : query.status === UserStatusFilter.BLOCKED
-                    ? false
-                    : undefined;
-
         return this._adminUserRepository.findManyForAdmin({
             page: query.page ?? 1,
             limit: query.limit ?? 10,
             search: query.search,
             role: query.role,
-            isActive,
+            isActive: query.isActive,
         });
     }
 
@@ -71,7 +63,7 @@ export class AdminUserService implements IAdminUserService {
         const updatedUser = targetUser.isActive === input.isActive ? targetUser : await this._adminUserRepository.updateStatus(targetUserId, input.isActive,);
 
         if (!updatedUser.isActive) {
-            await this._refreshSessionRepository.revokeAllForUser(updatedUser.id,);
+            await this._authService.logoutAll(updatedUser.id,);
         }
 
         return updatedUser;

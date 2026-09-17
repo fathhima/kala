@@ -11,20 +11,6 @@ import { SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';
 export class PrismaSlotRepository implements ISlotRepository {
     constructor(private readonly _prisma: PrismaService) { }
 
-    findApprovedProfileByUserId(userId: string) {
-        return this._prisma.instructorProfile.findFirst({
-            where: { userId, status: InstructorProfileStatus.APPROVED },
-            select: { id: true },
-        });
-    }
-
-    findApprovedOfferingForProfile(profileId: string, offeringId: string) {
-        return this._prisma.instructorOffering.findFirst({
-            where: { id: offeringId, profileId, status: OfferingStatus.APPROVED },
-            select: { id: true },
-        });
-    }
-
     async createRule(data: CreateSlotRuleInput): Promise<SlotRuleEntity> {
         const rule = await this._prisma.availabilityRule.create({
             data: {
@@ -51,6 +37,7 @@ export class PrismaSlotRepository implements ISlotRepository {
                 endMinute: data.endMinute,
                 slotDurationMinutes: data.slotDurationMinutes,
                 effectiveUntil: data.effectiveUntil ?? null,
+                status: data.status
             }
         });
         return SlotMapper.toRuleEntity(rule);

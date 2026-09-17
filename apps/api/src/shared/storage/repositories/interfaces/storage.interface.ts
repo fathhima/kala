@@ -9,8 +9,11 @@ export const STORAGE_SERVICE = Symbol('STORAGE_SERVICE');
 
 export interface IObjectStorageProvider {
   createUploadUrl(input: CreateUploadUrlInput): Promise<PresignedUpload>;
+
   createDownloadUrl(input: CreateDownloadUrlInput): Promise<PresignedDownload>;
+
   getObjectMetadata(key: string): Promise<StoredObjectMetadata | null>;
+  
   deleteObject(key: string): Promise<void>;
 }
 

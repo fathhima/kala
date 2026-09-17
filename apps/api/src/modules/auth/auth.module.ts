@@ -41,6 +41,6 @@ import { GOOGLE_OAUTH_PROVIDER } from "./services/interfaces/google-oauth.interf
             useClass: RedisPasswordResetRepository
         }
     ],
-    exports: [AUTH_SERVICE, REFRESH_SESSION_REPOSITORY, PENDING_SIGNUP_REPOSITORY, PASSWORD_RESET_REPOSITORY]
+    exports: [AUTH_SERVICE]
 })
 export class AuthModule { }

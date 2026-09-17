@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiConflictResponse, ApiForbiddenResponse, ApiNo
 import { Roles } from "@/shared/decorators/roles.decorator";
 import { UserId } from "@/shared/decorators/user-id.decorator";
 import { UserRole } from "@/shared/enums/role.enum";
-import { UserQueryDto } from "@/modules/user/dto/request/user-query.dto";
+import { UserQueryDto, UserStatusFilter } from "@/modules/user/dto/request/user-query.dto";
 import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-status.request.dto";
 import { AdminUserResponseDto } from "@/modules/user/dto/response/admin-user-detail-response.dto";
 import { AdminUserStatusResponseDto } from "@/modules/user/dto/response/admin-user-status-response.dto";
@@ -26,7 +26,18 @@ export class AdminUserController {
     @ApiUnauthorizedResponse({ description: "Access token is missing or invalid", })
     @ApiForbiddenResponse({ description: "Only admins can access this resource", })
     async getAdminUsers(@Query() query: UserQueryDto,): Promise<PaginatedAdminUsersResponseDto> {
-        const result = await this._adminUserService.getUsers(query);
+        const result = await this._adminUserService.getUsers({
+            page: query.page ?? 1,
+            limit: query.limit ?? 10,
+            search: query.search,
+            role: query.role,
+            isActive:
+                query.status === UserStatusFilter.ACTIVE
+                    ? true
+                    : query.status === UserStatusFilter.BLOCKED
+                        ? false
+                        : undefined,
+        });
 
         return PaginatedAdminUsersResponseDto.fromResult({
             message: "Users fetched successfully",
@@ -60,8 +71,12 @@ export class AdminUserController {
     async updateAdminUserStatus(@Param("id") id: string, @Body() dto: UpdateUserStatusDto, @UserId() adminUserId: string,)
         : Promise<AdminUserStatusResponseDto> {
 
-        const user = await this._adminUserService.updateUserStatus(id, dto, adminUserId,);
-
+        const user = await this._adminUserService.updateUserStatus(
+            id,
+            { isActive: dto.isActive },
+            adminUserId,
+        );
+        
         return AdminUserStatusResponseDto.fromResult({
             message: user.isActive
                 ? "User unblocked successfully"

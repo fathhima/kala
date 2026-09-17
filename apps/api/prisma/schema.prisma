@@ -233,6 +233,7 @@ model AvailabilitySlot {
   rule      AvailabilityRule?      @relation(fields: [ruleId], references: [id], onDelete: SetNull)
   exception AvailabilityException? @relation(fields: [exceptionId], references: [id], onDelete: SetNull)
 
+  @@unique([offeringId, startTime, endTime])
   @@index([offeringId, status, startTime])
   @@index([profileId, status, startTime])
   @@index([ruleId, status, startTime])

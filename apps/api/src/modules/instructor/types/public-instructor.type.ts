@@ -6,6 +6,12 @@ export type PublicInstructorMedia = {
     storageKey: string;
 };
 
+export type PublicInstructorMediaView = {
+    id: string;
+    type: MediaType;
+    viewUrl: string;
+};
+
 export type PublicInstructorOffering = {
     id: string;
     title: string | null;
@@ -37,11 +43,8 @@ export type PublicInstructorProfile = {
 };
 
 export type PublicInstructorResponse = Omit<PublicInstructorProfile, 'offerings'> & {
-    offerings: (Omit<PublicInstructorOffering, 'media'> & {
-        media: {
-            id: string;
-            type: MediaType;
-            viewUrl: string;
-        }[];
-    })[];
+    offerings: Array<Omit<PublicInstructorOffering, 'media'> & {
+        media: PublicInstructorMediaView[];
+    }
+    >;
 };

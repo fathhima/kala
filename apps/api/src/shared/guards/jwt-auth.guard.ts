@@ -4,13 +4,14 @@ import { Request } from "express";
 import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
 import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import { IS_PUBLIC_KEY } from "@/shared/decorators/public.decorator";
-import { JwtService } from "@/shared/jwt/jwt.service";
+import { JWT_SERVICE, type IJwtService } from "../jwt/repositories/interfaces/token.interface";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly _reflector: Reflector,
-    private readonly _jwtService: JwtService,
+    @Inject(JWT_SERVICE)
+    private readonly _jwtService: IJwtService,
     @Inject(USER_REPOSITORY)
     private readonly _userRepository: IUserRepository,
   ) { }

@@ -1,12 +1,12 @@
 import { ConfigService } from '@nestjs/config';
 import { setupApp } from '@/shared/config/app.config';
-import { LoggerService } from './shared/logger/logger.service';
+import { LOGGER_SERVICE } from './shared/logger/repositories/interfaces/logger.interface';
 
 async function bootstrap() {
   const app = await setupApp();
 
   const configService = app.get(ConfigService);
-  const loggerService = app.get(LoggerService);
+  const loggerService = app.get(LOGGER_SERVICE);
   const port = configService.getOrThrow<number>('PORT');
 
   await app.listen(port);

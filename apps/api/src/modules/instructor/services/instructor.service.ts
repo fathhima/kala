@@ -4,10 +4,10 @@ import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfil
 import { isEditableOfferingStatus } from '../types/offering-status.type';
 import { IInstructorService } from './interfaces/instructor.service.interface';
 import { type IInstructorRepository, INSTRUCTOR_REPOSITORY } from '../repositories/interfaces/instructor.interface';
-import { PublicInstructorProfile } from '../types/public-instructor.type';
+import { PublicInstructorProfile, PublicInstructorResponse } from '../types/public-instructor.type';
 import { OFFERING_MEDIA_MIME_TYPES } from '../constants/media-mime-types';
 import { MediaType } from '../enums/instructor.enum';
-import { type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
+import { STORAGE_SERVICE, type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
 import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
@@ -17,10 +17,11 @@ export class InstructorService implements IInstructorService {
     constructor(
         @Inject(INSTRUCTOR_REPOSITORY)
         private readonly _instructorRepository: IInstructorRepository,
+        @Inject(STORAGE_SERVICE)
         private readonly _storageService: IStorageService,
     ) { }
 
-    async getPublicInstructors(query: PublicInstructorQueryInput): Promise<IPaginatedResult<PublicInstructorProfile>> {
+    async getPublicInstructors(query: PublicInstructorQueryInput): Promise<IPaginatedResult<PublicInstructorResponse>> {
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
 
@@ -31,10 +32,15 @@ export class InstructorService implements IInstructorService {
             subcategoryId: query.subcategoryId,
         });
 
-        return { items: result.profiles, total: result.total, page, limit };
+        return {
+            items: await Promise.all(result.profiles.map((profile) => this._toPublicInstructor(profile))),
+            total: result.total,
+            page,
+            limit,
+        };
     }
 
-    async getPublicInstructor(profileId: string): Promise<PublicInstructorProfile> {
+    async getPublicInstructor(profileId: string): Promise<PublicInstructorResponse> {
         const profile = await this._instructorRepository.findPublicInstructor(profileId);
 
         if (!profile) {
@@ -44,13 +50,14 @@ export class InstructorService implements IInstructorService {
         return this._toPublicInstructor(profile);
     }
 
-    private async _toPublicInstructor(profile: PublicInstructorProfile,): Promise<PublicInstructorDto> {
+    private async _toPublicInstructor(profile: PublicInstructorProfile,): Promise<PublicInstructorResponse> {
         return {
             id: profile.id,
             name: profile.name,
             imageUrl: profile.imageUrl,
             bio: profile.bio,
             location: profile.location,
+            portfolioUrl: profile.portfolioUrl,
             offerings: await Promise.all(
                 profile.offerings.map(async (offering) => ({
                     id: offering.id,

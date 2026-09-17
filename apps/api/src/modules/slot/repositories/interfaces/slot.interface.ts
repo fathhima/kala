@@ -4,10 +4,6 @@ import { CreateSlotExceptionInput, CreateSlotInput, CreateSlotRuleInput, UpdateS
 export const SLOT_REPOSITORY = Symbol('SLOT_REPOSITORY');
 
 export interface ISlotRepository {
-    findApprovedProfileByUserId(userId: string): Promise<{ id: string } | null>;
-
-    findApprovedOfferingForProfile(profileId: string, offeringId: string): Promise<{ id: string } | null>;
-
     createRule(data: CreateSlotRuleInput): Promise<SlotRuleEntity>;
 
     updateRule(ruleId: string, data: UpdateSlotRuleInput): Promise<SlotRuleEntity>;

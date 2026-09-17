@@ -1,17 +1,20 @@
 import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
 import { type ISlotRepository, SLOT_REPOSITORY } from '../repositories/interfaces/slot.interface';
-import { CreateSlotExceptionCommand, ISlotService } from './interfaces/slot.service.interface';
+import { ISlotService } from './interfaces/slot.service.interface';
 import { SlotRuleEntity } from '../entities/slot.entity';
 import { AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
-import { CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
+import { CreateSlotExceptionCommand, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
 import { SlotAvailabilityQueryInput } from '../types/slot-availability-query.type';
 import { ConfigService } from '@nestjs/config';
+import { type IInstructorQuery, INSTRUCTOR_QUERY } from '@/modules/instructor/repositories/interfaces/instructor-query.interface';
 
 @Injectable()
 export class SlotService implements ISlotService {
     constructor(
         @Inject(SLOT_REPOSITORY)
         private readonly _slotRepository: ISlotRepository,
+        @Inject(INSTRUCTOR_QUERY)
+        private readonly _instructorQuery: IInstructorQuery,
         private readonly _configService: ConfigService
     ) { }
 
@@ -165,7 +168,7 @@ export class SlotService implements ISlotService {
     }
 
     private async _getApprovedProfile(userId: string) {
-        const profile = await this._slotRepository.findApprovedProfileByUserId(userId);
+        const profile = await this._instructorQuery.findApprovedProfileIdByUserId(userId);
 
         if (!profile) {
             throw new ForbiddenException('Only approved instructors can manage availability');
@@ -175,10 +178,7 @@ export class SlotService implements ISlotService {
     }
 
     private async _assertApprovedOffering(profileId: string, offeringId: string) {
-        const offering = await this._slotRepository.findApprovedOfferingForProfile(
-            profileId,
-            offeringId,
-        );
+        const offering = await this._instructorQuery.findApprovedOfferingId(profileId, offeringId);
 
         if (!offering) {
             throw new NotFoundException('Approved offering not found');
@@ -206,9 +206,7 @@ export class SlotService implements ISlotService {
         generationEnd.setDate(generationEnd.getDate() + this._configService.getOrThrow<number>('SLOT_GENERATION_DAYS'));
 
         const effectiveFrom = new Date(rule.effectiveFrom);
-        const effectiveUntil = rule.effectiveUntil
-            ? new Date(rule.effectiveUntil)
-            : generationEnd;
+        const effectiveUntil = rule.effectiveUntil ? new Date(rule.effectiveUntil) : generationEnd;
 
         const end = effectiveUntil < generationEnd ? effectiveUntil : generationEnd;
         const cursor = new Date(effectiveFrom > new Date() ? effectiveFrom : new Date());
@@ -218,8 +216,8 @@ export class SlotService implements ISlotService {
         while (cursor <= end) {
             if (cursor.getDay() === rule.weekday) {
                 const dateKey = cursor.toISOString().slice(0, 10);
-                const dayStart = this._dateFromMinute(dateKey, rule.startMinute);
-                const dayEnd = this._dateFromMinute(dateKey, rule.endMinute);
+                const dayStart = this._dateFromMinute(dateKey, rule.startMinute, rule.timezone);
+                const dayEnd = this._dateFromMinute(dateKey, rule.endMinute, rule.timezone);
 
                 slots.push(
                     ...this._splitRangeIntoSlots({
@@ -282,11 +280,31 @@ export class SlotService implements ISlotService {
         return slots;
     }
 
-    private _dateFromMinute(date: string, minute: number) {
+    private _dateFromMinute(date: string, minute: number, timezone: string) {
         const hours = Math.floor(minute / 60).toString().padStart(2, '0');
         const mins = (minute % 60).toString().padStart(2, '0');
 
-        return new Date(`${date}T${hours}:${mins}:00+05:30`);
+        const localDateString = `${date}T${hours}:${mins}:00`;
+
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            timeZoneName: 'shortOffset',
+        });
+
+        // This will extract the offset string like "GMT+5:30" or "GMT-4"
+
+        const parts = formatter.formatToParts(new Date(localDateString + 'Z'));
+        const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT';
+
+        // Convert "GMT+5:30" to "+05:30" format for the ISO string
+
+        let offset = offsetPart.replace('GMT', '');
+        if (!offset) offset = 'Z';
+        else if (!offset.includes(':')) offset += ':00'; // Handle exact hour offsets like "+5" -> "+5:00"
+
+        if (offset.length === 5 && offset !== 'Z') offset = offset.slice(0, 1) + '0' + offset.slice(1); // "+5:30" -> "+05:30"
+
+        return new Date(`${localDateString}${offset}`)
     }
 
     private _rangeFromQuery(query: SlotAvailabilityQueryInput) {

@@ -1,8 +1,8 @@
 import { MediaType } from '../enums/instructor.enum';
 
 export type PublicInstructorQueryInput = {
-    page?: number;
-    limit?: number;
+    page: number;
+    limit: number;
     search?: string;
     subcategoryId?: string;
 };
@@ -23,6 +23,15 @@ export type CreateOfferingInput = {
 };
 
 export type UpdateOfferingInput = Partial<CreateOfferingInput>;
+
+export type CreateOfferingMediaInput = {
+    offeringId: string;
+    type: MediaType;
+    storageKey: string;
+    mimeType: string;
+    sizeBytes: number;
+    sortOrder: number
+}
 
 export type RequestOfferingMediaUploadInput = {
     type: MediaType;

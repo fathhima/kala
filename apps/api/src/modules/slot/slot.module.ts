@@ -4,8 +4,10 @@ import { SLOT_REPOSITORY } from './repositories/interfaces/slot.interface';
 import { SlotController } from './slot.controller';
 import { SLOT_SERVICE } from './services/interfaces/slot.service.interface';
 import { SlotService } from './services/slot.service';
+import { InstructorModule } from '../instructor/instructor.module';
 
 @Module({
+  imports:[InstructorModule],
   controllers: [SlotController],
   providers: [
     {

@@ -6,6 +6,7 @@ import { PrismaInstructorRepository } from './repositories/prisma-instructor.rep
 import { INSTRUCTOR_REPOSITORY } from './repositories/interfaces/instructor.interface';
 import { INSTRUCTOR_SERVICE } from './services/interfaces/instructor.service.interface';
 import { ADMIN_INSTRUCTOR_REPOSITORY } from './repositories/interfaces/admin-instructor.interface';
+import { INSTRUCTOR_QUERY } from './repositories/interfaces/instructor-query.interface';
 
 @Module({
     imports: [StorageModule],
@@ -24,10 +25,15 @@ import { ADMIN_INSTRUCTOR_REPOSITORY } from './repositories/interfaces/admin-ins
             provide: ADMIN_INSTRUCTOR_REPOSITORY,
             useExisting: PrismaInstructorRepository,
         },
+        {
+            provide: INSTRUCTOR_QUERY,
+            useExisting: PrismaInstructorRepository, 
+        }
     ],
     exports: [
         INSTRUCTOR_REPOSITORY,
         ADMIN_INSTRUCTOR_REPOSITORY,
+        INSTRUCTOR_QUERY
     ],
 })
 export class InstructorModule { }

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { PaginationMetaDto } from '@/shared/dto/response/pagination-meta.dto'
+import { IPaginatedResult } from '@/shared/types/paginated-result'
 
 export class PublicSubcategoryDto {
   @ApiProperty()
@@ -11,7 +12,7 @@ export class PublicSubcategoryDto {
   @ApiProperty()
   slug!: string
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description?: string | null
 }
 
@@ -25,7 +26,7 @@ export class PublicCategoryDto {
   @ApiProperty()
   slug!: string
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description?: string | null
 
   @ApiProperty({ type: [PublicSubcategoryDto] })
@@ -83,10 +84,10 @@ export class PublicOfferingDto {
   @ApiProperty()
   id!: string
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   title?: string | null
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description?: string | null
 
   @ApiProperty()
@@ -95,7 +96,7 @@ export class PublicOfferingDto {
   @ApiProperty()
   currency!: string
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   experienceYears?: number | null
 
   @ApiProperty({ type: PublicOfferingSubcategoryDto })
@@ -112,14 +113,17 @@ export class PublicInstructorDto {
   @ApiProperty()
   name!: string
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   imageUrl?: string | null
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   bio?: string | null
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   location?: string | null
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  portfolioUrl?: string | null
 
   @ApiProperty({ type: [PublicOfferingDto] })
   offerings!: PublicOfferingDto[]
@@ -153,4 +157,15 @@ export class PublicInstructorListResponseDto {
 
   @ApiProperty({ type: PublicInstructorListDataDto })
   data!: PublicInstructorListDataDto
+
+  static fromResult(message: string, result: IPaginatedResult<any>): PublicInstructorListResponseDto {
+    const dto = new PublicInstructorListResponseDto();
+    dto.success = true;
+    dto.message = message;
+    dto.data = {
+      items: result.items,
+      meta: PaginationMetaDto.create(result.page, result.limit, result.total),
+    };
+    return dto;
+  }
 }

@@ -9,14 +9,14 @@ import { AppModule } from '@/app.module';
 import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
 import helmet from 'helmet';
-import { LoggerService } from '../logger/logger.service';
+import { LOGGER_SERVICE } from '../logger/repositories/interfaces/logger.interface';
 
 export async function setupApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
 
-  app.useLogger(app.get(LoggerService))
+  app.useLogger(app.get(LOGGER_SERVICE))
 
   const configService = app.get(ConfigService);
 

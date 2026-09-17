@@ -1,16 +1,36 @@
 import { UserEntity } from "@/modules/user/entities/user.entity";
 import { UserRole } from "@/shared/enums/role.enum";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class MeUserDto {
+  @ApiProperty()
   id!: string;
+
+  @ApiProperty()
   name!: string;
+
+  @ApiProperty()
   email!: string;
+
+  @ApiProperty({ enum: UserRole, isArray: true })
   roles!: UserRole[];
+
+  @ApiPropertyOptional({ type: String, nullable: true })
   imageUrl?: string | null;
+
+  @ApiProperty()
   isVerified!: boolean;
+
+  @ApiProperty()
   isActive!: boolean;
+
+  @ApiProperty()
   hasPassword!: boolean;
+
+  @ApiProperty()
   createdAt!: Date;
+
+  @ApiProperty()
   updatedAt!: Date;
 
   static fromEntity(user: UserEntity): MeUserDto {
@@ -32,8 +52,13 @@ export class MeUserDto {
 }
 
 export class MeResponseDto {
+  @ApiProperty()
   success!: boolean;
+
+  @ApiProperty()
   message!: string;
+
+  @ApiProperty({ type: MeUserDto })
   data!: MeUserDto;
 
   static fromResult(params: {

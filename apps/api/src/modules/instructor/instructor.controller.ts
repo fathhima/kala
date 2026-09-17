@@ -32,11 +32,7 @@ export class InstructorController {
             subcategoryId: query.subcategoryId,
         });
 
-        return {
-            success: true,
-            message: 'Instructors fetched successfully',
-            data,
-        };
+        return PublicInstructorListResponseDto.fromResult('Instructors fetched successfully', data);
     }
 
     @Get('onboarding')

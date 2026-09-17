@@ -1,23 +1,23 @@
-import { InstructorApplicationQueryDto } from "@/modules/instructor/dto/request/instructor-application-query.dto";
 import { InstructorApplicationEntity } from "@/modules/instructor/entities/instructor-profile.entity";
 import { ReviewableOfferingStatus } from "@/modules/instructor/types/offering-status.type";
-import { StorageService } from "@/shared/storage/storage.service";
 import { IPaginatedResult } from "@/shared/types";
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { type IAdminInstructorService } from "./interfaces/admin-instructor.service.interface";
 import { ADMIN_INSTRUCTOR_REPOSITORY, type IAdminInstructorRepository } from "@/modules/instructor/repositories/interfaces/admin-instructor.interface";
+import { type IStorageService, STORAGE_SERVICE } from "@/shared/storage/repositories/interfaces/storage.interface";
+import { AdminInstructorListParams } from "@/modules/instructor/types/admin-instructor-list-params.type";
 
 
 @Injectable()
 export class AdminInstructorService implements IAdminInstructorService {
-
     constructor(
         @Inject(ADMIN_INSTRUCTOR_REPOSITORY)
         private readonly _instructorReviewRepository: IAdminInstructorRepository,
-        private readonly _storageService: StorageService
+        @Inject(STORAGE_SERVICE)
+        private readonly _storageService: IStorageService
     ) { }
 
-    async getApplicationsForAdmin(query: InstructorApplicationQueryDto,): Promise<IPaginatedResult<InstructorApplicationEntity>> {
+    async getApplicationsForAdmin(query: AdminInstructorListParams,): Promise<IPaginatedResult<InstructorApplicationEntity>> {
         return this._instructorReviewRepository.findApplicationsForAdmin({
             page: query.page,
             limit: query.limit,

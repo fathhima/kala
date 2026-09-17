@@ -23,7 +23,12 @@ export class AdminInstructorController {
     @ApiUnauthorizedResponse({ description: 'Access token is missing or invalid', })
     @ApiForbiddenResponse({ description: 'Only admins can access instructor applications', })
     async findAll(@Query() query: InstructorApplicationQueryDto,): Promise<PaginatedInstructorApplicationsResponseDto> {
-        const result = await this._adminInstructorService.getApplicationsForAdmin(query);
+        const result = await this._adminInstructorService.getApplicationsForAdmin({
+            page: query.page ?? 1,
+            limit: query.limit ?? 10,
+            status: query.status,
+            search: query.search,
+        });
 
         return PaginatedInstructorApplicationsResponseDto.fromResult('Instructor applications fetched successfully', result,);
     }

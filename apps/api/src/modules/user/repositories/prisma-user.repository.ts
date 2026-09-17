@@ -9,6 +9,7 @@ import { IPaginatedResult } from "@/shared/types";
 import { IAdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.interface";
 import { UserRole } from "@/shared/enums/role.enum";
 import { Prisma } from "@prisma/client";
+import { UniqueConstraintError } from "@/shared/errors/unique-constraint.error";
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository, IAdminUserRepository {
@@ -32,7 +33,7 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
     const user = await this._prisma.user.findUnique({
       where: { email }
     })
-    return user ? UserMapper.toEntity(user) : null
+    return user ? UserMapper.toAuthEntity(user) : null
   }
 
   async create(data: CreateUserInput) {
@@ -53,12 +54,10 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
       return UserMapper.toEntity(user)
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new DuplicateEmailError(); // domain error in user/errors or shared/errors
+        throw new UniqueConstraintError((error.meta?.target as string[] | undefined) ?? ['email'],);
       }
       throw error;
     }
-
-
   }
 
   async updateProfile(userId: string, data: { name?: string; imageUrl?: string | null }): Promise<UserEntity> {

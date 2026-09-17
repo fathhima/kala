@@ -25,10 +25,17 @@ export function InstructorProfile() {
   const [date, setDate] = useState('')
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
 
+  const from = date ? `${date}T00:00:00.000Z` : '';
+
+  const nextDay = date ? new Date(new Date(date).getTime() + 86400000) : null;
+  const to = nextDay ? `${nextDay.toISOString().split('T')[0]}T00:00:00.000Z` : '';
+
+
   const availability = usePublicAvailabilityQuery({
     profileId: profileId ?? '',
     offeringId: bookingOfferingId ?? '',
-    date,
+    from,
+    to,
     enabled: Boolean(profileId && bookingOfferingId && date),
   })
 

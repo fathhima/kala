@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost:4000*
 |[**userControllerUpdateMe**](#usercontrollerupdateme) | **PATCH** /api/users/me | Update the current user profile|
 
 # **userControllerGetMe**
-> object userControllerGetMe()
+> MeResponseDto userControllerGetMe()
 
 
 ### Example
@@ -31,7 +31,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**object**
+**MeResponseDto**
 
 ### Authorization
 
@@ -51,7 +51,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **userControllerUpdateMe**
-> object userControllerUpdateMe(updateUserProfileDto)
+> MeResponseDto userControllerUpdateMe(updateUserProfileDto)
 
 
 ### Example
@@ -82,7 +82,7 @@ const { status, data } = await apiInstance.userControllerUpdateMe(
 
 ### Return type
 
-**object**
+**MeResponseDto**
 
 ### Authorization
 

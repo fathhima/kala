@@ -64,7 +64,8 @@ export const useCreateSlotExceptionMutation = () => {
 export const usePublicAvailabilityQuery = (params: {
   profileId: string
   offeringId: string
-  date: string
+  from: string
+  to: string
   enabled?: boolean
 }) =>
   useQuery({
@@ -72,18 +73,21 @@ export const usePublicAvailabilityQuery = (params: {
       'public-availability',
       params.profileId,
       params.offeringId,
-      params.date,
+      params.from,
+      params.to
     ],
     queryFn: () =>
       getPublicAvailability({
         profileId: params.profileId,
         offeringId: params.offeringId,
-        date: params.date,
+        from: params.from,
+        to: params.to
       }),
     enabled: Boolean(
       params.enabled !== false &&
       params.profileId &&
       params.offeringId &&
-      params.date,
+      params.from &&
+      params.to,
     ),
   })

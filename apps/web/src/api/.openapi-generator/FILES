@@ -44,7 +44,11 @@ docs/InstructorOfferingResponseDto.md
 docs/InstructorOfferingSubcategoryDto.md
 docs/InstructorProfileDto.md
 docs/InstructorProfileResponseDto.md
+docs/InstructorSlotAvailabilityDto.md
+docs/InstructorSlotAvailabilityResponseDto.md
 docs/LoginDto.md
+docs/MeResponseDto.md
+docs/MeUserDto.md
 docs/MessageResponseDto.md
 docs/OfferingMediaDto.md
 docs/OfferingMediaResponseDto.md
@@ -67,6 +71,7 @@ docs/PublicMediaDto.md
 docs/PublicOfferingCategoryDto.md
 docs/PublicOfferingDto.md
 docs/PublicOfferingSubcategoryDto.md
+docs/PublicSlotListResponseDto.md
 docs/RefreshDataDto.md
 docs/RefreshResponseDto.md
 docs/RegisterDto.md
@@ -81,7 +86,12 @@ docs/ResetPasswordDto.md
 docs/ReviewOfferingDto.md
 docs/Role.md
 docs/SafeUserDto.md
-docs/SlotApi.md
+docs/SlotDto.md
+docs/SlotExceptionDto.md
+docs/SlotExceptionResponseDto.md
+docs/SlotRuleDto.md
+docs/SlotRuleResponseDto.md
+docs/SlotsApi.md
 docs/SubcategoryDto.md
 docs/SubcategoryImageUploadDataDto.md
 docs/SubcategoryImageUploadResponseDto.md

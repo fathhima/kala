@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { forgotPassword, getMe, googleSignin, loginUser, logoutAllSessions, logoutCurrentSession, registerUser, resendOtp, resetPassword, validateResetToken, verifyOtp } from "./api"
 
 export const useRegisterMutation = () => {
@@ -49,11 +49,21 @@ export const useGoogleSigninMutation = () => {
     });
 };
 
-export const useLogoutMutation = () =>
-    useMutation({ mutationFn: logoutCurrentSession });
+export const useLogoutMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: logoutCurrentSession,
+        onSuccess: () => queryClient.clear()
+    });
+};
+export const useLogoutAllMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: logoutAllSessions,
+        onSuccess: () => queryClient.clear()
+    });
+};
 
-export const useLogoutAllMutation = () =>
-    useMutation({ mutationFn: logoutAllSessions });
 
 export const useMeQuery = (enabled: boolean) => {
     return useQuery({

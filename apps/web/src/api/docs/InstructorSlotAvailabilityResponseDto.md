@@ -1,4 +1,4 @@
-# MeResponseDto
+# InstructorSlotAvailabilityResponseDto
 
 
 ## Properties
@@ -7,14 +7,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **success** | **boolean** |  | [default to undefined]
 **message** | **string** |  | [default to undefined]
-**data** | [**MeUserDto**](MeUserDto.md) |  | [default to undefined]
+**data** | [**InstructorSlotAvailabilityDto**](InstructorSlotAvailabilityDto.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { MeResponseDto } from './api';
+import { InstructorSlotAvailabilityResponseDto } from './api';
 
-const instance: MeResponseDto = {
+const instance: InstructorSlotAvailabilityResponseDto = {
     success,
     message,
     data,

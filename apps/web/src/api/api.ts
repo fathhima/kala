@@ -317,6 +317,16 @@ export interface InstructorProfileResponseDto {
     'message': string;
     'data'?: InstructorProfileDto | null;
 }
+export interface InstructorSlotAvailabilityDto {
+    'rules': Array<SlotRuleDto>;
+    'exceptions': Array<SlotExceptionDto>;
+    'slots': Array<SlotDto>;
+}
+export interface InstructorSlotAvailabilityResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': InstructorSlotAvailabilityDto;
+}
 export interface LoginDto {
     /**
      * The email address of the user trying to log in
@@ -327,6 +337,32 @@ export interface LoginDto {
      */
     'password': string;
 }
+export interface MeResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': MeUserDto;
+}
+export interface MeUserDto {
+    'id': string;
+    'name': string;
+    'email': string;
+    'roles': Array<MeUserDtoRolesEnum>;
+    'imageUrl'?: string | null;
+    'isVerified': boolean;
+    'isActive': boolean;
+    'hasPassword': boolean;
+    'createdAt': string;
+    'updatedAt': string;
+}
+
+export const MeUserDtoRolesEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR',
+    Admin: 'ADMIN'
+} as const;
+
+export type MeUserDtoRolesEnum = typeof MeUserDtoRolesEnum[keyof typeof MeUserDtoRolesEnum];
+
 export interface MessageResponseDto {
     'success': boolean;
     'message': string;
@@ -413,9 +449,10 @@ export interface PublicInstructorDto {
      */
     'id': string;
     'name': string;
-    'imageUrl'?: object | null;
-    'bio'?: object | null;
-    'location'?: object | null;
+    'imageUrl'?: string | null;
+    'bio'?: string | null;
+    'location'?: string | null;
+    'portfolioUrl'?: string | null;
     'offerings': Array<PublicOfferingDto>;
 }
 export interface PublicInstructorListDataDto {
@@ -452,11 +489,11 @@ export interface PublicOfferingCategoryDto {
 }
 export interface PublicOfferingDto {
     'id': string;
-    'title'?: object | null;
-    'description'?: object | null;
+    'title'?: string | null;
+    'description'?: string | null;
     'hourlyRate': string;
     'currency': string;
-    'experienceYears'?: object | null;
+    'experienceYears'?: number | null;
     'subcategory': PublicOfferingSubcategoryDto;
     'media': Array<PublicMediaDto>;
 }
@@ -465,6 +502,11 @@ export interface PublicOfferingSubcategoryDto {
     'name': string;
     'slug': string;
     'category': PublicOfferingCategoryDto;
+}
+export interface PublicSlotListResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': Array<SlotDto>;
 }
 export interface RefreshDataDto {
     'accessToken': string;
@@ -595,6 +637,54 @@ export interface SafeUserDto {
     'isVerified': boolean;
     'isActive': boolean;
     'hasPassword': boolean;
+}
+export interface SlotDto {
+    'id': string;
+    'profileId': string;
+    'offeringId': string;
+    'ruleId'?: string | null;
+    'exceptionId'?: string | null;
+    'title'?: string | null;
+    'startTime': string;
+    'endTime': string;
+    'timezone': string;
+    'status': string;
+}
+export interface SlotExceptionDto {
+    'id': string;
+    'profileId': string;
+    'offeringId'?: string | null;
+    'type': string;
+    'title'?: string | null;
+    'startTime': string;
+    'endTime': string;
+    'timezone': string;
+    'slotDurationMinutes'?: number | null;
+    'status': string;
+}
+export interface SlotExceptionResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': SlotExceptionDto;
+}
+export interface SlotRuleDto {
+    'id': string;
+    'profileId': string;
+    'offeringId': string;
+    'title'?: string | null;
+    'weekday': number;
+    'startMinute': number;
+    'endMinute': number;
+    'timezone': string;
+    'slotDurationMinutes': number;
+    'effectiveFrom': string;
+    'effectiveUntil'?: string | null;
+    'status': string;
+}
+export interface SlotRuleResponseDto {
+    'success': boolean;
+    'message': string;
+    'data': SlotRuleDto;
 }
 export interface SubcategoryDto {
     'id': string;
@@ -4390,12 +4480,13 @@ export class InstructorApi extends BaseAPI {
 
 
 /**
- * SlotApi - axios parameter creator
+ * SlotsApi - axios parameter creator
  */
-export const SlotApiAxiosParamCreator = function (configuration?: Configuration) {
+export const SlotsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Create an availability exception
          * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4416,6 +4507,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarQueryParameter = {} as any;
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4429,6 +4521,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary Create a new availability rule
          * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4449,6 +4542,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarQueryParameter = {} as any;
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4462,6 +4556,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary Disable an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4482,6 +4577,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4494,6 +4590,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary Get public slot availability for an instructor
          * @param {string} profileId 
          * @param {string} [offeringId] 
          * @param {string} [from] 
@@ -4529,6 +4626,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
                 localVarQueryParameter['to'] = to;
             }
 
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4541,6 +4639,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary Get instructor availability rules and exceptions
          * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
@@ -4572,6 +4671,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
                 localVarQueryParameter['to'] = to;
             }
 
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4584,6 +4684,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary Update an existing availability rule
          * @param {string} ruleId 
          * @param {UpdateSlotRuleDto} updateSlotRuleDto 
          * @param {*} [options] Override http request option.
@@ -4608,6 +4709,7 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarQueryParameter = {} as any;
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -4623,49 +4725,53 @@ export const SlotApiAxiosParamCreator = function (configuration?: Configuration)
 };
 
 /**
- * SlotApi - functional programming interface
+ * SlotsApi - functional programming interface
  */
-export const SlotApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = SlotApiAxiosParamCreator(configuration)
+export const SlotsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = SlotsApiAxiosParamCreator(configuration)
     return {
         /**
          * 
+         * @summary Create an availability exception
          * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SlotExceptionResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerCreateException(createSlotExceptionDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerCreateException']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerCreateException']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
+         * @summary Create a new availability rule
          * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SlotRuleResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerCreateRule(createSlotRuleDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerCreateRule']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerCreateRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
+         * @summary Disable an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerDisableRule(ruleId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerDisableRule']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerDisableRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
+         * @summary Get public slot availability for an instructor
          * @param {string} profileId 
          * @param {string} [offeringId] 
          * @param {string} [from] 
@@ -4673,77 +4779,83 @@ export const SlotApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicSlotListResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerGetPublicAvailability(profileId, offeringId, from, to, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerGetPublicAvailability']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerGetPublicAvailability']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
+         * @summary Get instructor availability rules and exceptions
          * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorSlotAvailabilityResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerListInstructorAvailability(offeringId, from, to, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerListInstructorAvailability']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerListInstructorAvailability']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
+         * @summary Update an existing availability rule
          * @param {string} ruleId 
          * @param {UpdateSlotRuleDto} updateSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SlotRuleResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerUpdateRule(ruleId, updateSlotRuleDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotApi.slotControllerUpdateRule']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerUpdateRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
 
 /**
- * SlotApi - factory interface
+ * SlotsApi - factory interface
  */
-export const SlotApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = SlotApiFp(configuration)
+export const SlotsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = SlotsApiFp(configuration)
     return {
         /**
          * 
+         * @summary Create an availability exception
          * @param {CreateSlotExceptionDto} createSlotExceptionDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig): AxiosPromise<SlotExceptionResponseDto> {
             return localVarFp.slotControllerCreateException(createSlotExceptionDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Create a new availability rule
          * @param {CreateSlotRuleDto} createSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<SlotRuleResponseDto> {
             return localVarFp.slotControllerCreateRule(createSlotRuleDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Disable an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
             return localVarFp.slotControllerDisableRule(ruleId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Get public slot availability for an instructor
          * @param {string} profileId 
          * @param {string} [offeringId] 
          * @param {string} [from] 
@@ -4751,69 +4863,75 @@ export const SlotApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<PublicSlotListResponseDto> {
             return localVarFp.slotControllerGetPublicAvailability(profileId, offeringId, from, to, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Get instructor availability rules and exceptions
          * @param {string} [offeringId] 
          * @param {string} [from] 
          * @param {string} [to] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig): AxiosPromise<InstructorSlotAvailabilityResponseDto> {
             return localVarFp.slotControllerListInstructorAvailability(offeringId, from, to, options).then((request) => request(axios, basePath));
         },
         /**
          * 
+         * @summary Update an existing availability rule
          * @param {string} ruleId 
          * @param {UpdateSlotRuleDto} updateSlotRuleDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig): AxiosPromise<SlotRuleResponseDto> {
             return localVarFp.slotControllerUpdateRule(ruleId, updateSlotRuleDto, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * SlotApi - object-oriented interface
+ * SlotsApi - object-oriented interface
  */
-export class SlotApi extends BaseAPI {
+export class SlotsApi extends BaseAPI {
     /**
      * 
+     * @summary Create an availability exception
      * @param {CreateSlotExceptionDto} createSlotExceptionDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
     public slotControllerCreateException(createSlotExceptionDto: CreateSlotExceptionDto, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerCreateException(createSlotExceptionDto, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerCreateException(createSlotExceptionDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
+     * @summary Create a new availability rule
      * @param {CreateSlotRuleDto} createSlotRuleDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
     public slotControllerCreateRule(createSlotRuleDto: CreateSlotRuleDto, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerCreateRule(createSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerCreateRule(createSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
+     * @summary Disable an availability rule
      * @param {string} ruleId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
     public slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerDisableRule(ruleId, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerDisableRule(ruleId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
+     * @summary Get public slot availability for an instructor
      * @param {string} profileId 
      * @param {string} [offeringId] 
      * @param {string} [from] 
@@ -4822,11 +4940,12 @@ export class SlotApi extends BaseAPI {
      * @throws {RequiredError}
      */
     public slotControllerGetPublicAvailability(profileId: string, offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerGetPublicAvailability(profileId, offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerGetPublicAvailability(profileId, offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
+     * @summary Get instructor availability rules and exceptions
      * @param {string} [offeringId] 
      * @param {string} [from] 
      * @param {string} [to] 
@@ -4834,18 +4953,19 @@ export class SlotApi extends BaseAPI {
      * @throws {RequiredError}
      */
     public slotControllerListInstructorAvailability(offeringId?: string, from?: string, to?: string, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerListInstructorAvailability(offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerListInstructorAvailability(offeringId, from, to, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
+     * @summary Update an existing availability rule
      * @param {string} ruleId 
      * @param {UpdateSlotRuleDto} updateSlotRuleDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
     public slotControllerUpdateRule(ruleId: string, updateSlotRuleDto: UpdateSlotRuleDto, options?: RawAxiosRequestConfig) {
-        return SlotApiFp(this.configuration).slotControllerUpdateRule(ruleId, updateSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
+        return SlotsApiFp(this.configuration).slotControllerUpdateRule(ruleId, updateSlotRuleDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4936,7 +5056,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async userControllerGetMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async userControllerGetMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MeResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerGetMe(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerGetMe']?.[localVarOperationServerIndex]?.url;
@@ -4949,7 +5069,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async userControllerUpdateMe(updateUserProfileDto: UpdateUserProfileDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async userControllerUpdateMe(updateUserProfileDto: UpdateUserProfileDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MeResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.userControllerUpdateMe(updateUserProfileDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UsersApi.userControllerUpdateMe']?.[localVarOperationServerIndex]?.url;
@@ -4970,7 +5090,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        userControllerGetMe(options?: RawAxiosRequestConfig): AxiosPromise<object> {
+        userControllerGetMe(options?: RawAxiosRequestConfig): AxiosPromise<MeResponseDto> {
             return localVarFp.userControllerGetMe(options).then((request) => request(axios, basePath));
         },
         /**
@@ -4980,7 +5100,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        userControllerUpdateMe(updateUserProfileDto: UpdateUserProfileDto, options?: RawAxiosRequestConfig): AxiosPromise<object> {
+        userControllerUpdateMe(updateUserProfileDto: UpdateUserProfileDto, options?: RawAxiosRequestConfig): AxiosPromise<MeResponseDto> {
             return localVarFp.userControllerUpdateMe(updateUserProfileDto, options).then((request) => request(axios, basePath));
         },
     };

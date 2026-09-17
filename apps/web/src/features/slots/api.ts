@@ -163,14 +163,16 @@ export async function createSlotException(
 export async function getPublicAvailability(params: {
   profileId: string
   offeringId: string
-  date: string
+  from: string
+  to: string
 }): Promise<Slot[]> {
   const response = await apiClient.get<{ success: boolean; data: Slot[] }>(
     `/api/public/instructors/${params.profileId}/availability`,
     {
       params: {
         offeringId: params.offeringId,
-        date: params.date,
+        from: params.from,
+        to: params.to
       },
     },
   )

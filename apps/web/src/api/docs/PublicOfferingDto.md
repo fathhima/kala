@@ -6,11 +6,11 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [default to undefined]
-**title** | **object** |  | [optional] [default to undefined]
-**description** | **object** |  | [optional] [default to undefined]
+**title** | **string** |  | [optional] [default to undefined]
+**description** | **string** |  | [optional] [default to undefined]
 **hourlyRate** | **string** |  | [default to undefined]
 **currency** | **string** |  | [default to undefined]
-**experienceYears** | **object** |  | [optional] [default to undefined]
+**experienceYears** | **number** |  | [optional] [default to undefined]
 **subcategory** | [**PublicOfferingSubcategoryDto**](PublicOfferingSubcategoryDto.md) |  | [default to undefined]
 **media** | [**Array&lt;PublicMediaDto&gt;**](PublicMediaDto.md) |  | [default to undefined]
 

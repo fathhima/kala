@@ -7,9 +7,10 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** | Instructor profile ID | [default to undefined]
 **name** | **string** |  | [default to undefined]
-**imageUrl** | **object** |  | [optional] [default to undefined]
-**bio** | **object** |  | [optional] [default to undefined]
-**location** | **object** |  | [optional] [default to undefined]
+**imageUrl** | **string** |  | [optional] [default to undefined]
+**bio** | **string** |  | [optional] [default to undefined]
+**location** | **string** |  | [optional] [default to undefined]
+**portfolioUrl** | **string** |  | [optional] [default to undefined]
 **offerings** | [**Array&lt;PublicOfferingDto&gt;**](PublicOfferingDto.md) |  | [default to undefined]
 
 ## Example
@@ -23,6 +24,7 @@ const instance: PublicInstructorDto = {
     imageUrl,
     bio,
     location,
+    portfolioUrl,
     offerings,
 };
 ```

@@ -1,12 +1,12 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
-import { isEditableOfferingStatus } from '../types/offering-status.type';
+import { isEditableOfferingStatus, isSubmittableOfferingStatus } from '../types/offering-status.type';
 import { IInstructorService } from './interfaces/instructor.service.interface';
 import { type IInstructorRepository, INSTRUCTOR_REPOSITORY } from '../repositories/interfaces/instructor.interface';
 import { PublicInstructorProfile, PublicInstructorResponse } from '../types/public-instructor.type';
 import { OFFERING_MEDIA_MIME_TYPES } from '../constants/media-mime-types';
-import { MediaType } from '../enums/instructor.enum';
+import { InstructorApplicationStatus, MediaType } from '../enums/instructor.enum';
 import { STORAGE_SERVICE, type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
 import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
@@ -258,41 +258,23 @@ export class InstructorService implements IInstructorService {
         const workspace = await this._instructorRepository.findWorkspaceByUserId(userId);
 
         if (!workspace) {
-            throw new BadRequestException('Create your instructor profile first');
+            throw new NotFoundException('Instructor profile not found');
         }
 
-        if (!workspace.portfolioUrl?.trim()) {
-            throw new BadRequestException('Add your portfolio URL before submitting');
+        const offeringIds = workspace.offerings
+            .filter((offering) => isSubmittableOfferingStatus(offering.status))
+            .map((offering) => offering.id);
+
+        if (!offeringIds.length) {
+            throw new BadRequestException('No offerings available to submit');
         }
 
-        if (workspace.latestApplication?.status === 'PENDING') {
-            throw new ConflictException('You already have an application under review');
+        const openReview = workspace.latestApplication;
+        if (openReview?.status === InstructorApplicationStatus.PENDING) {
+            throw new ConflictException('An application is already pending review');
         }
 
-        const offerings = workspace.offerings.filter((offering) =>
-            isEditableOfferingStatus(offering.status),
-        );
-
-        if (!offerings.length) {
-            throw new BadRequestException('Add at least one draft, rejected, or changes-requested offering',);
-        }
-
-        for (const offering of offerings) {
-            await this._assertSubcategoryIsSelectable(offering.subcategoryId);
-
-            if (!offering.title?.trim() || !offering.description?.trim()) {
-                throw new BadRequestException('Every submitted offering needs a title and description',);
-            }
-
-            if (!offering.media.some((media) => media.type === MediaType.IMAGE)) {
-                throw new BadRequestException('Every submitted offering needs at least one portfolio image',);
-            }
-        }
-
-        return this._instructorRepository.submitApplication(
-            workspace.id,
-            offerings.map((offering) => offering.id),
-        );
+        return this._instructorRepository.submitApplication(workspace.id, offeringIds);
     }
 
     private async _assertNoPendingApplication(userId: string): Promise<void> {

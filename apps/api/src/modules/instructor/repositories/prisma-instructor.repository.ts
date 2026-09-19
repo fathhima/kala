@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { IPaginatedResult } from '@/shared/types';
 import { InstructorMapper } from '../mappers/instructor.mapper';
@@ -308,48 +308,78 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
 
     async submitApplication(profileId: string, offeringIds: string[],): Promise<InstructorApplicationEntity> {
         return this._prisma.$transaction(async (tx) => {
-            const application = await tx.instructorApplication.create({
-                data: { profileId },
+            const offerings = await tx.instructorOffering.findMany({
+                where: { id: { in: offeringIds }, profileId },
             });
 
-            const updated = await tx.instructorOffering.updateMany({
-                where: {
-                    id: { in: offeringIds },
-                    profileId,
-                    status: {
-                        in: [
-                            OfferingStatus.DRAFT,
-                            OfferingStatus.REJECTED,
-                            OfferingStatus.CHANGES_REQUESTED,
-                        ],
+            if (offerings.length !== offeringIds.length) {
+                throw new BadRequestException('One or more offerings were not found');
+            }
+
+            const reusableApplicationIds = [
+                ...new Set(
+                    offerings
+                        .map((offering) => offering.applicationId)
+                        .filter((id): id is string => Boolean(id)),
+                ),
+            ];
+
+            const reusable = reusableApplicationIds.length
+                ? await tx.instructorApplication.findFirst({
+                    where: {
+                        id: { in: reusableApplicationIds },
+                        profileId,
+                        status: {
+                            in: [
+                                InstructorApplicationStatus.CHANGES_REQUESTED,
+                                InstructorApplicationStatus.REJECTED,
+                            ],
+                        },
                     },
-                },
+                    orderBy: { submittedAt: 'desc' },
+                })
+                : null;
+
+            const application = reusable
+                ? await tx.instructorApplication.update({
+                    where: { id: reusable.id },
+                    data: {
+                        status: InstructorApplicationStatus.PENDING,
+                        submittedAt: new Date(),
+                        reviewedAt: null,
+                        reviewedBy: null,
+                    },
+                })
+                : await tx.instructorApplication.create({
+                    data: {
+                        profileId,
+                        status: InstructorApplicationStatus.PENDING,
+                        submittedAt: new Date(),
+                    },
+                });
+
+            await tx.instructorOffering.updateMany({
+                where: { id: { in: offeringIds }, profileId },
                 data: {
                     applicationId: application.id,
                     status: OfferingStatus.PENDING,
-                    reviewNote: null,
-                    reviewedAt: null,
-                    reviewedBy: null,
                 },
             });
 
-            if (updated.count !== offeringIds.length) {
-                throw new ConflictException(
-                    'One or more offerings are no longer available for submission',
-                );
-            }
-
-            await tx.instructorProfile.update({
-                where: { id: profileId },
-                data: { status: InstructorProfileStatus.PENDING },
-            });
-
-            const result = await tx.instructorApplication.findUniqueOrThrow({
+            const hydrated = await tx.instructorApplication.findUniqueOrThrow({
                 where: { id: application.id },
-                include: applicationInclude,
+                include: {
+                    offerings: {
+                        include: {
+                            subcategory: { include: { category: true } },
+                            media: true,
+                        },
+                    },
+                    profile: { include: { user: true } },
+                },
             });
 
-            return InstructorMapper.toApplicationEntity(result);
+            return InstructorMapper.toApplicationEntity(hydrated);
         });
     }
 

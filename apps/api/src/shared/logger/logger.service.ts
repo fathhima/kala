@@ -1,9 +1,9 @@
 import { Inject, Injectable, LoggerService as NestLoggerService, } from '@nestjs/common';
-import { LOGGER_PROVIDER, type ILoggerProvider, } from './repositories/interfaces/logger.interface';
+import { ILoggerService, LOGGER_PROVIDER, type ILoggerProvider, } from './repositories/interfaces/logger.interface';
 import { LogMeta } from './types/log-meta.type';
 
 @Injectable()
-export class LoggerService implements NestLoggerService {
+export class LoggerService implements NestLoggerService, ILoggerService {
     constructor(
         @Inject(LOGGER_PROVIDER)
         private readonly _loggerProvider: ILoggerProvider,

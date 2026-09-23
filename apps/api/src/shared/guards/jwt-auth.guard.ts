@@ -1,10 +1,9 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException, } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Request } from "express";
-import { USER_REPOSITORY } from "@/modules/user/repositories/interfaces/user.interface";
-import type { IUserRepository } from "@/modules/user/repositories/interfaces/user.interface";
 import { IS_PUBLIC_KEY } from "@/shared/decorators/public.decorator";
 import { JWT_SERVICE, type IJwtService } from "../jwt/repositories/interfaces/token.interface";
+import { type IUserIdentityService, USER_IDENTITY_SERVICE } from "@/modules/user/services/interfaces/user-identity.service.interface";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -12,8 +11,8 @@ export class JwtAuthGuard implements CanActivate {
     private readonly _reflector: Reflector,
     @Inject(JWT_SERVICE)
     private readonly _jwtService: IJwtService,
-    @Inject(USER_REPOSITORY)
-    private readonly _userRepository: IUserRepository,
+    @Inject(USER_IDENTITY_SERVICE)
+    private readonly _userIdentityService: IUserIdentityService,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,7 +35,7 @@ export class JwtAuthGuard implements CanActivate {
     try {
       const payload = await this._jwtService.verifyAccessToken(token);
 
-      const user = await this._userRepository.findById(payload.sub);
+      const user = await this._userIdentityService.findById(payload.sub);
 
       if (!user) {
         throw new UnauthorizedException("User not found");

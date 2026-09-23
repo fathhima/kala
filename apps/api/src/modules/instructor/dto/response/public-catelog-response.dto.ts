@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { PaginationMetaDto } from '@/shared/dto/response/pagination-meta.dto'
 import { IPaginatedResult } from '@/shared/types/paginated-result'
+import { PublicInstructorResponse } from '../../types/public-instructor.type'
 
 export class PublicSubcategoryDto {
   @ApiProperty()
@@ -127,6 +128,45 @@ export class PublicInstructorDto {
 
   @ApiProperty({ type: [PublicOfferingDto] })
   offerings!: PublicOfferingDto[]
+
+  static fromEntity(entity: PublicInstructorResponse): PublicInstructorDto {
+    const dto = new PublicInstructorDto();
+    dto.id = entity.id;
+    dto.name = entity.name;
+    dto.imageUrl = entity.imageUrl;
+    dto.bio = entity.bio;
+    dto.location = entity.location;
+    dto.portfolioUrl = entity.portfolioUrl;
+    dto.offerings = entity.offerings.map(o => {
+      const offering = new PublicOfferingDto();
+      offering.id = o.id;
+      offering.title = o.title;
+      offering.description = o.description;
+      offering.hourlyRate = o.hourlyRate;
+      offering.currency = o.currency;
+      offering.experienceYears = o.experienceYears;
+      const subcat = new PublicOfferingSubcategoryDto();
+      subcat.id = o.subcategory.id;
+      subcat.name = o.subcategory.name;
+      subcat.slug = o.subcategory.slug;
+      const cat = new PublicOfferingCategoryDto();
+      cat.id = o.subcategory.category.id;
+      cat.name = o.subcategory.category.name;
+      cat.slug = o.subcategory.category.slug;
+
+      subcat.category = cat;
+      offering.subcategory = subcat;
+      offering.media = o.media.map(m => {
+        const media = new PublicMediaDto();
+        media.id = m.id;
+        media.type = m.type;
+        media.viewUrl = m.viewUrl;
+        return media;
+      });
+      return offering;
+    });
+    return dto;
+  }
 }
 
 export class PublicInstructorResponseDto {
@@ -138,6 +178,14 @@ export class PublicInstructorResponseDto {
 
   @ApiProperty({ type: PublicInstructorDto })
   data!: PublicInstructorDto
+
+  static fromEntity(message: string,entity: PublicInstructorResponse,): PublicInstructorResponseDto {
+    const dto = new PublicInstructorResponseDto();
+    dto.success = true;
+    dto.message = message;
+    dto.data = PublicInstructorDto.fromEntity(entity);
+    return dto;
+  }
 }
 
 export class PublicInstructorListDataDto {

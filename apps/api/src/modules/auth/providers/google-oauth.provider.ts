@@ -1,16 +1,17 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { OAuth2Client } from "google-auth-library";
-import { GoogleProfile } from "../types/google-profile.type";
-import { IGoogleOAuthProvider } from "../services/interfaces/google-oauth.interface";
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
+import { GoogleProfile } from '../types/google-profile.type';
+import { IGoogleOAuthProvider } from '../services/interfaces/google-oauth.interface';
 
 @Injectable()
-export class GoogleOAuthRepository implements IGoogleOAuthProvider {
+export class GoogleOAuthProvider implements IGoogleOAuthProvider {
     private readonly _client: OAuth2Client;
     private readonly _googleClientId: string;
 
     constructor(private readonly _configService: ConfigService) {
-        this._googleClientId = this._configService.getOrThrow<string>("GOOGLE_CLIENT_ID");
+        this._googleClientId =
+            this._configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
         this._client = new OAuth2Client(this._googleClientId);
     }
 
@@ -23,21 +24,21 @@ export class GoogleOAuthRepository implements IGoogleOAuthProvider {
         const payload = ticket.getPayload();
 
         if (!payload) {
-            throw new UnauthorizedException("Invalid Google token");
+            throw new UnauthorizedException('Invalid Google token');
         }
 
         if (!payload.sub || !payload.email) {
-            throw new UnauthorizedException("Google account data is incomplete");
+            throw new UnauthorizedException('Google account data is incomplete');
         }
 
         if (!payload.email_verified) {
-            throw new UnauthorizedException('Google account email is not verified',);
+            throw new UnauthorizedException('Google account email is not verified');
         }
 
         return {
             googleId: payload.sub,
             email: payload.email,
-            name: payload.name ?? payload.email.split("@")[0],
+            name: payload.name ?? payload.email.split('@')[0],
             picture: payload.picture ?? null,
             emailVerified: true,
         };

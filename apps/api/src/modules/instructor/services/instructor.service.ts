@@ -11,6 +11,9 @@ import { STORAGE_SERVICE, type IStorageService } from '@/shared/storage/reposito
 import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
+import { type ILoggerService, LOGGER_SERVICE } from '@/shared/logger/repositories/interfaces/logger.interface';
+import { CATEGORY_SERVICE, type ICategoryService } from '@/modules/category/services/interfaces/category.service.interface';
+import { type IInstructorQuery, INSTRUCTOR_QUERY } from '../repositories/interfaces/instructor-query.interface';
 
 @Injectable()
 export class InstructorService implements IInstructorService {
@@ -19,6 +22,12 @@ export class InstructorService implements IInstructorService {
         private readonly _instructorRepository: IInstructorRepository,
         @Inject(STORAGE_SERVICE)
         private readonly _storageService: IStorageService,
+        @Inject(CATEGORY_SERVICE)
+        private readonly _categoryService: ICategoryService,
+        @Inject(INSTRUCTOR_QUERY)
+        private readonly _instructorQuery: IInstructorQuery,
+        @Inject(LOGGER_SERVICE)
+        private readonly _loggerService: ILoggerService,
     ) { }
 
     async getPublicInstructors(query: PublicInstructorQueryInput): Promise<IPaginatedResult<PublicInstructorResponse>> {
@@ -150,7 +159,13 @@ export class InstructorService implements IInstructorService {
         const offering = await this._getOwnedEditableOffering(userId, offeringId);
 
         for (const media of offering.media) {
-            await this._storageService.deleteObject(media.storageKey).catch(() => undefined);
+            await this._storageService.deleteObject(media.storageKey).catch((error) => {
+                this._loggerService.error(
+                    `Failed to delete stored object: ${media.storageKey}`,
+                    error instanceof Error ? error.stack : undefined,
+                    InstructorService.name,
+                );
+            });
         }
 
         await this._instructorRepository.deleteOffering(offering.id);
@@ -277,6 +292,18 @@ export class InstructorService implements IInstructorService {
         return this._instructorRepository.submitApplication(workspace.id, offeringIds);
     }
 
+    async findApprovedProfileByUserId(userId: string) {
+        return this._instructorQuery.findApprovedProfileIdByUserId(userId);
+    }
+
+    async findApprovedOfferingForProfile(profileId: string, offeringId: string) {
+        return this._instructorQuery.findApprovedOfferingId(profileId, offeringId);
+    }
+
+    async getOfferingSnapshots(offeringIds: string[]) {
+        return this._instructorQuery.getOfferingSnapshots(offeringIds);
+    }
+
     private async _assertNoPendingApplication(userId: string): Promise<void> {
         const workspace = await this._instructorRepository.findWorkspaceByUserId(userId);
 
@@ -328,7 +355,7 @@ export class InstructorService implements IInstructorService {
     }
 
     private async _assertSubcategoryIsSelectable(subcategoryId: string) {
-        const valid = await this._instructorRepository.isSelectableSubcategory(subcategoryId);
+        const valid = await this._categoryService.isSelectableSubcategory(subcategoryId);
 
         if (!valid) {
             throw new BadRequestException('Select an active subcategory within an active category',);

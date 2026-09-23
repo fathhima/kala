@@ -52,11 +52,7 @@ export class InstructorController {
     async getInstructor(@Param('profileId') profileId: string,): Promise<PublicInstructorResponseDto> {
         const instructor = await this._instructorService.getPublicInstructor(profileId);
 
-        return {
-            success: true,
-            message: 'Instructor fetched successfully',
-            data: instructor,
-        };
+        return PublicInstructorResponseDto.fromEntity('Instructor fetched successfully', instructor);
     }
 
     @Patch('profile')
@@ -65,7 +61,7 @@ export class InstructorController {
     async saveProfile(@UserId() userId: string, @Body() dto: UpdateInstructorProfileDto,): Promise<InstructorProfileResponseDto> {
         const profile = await this._instructorService.saveProfile(userId, dto);
 
-        return InstructorProfileResponseDto.fromEntity('Instructor profile saved successfully', profile,);
+        return InstructorProfileResponseDto.fromEntity('Instructor profile saved successfully', profile);
     }
 
     @Post('offerings')

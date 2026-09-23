@@ -8,7 +8,7 @@ import { UpdateUserStatusDto } from "@/modules/user/dto/request/update-user-stat
 import { AdminUserResponseDto } from "@/modules/user/dto/response/admin-user-detail-response.dto";
 import { AdminUserStatusResponseDto } from "@/modules/user/dto/response/admin-user-status-response.dto";
 import { PaginatedAdminUsersResponseDto } from "@/modules/user/dto/response/admin-paginated-user-list.dto";
-import { ADMIN_USER_SERVICE, type IAdminUserService } from "../services/interfaces/admin-user.service.interface";
+import { ADMIN_USER_SERVICE, type IAdminUserService } from "../../user/services/interfaces/admin-user.service.interface";
 
 
 @ApiTags("Admin user management")

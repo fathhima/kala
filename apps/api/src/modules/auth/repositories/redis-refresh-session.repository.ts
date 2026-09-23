@@ -1,55 +1,47 @@
-import { Injectable } from "@nestjs/common";
-import { RedisService } from "@/shared/redis/redis.service";
+import { Inject, Injectable } from "@nestjs/common";
 import { IRefreshSessionRepository } from "./interfaces/refresh-session.interface";
 import { RefreshSessionRecord } from "../types/refresh-session.type";
+import { type IRedisService, REDIS_SERVICE } from "@/shared/redis/repositories/interfaces/key-value-store.interface";
 
 @Injectable()
 export class RedisRefreshSessionRepository implements IRefreshSessionRepository {
-    constructor(private readonly _redisService: RedisService) { }
+    constructor(@Inject(REDIS_SERVICE)
+    private readonly _redisService: IRedisService) { }
 
     async create(sessionId: string, userId: string, ttlSeconds: number,): Promise<void> {
-        const client = this._redisService.getClient();
-
         const session: RefreshSessionRecord = { userId, createdAt: new Date().toISOString(), };
 
-        await client.multi().set(this._sessionKey(sessionId), JSON.stringify(session), "EX", ttlSeconds,)
-            .sadd(this._userSessionsKey(userId), sessionId)
-            .expire(this._userSessionsKey(userId), ttlSeconds)
-            .exec();
+        await this._redisService.set(this._sessionKey(sessionId), JSON.stringify(session), ttlSeconds);
+        await this._redisService.sadd(this._userSessionsKey(userId), sessionId, ttlSeconds);
     }
 
     async findById(sessionId: string,): Promise<RefreshSessionRecord | null> {
-        const raw = await this._redisService.getClient().get(this._sessionKey(sessionId),);
+        const raw = await this._redisService.get(this._sessionKey(sessionId),);
 
         return raw ? (JSON.parse(raw) as RefreshSessionRecord) : null;
     }
 
     async revoke(sessionId: string, userId?: string): Promise<void> {
-        const session = userId ? { userId } : await this.findById(sessionId);
+        let ownerId = userId;
 
-        const transaction = this._redisService.getClient().multi().del(this._sessionKey(sessionId));
-
-        if (session?.userId) {
-            transaction.srem(this._userSessionsKey(session.userId), sessionId);
+        if (!ownerId) {
+            const session = await this.findById(sessionId);
+            ownerId = session?.userId;
         }
 
-        await transaction.exec();
+        await this._redisService.del(this._sessionKey(sessionId));
+
+        if (ownerId) {
+            await this._redisService.srem(this._userSessionsKey(ownerId), sessionId);
+        }
     }
 
     async revokeAllForUser(userId: string): Promise<void> {
-        const client = this._redisService.getClient();
-        const userSessionsKey = this._userSessionsKey(userId);
-
-        const sessionIds = await client.smembers(userSessionsKey);
-        const transaction = client.multi();
-
-        for (const sessionId of sessionIds) {
-            transaction.del(this._sessionKey(sessionId));
-        }
-
-        transaction.del(userSessionsKey);
-
-        await transaction.exec();
+        const sessionIds = await this._redisService.smembers(this._userSessionsKey(userId));
+        await this._redisService.del(
+            ...sessionIds.map((id) => this._sessionKey(id)),
+            this._userSessionsKey(userId),
+        );
     }
 
     private _sessionKey(sessionId: string): string {

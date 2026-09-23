@@ -1,22 +1,32 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import Redis from "ioredis";
+import { Inject, Injectable } from '@nestjs/common';
+import { IRedisService, KEY_VALUE_STORE, type IKeyValueStore, } from './repositories/interfaces/key-value-store.interface';
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
-  private readonly _client: Redis
+export class RedisService implements IRedisService {
+  constructor(
+    @Inject(KEY_VALUE_STORE)
+    private readonly _store: IKeyValueStore,
+  ) { }
 
-  constructor(private readonly _configService: ConfigService) {
-    const redisUri = this._configService.getOrThrow<string>('REDIS_URI')
-    this._client = new Redis(redisUri)
-  }
+  get(key: string) { return this._store.get(key); }
 
-  getClient(): Redis {
-    return this._client;
-  }
+  set(key: string, value: string, ttlSeconds: number) { return this._store.set(key, value, ttlSeconds); }
 
-  async onModuleDestroy() {
-    await this._client.quit()
-  }
+  del(...keys: string[]) { return this._store.del(...keys); }
 
+  ttl(key: string) { return this._store.ttl(key); }
+
+  getdel(key: string) { return this._store.getdel(key); }
+
+  sadd(key: string, member: string, ttlSeconds?: number) { return this._store.sadd(key, member, ttlSeconds); }
+
+  smembers(key: string) { return this._store.smembers(key); }
+
+  srem(key: string, member: string) { return this._store.srem(key, member); }
+
+  expire(key: string, ttlSeconds: number) { return this._store.expire(key, ttlSeconds); }
+
+  multiSet(ops: Array<{ key: string; value: string; ttlSeconds: number }>) { return this._store.multiSet(ops); }
+
+  multiDel(keys: string[]) { return this._store.multiDel(keys); }
 }

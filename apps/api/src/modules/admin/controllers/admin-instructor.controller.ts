@@ -6,7 +6,7 @@ import { UserRole } from '@/shared/enums/role.enum';
 import { InstructorApplicationQueryDto } from '@/modules/instructor/dto/request/instructor-application-query.dto';
 import { ReviewOfferingDto } from '@/modules/instructor/dto/request/review-offering.dto';
 import { InstructorApplicationResponseDto, PaginatedInstructorApplicationsResponseDto, PresignedDownloadResponseDto, } from '@/modules/instructor/dto/response/instructor-response.dto';
-import { ADMIN_INSTRUCTOR_SERVICE, type IAdminInstructorService } from "../services/interfaces/admin-instructor.service.interface";
+import { ADMIN_INSTRUCTOR_SERVICE, type IAdminInstructorService } from "../../instructor/services/interfaces/admin-instructor.service.interface";
 
 @ApiTags('Admin instructor management')
 @Controller('admin/instructor-applications')

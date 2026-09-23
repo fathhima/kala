@@ -22,7 +22,11 @@ export class SlotController {
     @ApiOperation({ summary: 'Get instructor availability rules and exceptions' })
     @ApiOkResponse({ type: InstructorSlotAvailabilityResponseDto })
     async listInstructorAvailability(@UserId() userId: string, @Query() query: SlotAvailabilityQueryDto) {
-        const availability = await this._slotService.getInstructorAvailability(userId, query);
+        const availability = await this._slotService.getInstructorAvailability(userId, {
+            offeringId: query.offeringId,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+        });
 
         return InstructorSlotAvailabilityResponseDto.fromEntity('Instructor availability fetched successfully', availability);
     }
@@ -97,7 +101,11 @@ export class SlotController {
     @ApiOperation({ summary: 'Get public slot availability for an instructor' })
     @ApiOkResponse({ type: PublicSlotListResponseDto })
     async getPublicAvailability(@Param('profileId') profileId: string, @Query() query: SlotAvailabilityQueryDto) {
-        const slots = await this._slotService.getPublicAvailability(profileId, query);
+        const slots = await this._slotService.getPublicAvailability(profileId, {
+            offeringId: query.offeringId,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+        });
 
         return PublicSlotListResponseDto.fromEntities('Public availability fetched successfully', slots);
     }

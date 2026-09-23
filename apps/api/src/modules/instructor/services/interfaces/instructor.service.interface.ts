@@ -4,6 +4,7 @@ import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfil
 import { PublicInstructorResponse } from '../../types/public-instructor.type';
 import { IPaginatedResult } from '@/shared/types';
 import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../../types/instructor.type';
+import { OfferingSnapshot } from '../../types/offering-snapshot.type';
 
 export const INSTRUCTOR_SERVICE = Symbol('INSTRUCTOR_SERVICE');
 
@@ -33,4 +34,10 @@ export interface IInstructorService {
     cancelApplication(userId: string, applicationId: string): Promise<void>;
 
     submitApplication(userId: string): Promise<InstructorApplicationEntity>;
+
+    findApprovedProfileByUserId(userId: string): Promise<{ id: string } | null>;
+
+    findApprovedOfferingForProfile(profileId: string, offeringId: string): Promise<{ id: string } | null>;
+    
+    getOfferingSnapshots(offeringIds: string[]): Promise<OfferingSnapshot[]>;
 }

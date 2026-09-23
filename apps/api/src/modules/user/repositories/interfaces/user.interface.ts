@@ -1,3 +1,4 @@
+import { UserRole } from "@/shared/enums/role.enum";
 import { AuthUserEntity, UserEntity } from "../../entities/user.entity";
 import { CreateUserInput } from "../../types/create-user-input.type";
 
@@ -22,4 +23,10 @@ export interface IUserRepository {
       imageUrl?: string | null;
       isVerified?: boolean;
     }): Promise<UserEntity>;
+
+  findAuthById(id: string): Promise<AuthUserEntity | null>;
+
+  assignRole(userId: string, role: UserRole): Promise<void>;
+
+
 }

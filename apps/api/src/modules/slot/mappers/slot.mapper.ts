@@ -60,16 +60,6 @@ export class SlotMapper {
             bookedAt: slot.bookedAt,
             createdAt: slot.createdAt,
             updatedAt: slot.updatedAt,
-            offering: slot.offering
-                ? {
-                    id: slot.offering.id,
-                    title: slot.offering.title,
-                    subcategory: {
-                        id: slot.offering.subcategory.id,
-                        name: slot.offering.subcategory.name,
-                    },
-                }
-                : undefined,
         };
     }
 

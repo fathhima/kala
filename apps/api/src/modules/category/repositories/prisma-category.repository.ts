@@ -11,7 +11,6 @@ import { UpdateSubcategoryInput } from '../types/update-subcategory-input.type';
 import { CategoryListParams } from '../types/category-list-params.type';
 import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { ICategoryRepository } from './interfaces/category.interface';
-import { IAdminCategoryRepository } from './interfaces/admin-category.interface';
 
 const categoryWithSubcategories = {
     subcategories: {
@@ -20,23 +19,23 @@ const categoryWithSubcategories = {
 } satisfies Prisma.CategoryInclude;
 
 @Injectable()
-export class PrismaCategoryRepository implements ICategoryRepository, IAdminCategoryRepository {
+export class PrismaCategoryRepository implements ICategoryRepository {
     constructor(private readonly _prisma: PrismaService) { }
 
-    async findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>> {
-        const skip = (params.page - 1) * params.limit
-        const where: Prisma.CategoryWhereInput = {}
+    async findManyForAdmin(params: CategoryListParams,): Promise<IPaginatedResult<CategoryEntity>> {
+        const skip = (params.page - 1) * params.limit;
+        const where: Prisma.CategoryWhereInput = {};
 
         if (params.search) {
             where.OR = [
                 { name: { contains: params.search, mode: 'insensitive' } },
                 { slug: { contains: params.search, mode: 'insensitive' } },
                 { description: { contains: params.search, mode: 'insensitive' } },
-            ]
+            ];
         }
 
         if (typeof params.isActive === 'boolean') {
-            where.isActive = params.isActive
+            where.isActive = params.isActive;
         }
 
         const [categories, total] = await this._prisma.$transaction([
@@ -48,14 +47,14 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
                 orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
             }),
             this._prisma.category.count({ where }),
-        ])
+        ]);
 
         return {
             items: categories.map(CategoryMapper.toCategoryEntity),
             total,
             page: params.page,
             limit: params.limit,
-        }
+        };
     }
 
     async findAll(): Promise<CategoryEntity[]> {
@@ -77,19 +76,13 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
                     where: {
                         isActive: true,
                     },
-                    orderBy: [
-                        { sortOrder: 'asc' },
-                        { name: 'asc' },
-                    ],
+                    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
                 },
             },
-            orderBy: [
-                { sortOrder: 'asc' },
-                { name: 'asc' },
-            ],
-        })
+            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        });
 
-        return categories.map(CategoryMapper.toCategoryEntity)
+        return categories.map(CategoryMapper.toCategoryEntity);
     }
 
     async findById(categoryId: string): Promise<CategoryEntity | null> {
@@ -110,9 +103,14 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
         return category ? CategoryMapper.toCategoryEntity(category) : null;
     }
 
-    async createCategory(input: CreateCategoryInput,): Promise<CategoryEntity> {
+    async createCategory(input: CreateCategoryInput): Promise<CategoryEntity> {
         const category = await this._prisma.category.create({
-            data: input,
+            data: {
+                name: input.name,
+                slug: input.slug,
+                description: input.description ?? null,
+                sortOrder: input.sortOrder ?? 0,
+            },
             include: categoryWithSubcategories,
         });
 
@@ -122,20 +120,38 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
     async updateCategory(categoryId: string, input: UpdateCategoryInput,): Promise<CategoryEntity> {
         const category = await this._prisma.category.update({
             where: { id: categoryId },
-            data: input,
+            data: {
+                name: input.name,
+                slug: input.slug,
+                description: input.description,
+                imageUrl: input.imageUrl,
+                imageStorageKey: input.imageStorageKey,
+                isActive: input.isActive,
+                sortOrder: input.sortOrder,
+            },
             include: categoryWithSubcategories,
         });
 
         return CategoryMapper.toCategoryEntity(category);
     }
 
-    async findSubcategories(categoryId: string,): Promise<SubcategoryEntity[]> {
+    async findSubcategories(categoryId: string): Promise<SubcategoryEntity[]> {
         const subcategories = await this._prisma.subcategory.findMany({
             where: { categoryId },
             orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         });
 
         return subcategories.map(CategoryMapper.toSubcategoryEntity);
+    }
+
+    async findSubcategoryByGlobalId(subcategoryId: string,): Promise<SubcategoryEntity | null> {
+        const subcategory = await this._prisma.subcategory.findUnique({
+            where: {
+                id: subcategoryId,
+            },
+        });
+
+        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
     }
 
     async findSubcategoryById(categoryId: string, subcategoryId: string,): Promise<SubcategoryEntity | null> {
@@ -146,9 +162,7 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
             },
         });
 
-        return subcategory
-            ? CategoryMapper.toSubcategoryEntity(subcategory)
-            : null;
+        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
     }
 
     async findSubcategoryBySlug(categoryId: string, slug: string,): Promise<SubcategoryEntity | null> {
@@ -161,16 +175,17 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
             },
         });
 
-        return subcategory
-            ? CategoryMapper.toSubcategoryEntity(subcategory)
-            : null;
+        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
     }
 
     async createSubcategory(categoryId: string, input: CreateSubcategoryInput,): Promise<SubcategoryEntity> {
         const subcategory = await this._prisma.subcategory.create({
             data: {
                 categoryId,
-                ...input
+                name: input.name,
+                slug: input.slug,
+                description: input.description ?? null,
+                sortOrder: input.sortOrder ?? 0,
             },
         });
 
@@ -180,7 +195,15 @@ export class PrismaCategoryRepository implements ICategoryRepository, IAdminCate
     async updateSubcategory(subcategoryId: string, input: UpdateSubcategoryInput,): Promise<SubcategoryEntity> {
         const subcategory = await this._prisma.subcategory.update({
             where: { id: subcategoryId },
-            data: input,
+            data: {
+                name: input.name,
+                slug: input.slug,
+                description: input.description,
+                imageUrl: input.imageUrl,
+                imageStorageKey: input.imageStorageKey,
+                isActive: input.isActive,
+                sortOrder: input.sortOrder,
+            },
         });
 
         return CategoryMapper.toSubcategoryEntity(subcategory);

@@ -5,9 +5,10 @@ import { SlotController } from './slot.controller';
 import { SLOT_SERVICE } from './services/interfaces/slot.service.interface';
 import { SlotService } from './services/slot.service';
 import { InstructorModule } from '../instructor/instructor.module';
+import { PrismaModule } from '@/shared/prisma/prisma.module';
 
 @Module({
-  imports:[InstructorModule],
+  imports: [InstructorModule, PrismaModule],
   controllers: [SlotController],
   providers: [
     {
@@ -20,6 +21,6 @@ import { InstructorModule } from '../instructor/instructor.module';
       useExisting: PrismaSlotRepository,
     },
   ],
-  exports: [SLOT_SERVICE, SLOT_REPOSITORY],
+  exports: [SLOT_SERVICE],
 })
-export class SlotModule {}
+export class SlotModule { }

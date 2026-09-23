@@ -136,15 +136,6 @@ export class PrismaSlotRepository implements ISlotRepository {
                     offeringId: input.offeringId,
                     startTime: { gte: input.from, lte: input.to },
                 },
-                include: {
-                    offering: {
-                        select: {
-                            id: true,
-                            title: true,
-                            subcategory: { select: { id: true, name: true } },
-                        },
-                    },
-                },
                 orderBy: { startTime: 'asc' },
             }),
         ]);
@@ -164,17 +155,6 @@ export class PrismaSlotRepository implements ISlotRepository {
                 offeringId: input.offeringId,
                 status: SlotStatus.AVAILABLE,
                 startTime: { gte: input.from, lte: input.to, gt: new Date() },
-                profile: { status: InstructorProfileStatus.APPROVED },
-                offering: { status: OfferingStatus.APPROVED },
-            },
-            include: {
-                offering: {
-                    select: {
-                        id: true,
-                        title: true,
-                        subcategory: { select: { id: true, name: true } },
-                    },
-                },
             },
             orderBy: { startTime: 'asc' },
         });

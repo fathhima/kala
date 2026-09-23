@@ -14,8 +14,6 @@ export interface IInstructorRepository {
 
     upsertProfile(userId: string, input: UpdateInstructorProfileInput): Promise<InstructorProfileEntity>;
 
-    isSelectableSubcategory(subcategoryId: string): Promise<boolean>;
-
     createOffering(profileId: string, input: CreateOfferingInput): Promise<InstructorOfferingEntity>;
 
     updateOffering(offeringId: string, input: UpdateOfferingInput): Promise<InstructorOfferingEntity>;

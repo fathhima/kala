@@ -1,5 +1,5 @@
 export type SlotAvailabilityQueryInput = {
     offeringId?: string;
-    from?: string;
-    to?: string;
+    from?: Date;
+    to?: Date;
 };

@@ -27,4 +27,6 @@ export interface IAuthService {
     logoutAll(userId: string): Promise<void>;
 
     changePassword(userId: string, input: ChangePasswordInput): Promise<void>;
+
+    revokeAllSessions(userId: string): Promise<void>;
 }

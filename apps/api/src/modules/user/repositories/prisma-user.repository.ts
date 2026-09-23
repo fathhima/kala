@@ -157,4 +157,23 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
 
     return UserMapper.toEntity(user);
   }
+
+  async findAuthById(id: string) {
+    const user = await this._prisma.user.findUnique({ where: { id } });
+
+    return user ? UserMapper.toAuthEntity(user) : null;
+  }
+
+  async assignRole(userId: string, role: UserRole) {
+    const user = await this._prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) return;
+
+    if (user.roles.includes(role)) return;
+
+    await this._prisma.user.update({
+      where: { id: userId },
+      data: { roles: { set: [...user.roles, role] } },
+    });
+  }
 }

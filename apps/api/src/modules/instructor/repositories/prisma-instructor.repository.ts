@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { IPaginatedResult } from '@/shared/types';
 import { InstructorMapper } from '../mappers/instructor.mapper';
@@ -7,11 +7,11 @@ import { IInstructorRepository } from './interfaces/instructor.interface';
 import { ReviewableOfferingStatus } from '../types/offering-status.type';
 import { IAdminInstructorRepository } from './interfaces/admin-instructor.interface';
 import { PublicInstructorProfile } from '../types/public-instructor.type';
-import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus } from '../enums/instructor.enum';
-import { UserRole } from '@/shared/enums/role.enum';
+import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, } from '../enums/instructor.enum';
 import { Prisma } from '@prisma/client';
-import { CreateOfferingInput, CreateOfferingMediaInput, PublicInstructorQueryInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
+import { CreateOfferingInput, CreateOfferingMediaInput, PublicInstructorQueryInput, UpdateInstructorProfileInput, UpdateOfferingInput, } from '../types/instructor.type';
 import { IInstructorQuery } from './interfaces/instructor-query.interface';
+import { OfferingSnapshot } from '../types/offering-snapshot.type';
 
 const offeringInclude = {
     media: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
@@ -69,13 +69,16 @@ const publicProfileInclude = {
     },
 } satisfies Prisma.InstructorProfileInclude;
 
-type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{ include: typeof publicProfileInclude; }>;
+type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{
+    include: typeof publicProfileInclude;
+}>;
 
 @Injectable()
-export class PrismaInstructorRepository implements IInstructorRepository, IAdminInstructorRepository, IInstructorQuery {
+export class PrismaInstructorRepository
+    implements IInstructorRepository, IAdminInstructorRepository, IInstructorQuery {
     constructor(private readonly _prisma: PrismaService) { }
 
-    async findPublicInstructors(input: PublicInstructorQueryInput): Promise<{ profiles: PublicInstructorProfile[]; total: number }> {
+    async findPublicInstructors(input: PublicInstructorQueryInput,): Promise<{ profiles: PublicInstructorProfile[]; total: number }> {
         const skip = (input.page - 1) * input.limit;
 
         const where: Prisma.InstructorProfileWhereInput = {
@@ -83,7 +86,9 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
             offerings: {
                 some: {
                     status: OfferingStatus.APPROVED,
-                    ...(input.subcategoryId ? { subcategoryId: input.subcategoryId } : {}),
+                    ...(input.subcategoryId
+                        ? { subcategoryId: input.subcategoryId }
+                        : {}),
                 },
             },
         };
@@ -199,14 +204,14 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         return profile ? InstructorMapper.toProfileEntity(profile) : null;
     }
 
-    async upsertProfile(userId: string, input: UpdateInstructorProfileInput): Promise<InstructorProfileEntity> {
+    async upsertProfile(userId: string, input: UpdateInstructorProfileInput,): Promise<InstructorProfileEntity> {
         const profile = await this._prisma.instructorProfile.upsert({
             where: { userId },
             create: {
                 userId,
                 bio: input.bio,
                 location: input.location,
-                portfolioUrl: input.portfolioUrl
+                portfolioUrl: input.portfolioUrl,
             },
             update: input,
             include: {
@@ -225,20 +230,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         return InstructorMapper.toProfileEntity(profile);
     }
 
-    async isSelectableSubcategory(subcategoryId: string): Promise<boolean> {
-        const subcategory = await this._prisma.subcategory.findFirst({
-            where: {
-                id: subcategoryId,
-                isActive: true,
-                category: { isActive: true },
-            },
-            select: { id: true },
-        });
-
-        return Boolean(subcategory);
-    }
-
-    async createOffering(profileId: string, input: CreateOfferingInput): Promise<InstructorOfferingEntity> {
+    async createOffering(profileId: string, input: CreateOfferingInput,): Promise<InstructorOfferingEntity> {
         const offering = await this._prisma.instructorOffering.create({
             data: {
                 ...input,
@@ -251,7 +243,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         return InstructorMapper.toOfferingEntity(offering);
     }
 
-    async updateOffering(offeringId: string, input: UpdateOfferingInput): Promise<InstructorOfferingEntity> {
+    async updateOffering(offeringId: string, input: UpdateOfferingInput,): Promise<InstructorOfferingEntity> {
         const offering = await this._prisma.instructorOffering.update({
             where: { id: offeringId },
             data: {
@@ -283,7 +275,7 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         });
     }
 
-    async createMedia(input: CreateOfferingMediaInput): Promise<OfferingMediaEntity> {
+    async createMedia(input: CreateOfferingMediaInput,): Promise<OfferingMediaEntity> {
         const media = await this._prisma.offeringMedia.create({
             data: {
                 ...input,
@@ -433,9 +425,10 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
             await tx.instructorProfile.update({
                 where: { id: profileId },
                 data: {
-                    status: approvedOfferingCount > 0
-                        ? InstructorProfileStatus.APPROVED
-                        : InstructorProfileStatus.DRAFT,
+                    status:
+                        approvedOfferingCount > 0
+                            ? InstructorProfileStatus.APPROVED
+                            : InstructorProfileStatus.DRAFT,
                 },
             });
 
@@ -490,11 +483,12 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
             include: applicationInclude,
         });
 
-        return application ? InstructorMapper.toApplicationEntity(application) : null;
+        return application
+            ? InstructorMapper.toApplicationEntity(application)
+            : null;
     }
 
-    async reviewOffering(applicationId: string, offeringId: string, adminUserId: string, decision: ReviewableOfferingStatus,
-        reviewNote?: string,): Promise<InstructorApplicationEntity | null> {
+    async reviewOffering(applicationId: string, offeringId: string, adminUserId: string, decision: ReviewableOfferingStatus, reviewNote?: string,): Promise<InstructorApplicationEntity | null> {
         return this._prisma.$transaction(async (tx) => {
             const offering = await tx.instructorOffering.findFirst({
                 where: {
@@ -568,35 +562,19 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
                 },
             });
 
-            const profileStatus = approvedOfferingExists > 0
-                ? InstructorProfileStatus.APPROVED
-                : applicationStatus === InstructorApplicationStatus.CHANGES_REQUESTED
-                    ? InstructorProfileStatus.CHANGES_REQUESTED
-                    : applicationStatus === InstructorApplicationStatus.REJECTED
-                        ? InstructorProfileStatus.REJECTED
-                        : InstructorProfileStatus.PENDING;
+            const profileStatus =
+                approvedOfferingExists > 0
+                    ? InstructorProfileStatus.APPROVED
+                    : applicationStatus === InstructorApplicationStatus.CHANGES_REQUESTED
+                        ? InstructorProfileStatus.CHANGES_REQUESTED
+                        : applicationStatus === InstructorApplicationStatus.REJECTED
+                            ? InstructorProfileStatus.REJECTED
+                            : InstructorProfileStatus.PENDING;
 
             await tx.instructorProfile.update({
                 where: { id: offering.profileId },
                 data: { status: profileStatus },
             });
-
-            if (
-                decision === OfferingStatus.APPROVED &&
-                !offering.application.profile.user.roles.includes(UserRole.INSTRUCTOR)
-            ) {
-                await tx.user.update({
-                    where: { id: offering.application.profile.user.id },
-                    data: {
-                        roles: {
-                            set: [
-                                ...offering.application.profile.user.roles,
-                                UserRole.INSTRUCTOR,
-                            ],
-                        },
-                    },
-                });
-            }
 
             const result = await tx.instructorApplication.findUnique({
                 where: { id: applicationId },
@@ -607,16 +585,42 @@ export class PrismaInstructorRepository implements IInstructorRepository, IAdmin
         });
     }
 
-    async findApprovedProfileIdByUserId(userId: string): Promise<{ id: string } | null> {
+    async findApprovedProfileIdByUserId(userId: string,): Promise<{ id: string } | null> {
         return this._prisma.instructorProfile.findFirst({
             where: { userId, status: InstructorProfileStatus.APPROVED },
             select: { id: true },
         });
     }
-    async findApprovedOfferingId(profileId: string, offeringId: string): Promise<{ id: string } | null> {
+
+    async findApprovedOfferingId(profileId: string, offeringId: string,): Promise<{ id: string } | null> {
         return this._prisma.instructorOffering.findFirst({
             where: { id: offeringId, profileId, status: OfferingStatus.APPROVED },
             select: { id: true },
         });
+    }
+
+    async getOfferingSnapshots(offeringIds: string[]): Promise<OfferingSnapshot[]> {
+        if (!offeringIds.length) return [];
+
+        const offerings = await this._prisma.instructorOffering.findMany({
+            where: { id: { in: offeringIds } },
+            select: {
+                id: true,
+                title: true,
+                status: true,
+                profileId: true,
+                profile: { select: { status: true } },
+                subcategory: { select: { id: true, name: true } },
+            },
+        });
+
+        return offerings.map((o) => ({
+            id: o.id,
+            title: o.title,
+            status: o.status as OfferingStatus,
+            profileId: o.profileId,
+            profileStatus: o.profile.status as InstructorProfileStatus,
+            subcategory: { id: o.subcategory.id, name: o.subcategory.name },
+        }));
     }
 }

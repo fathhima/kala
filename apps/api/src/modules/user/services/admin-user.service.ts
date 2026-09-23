@@ -1,14 +1,12 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from "@nestjs/common";
-import { USER_REPOSITORY, type IUserRepository, } from "@/modules/user/repositories/interfaces/user.interface";
-import { REFRESH_SESSION_REPOSITORY, type IRefreshSessionRepository, } from "@/modules/auth/repositories/interfaces/refresh-session.interface";
-import { UserEntity } from "@/modules/user/entities/user.entity";
 import { UserRole } from "@/shared/enums/role.enum";
 import { IPaginatedResult } from "@/shared/types";
-import { ADMIN_USER_REPOSITORY, type IAdminUserRepository } from "../../user/repositories/interfaces/admin-user.interface";
+import { ADMIN_USER_REPOSITORY, type IAdminUserRepository } from "../repositories/interfaces/admin-user.interface";
 import { IAdminUserService } from "./interfaces/admin-user.service.interface";
-import { AdminUserListParams } from "@/modules/user/types/admin-user-list-params.type";
-import { UpdateUserStatusInput } from "@/modules/user/types/update-user-status.type";
-import { AUTH_SERVICE, type IAuthService } from "@/modules/auth/services/interfaces/auth.service.interface";
+import { type IUserRepository, USER_REPOSITORY } from "../repositories/interfaces/user.interface";
+import { AdminUserListParams } from "../types/admin-user-list-params.type";
+import { UserEntity } from "../entities/user.entity";
+import { UpdateUserStatusInput } from "../types/update-user-status.type";
 
 @Injectable()
 export class AdminUserService implements IAdminUserService {
@@ -18,9 +16,6 @@ export class AdminUserService implements IAdminUserService {
 
         @Inject(ADMIN_USER_REPOSITORY)
         private readonly _adminUserRepository: IAdminUserRepository,
-
-        @Inject(AUTH_SERVICE)
-        private readonly _authService: IAuthService,
     ) { }
 
     async getUsers(query: AdminUserListParams,): Promise<IPaginatedResult<UserEntity>> {
@@ -60,12 +55,7 @@ export class AdminUserService implements IAdminUserService {
             }
         }
 
-        const updatedUser = targetUser.isActive === input.isActive ? targetUser : await this._adminUserRepository.updateStatus(targetUserId, input.isActive,);
-
-        if (!updatedUser.isActive) {
-            await this._authService.logoutAll(updatedUser.id,);
-        }
-
-        return updatedUser;
+        return targetUser.isActive === input.isActive ? targetUser
+            : this._adminUserRepository.updateStatus(targetUserId, input.isActive);
     }
 }

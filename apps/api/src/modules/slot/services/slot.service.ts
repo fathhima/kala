@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
 import { type ISlotRepository, SLOT_REPOSITORY } from '../repositories/interfaces/slot.interface';
 import { ISlotService } from './interfaces/slot.service.interface';
 import { SlotRuleEntity } from '../entities/slot.entity';
@@ -6,20 +6,26 @@ import { AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '.
 import { CreateSlotExceptionCommand, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
 import { SlotAvailabilityQueryInput } from '../types/slot-availability-query.type';
 import { ConfigService } from '@nestjs/config';
-import { type IInstructorQuery, INSTRUCTOR_QUERY } from '@/modules/instructor/repositories/interfaces/instructor-query.interface';
+import { type IInstructorService, INSTRUCTOR_SERVICE } from '@/modules/instructor/services/interfaces/instructor.service.interface';
+import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/enums/instructor.enum';
 
 @Injectable()
 export class SlotService implements ISlotService {
     constructor(
         @Inject(SLOT_REPOSITORY)
         private readonly _slotRepository: ISlotRepository,
-        @Inject(INSTRUCTOR_QUERY)
-        private readonly _instructorQuery: IInstructorQuery,
+        @Inject(INSTRUCTOR_SERVICE)
+        private readonly _instructorService: IInstructorService,
         private readonly _configService: ConfigService
     ) { }
 
     async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryInput) {
-        const profile = await this._getApprovedProfile(userId);
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
         const range = this._rangeFromQuery(query);
 
         return this._slotRepository.findInstructorAvailability({
@@ -31,8 +37,14 @@ export class SlotService implements ISlotService {
     }
 
     async createRule(userId: string, input: Omit<CreateSlotRuleInput, 'profileId'>) {
-        const profile = await this._getApprovedProfile(userId);
-        await this._assertApprovedOffering(profile.id, input.offeringId);
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
+        await this._instructorService.findApprovedOfferingForProfile(profile.id, input.offeringId);
+
         this._assertValidMinutes(input.startMinute, input.endMinute, input.slotDurationMinutes);
 
         const rule = await this._slotRepository.createRule({
@@ -54,7 +66,12 @@ export class SlotService implements ISlotService {
     }
 
     async updateRule(userId: string, ruleId: string, input: UpdateSlotRuleInput & { title?: string | null; effectiveUntil?: Date | null }) {
-        const profile = await this._getApprovedProfile(userId);
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
         const existing = await this._slotRepository.findOwnedActiveRule(profile.id, ruleId);
 
         if (!existing) {
@@ -83,7 +100,12 @@ export class SlotService implements ISlotService {
     }
 
     async disableRule(userId: string, ruleId: string): Promise<void> {
-        const profile = await this._getApprovedProfile(userId);
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
         const rule = await this._slotRepository.findOwnedActiveRule(profile.id, ruleId);
 
         if (!rule) {
@@ -98,7 +120,12 @@ export class SlotService implements ISlotService {
     }
 
     async createException(userId: string, input: CreateSlotExceptionCommand) {
-        const profile = await this._getApprovedProfile(userId);
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
         const startTime = new Date(input.startTime);
         const endTime = new Date(input.endTime);
 
@@ -107,7 +134,7 @@ export class SlotService implements ISlotService {
         }
 
         if (input.offeringId) {
-            await this._assertApprovedOffering(profile.id, input.offeringId);
+            await this._instructorService.findApprovedOfferingForProfile(profile.id, input.offeringId);
         }
 
         if (input.type === AvailabilityExceptionType.EXTRA && !input.offeringId) {
@@ -158,31 +185,30 @@ export class SlotService implements ISlotService {
 
     async getPublicAvailability(profileId: string, query: SlotAvailabilityQueryInput) {
         const range = this._rangeFromQuery(query);
-
-        return this._slotRepository.findPublicSlots({
+        const slots = await this._slotRepository.findPublicSlots({
             profileId,
             offeringId: query.offeringId,
             from: range.from,
             to: range.to,
         });
-    }
 
-    private async _getApprovedProfile(userId: string) {
-        const profile = await this._instructorQuery.findApprovedProfileIdByUserId(userId);
+        const snapshots = await this._instructorService.getOfferingSnapshots(
+            [...new Set(slots.map((s) => s.offeringId))],
+        );
+        const byId = new Map(snapshots.map((o) => [o.id, o]));
 
-        if (!profile) {
-            throw new ForbiddenException('Only approved instructors can manage availability');
-        }
-
-        return profile;
-    }
-
-    private async _assertApprovedOffering(profileId: string, offeringId: string) {
-        const offering = await this._instructorQuery.findApprovedOfferingId(profileId, offeringId);
-
-        if (!offering) {
-            throw new NotFoundException('Approved offering not found');
-        }
+        return slots.filter((s) => {
+            const o = byId.get(s.offeringId);
+            return o?.profileStatus === InstructorProfileStatus.APPROVED
+                && o.status === OfferingStatus.APPROVED;
+        })
+            .map((s) => {
+                const o = byId.get(s.offeringId)!;
+                return {
+                    ...s,
+                    offering: { id: o.id, title: o.title, subcategory: o.subcategory },
+                };
+            });
     }
 
     private _assertValidMinutes(startMinute: number, endMinute: number, duration: number) {

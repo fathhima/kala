@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import { PrismaModule } from './shared/prisma/prisma.module';
 import { ConfigModule } from './shared/config/config.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { MailerModule } from './shared/mailer/mailer.module';
@@ -28,7 +27,6 @@ import { LoggerModule } from './shared/logger/logger.module';
     JwtModule,
     ConfigModule,
     LoggerModule,
-    PrismaModule,
     RedisModule,
     MailerModule,
     AuthModule,

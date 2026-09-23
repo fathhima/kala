@@ -14,3 +14,5 @@ export interface ILoggerProvider {
 
     verbose(message: string, context?: string, meta?: LogMeta): void;
 }
+
+export type ILoggerService = ILoggerProvider;

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { SlotMapper } from '../mappers/slot.mapper';
 import { ISlotRepository } from './interfaces/slot.interface';
-import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/enums/instructor.enum';
 import { AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
 import { CreateSlotExceptionInput, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
 import { SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';

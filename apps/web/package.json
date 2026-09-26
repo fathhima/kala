@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "api:generate": "openapi-generator-cli generate",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix"
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",

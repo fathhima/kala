@@ -23,8 +23,6 @@ import { MyBookings } from "@/pages/student/MyBookings";
 import { BookingDetails } from "@/pages/student/BookingDetails";
 import { BookingChat } from "@/pages/student/BookingChat";
 import { PaymentHistory } from "@/pages/student/PaymentHistory";
-import { StudentProfileSettings } from "@/pages/student/ProfileSettings";
-import { ChangePassword } from "@/pages/student/ChangePassword";
 import { BecomeInstructor } from "@/pages/student/BecomeInstructor";
 import { Payment } from "@/pages/student/Payment";
 import { VideoCall } from "@/pages/student/VideoCall";
@@ -141,8 +139,6 @@ export const router = createBrowserRouter([
       // { path: 'bookings/:id', element: <BookingDetails /> },
       // { path: 'bookings/:id/chat', element: <BookingChat /> },
       // { path: 'payments', element: <PaymentHistory /> },
-      // { path: 'settings', element: <StudentProfileSettings /> },
-      // { path: 'change-password', element: <ChangePassword /> },
       { path: 'become-instructor', element: <BecomeInstructor /> },
       { path: 'settings', element: <AccountSettings /> },
     ]

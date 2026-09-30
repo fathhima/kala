@@ -57,6 +57,8 @@ export class SlotMapper {
             endTime: slot.endTime,
             timezone: slot.timezone,
             status: slot.status as SlotStatus,
+            heldUntil: slot.heldUntil,
+            heldByUserId: slot.heldByUserId,
             bookedAt: slot.bookedAt,
             createdAt: slot.createdAt,
             updatedAt: slot.updatedAt,

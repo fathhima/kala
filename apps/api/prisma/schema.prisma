@@ -48,6 +48,7 @@ enum MediaType {
 
 enum SlotStatus {
   AVAILABLE
+  HELD
   BOOKED
   CANCELLED
 }
@@ -67,6 +68,16 @@ enum AvailabilityExceptionStatus {
   INACTIVE
 }
 
+enum BookingStatus {
+  PAYMENT_PENDING
+  CONFIRMED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+  REFUND_PENDING
+  REFUNDED
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -83,6 +94,7 @@ model User {
   updatedAt  DateTime @updatedAt
 
   instructorProfile InstructorProfile?
+  bookings          Booking[]
 
   @@map("users")
 }
@@ -141,6 +153,7 @@ model InstructorProfile {
   availabilityRules      AvailabilityRule[]
   availabilityExceptions AvailabilityException[]
   availabilitySlots      AvailabilitySlot[]
+  bookings               Booking[]
 
   @@index([status])
   @@map("instructor_profiles")
@@ -189,6 +202,7 @@ model InstructorOffering {
   slots                  AvailabilitySlot[]
   availabilityRules      AvailabilityRule[]
   availabilityExceptions AvailabilityException[]
+  bookings               Booking[]
 
   @@index([profileId, status])
   @@index([subcategoryId, status])
@@ -214,30 +228,35 @@ model OfferingMedia {
 }
 
 model AvailabilitySlot {
-  id          String     @id @default(cuid())
-  profileId   String
-  offeringId  String
-  ruleId      String?
-  exceptionId String?
-  title       String?
-  startTime   DateTime
-  endTime     DateTime
-  timezone    String     @default("Asia/Kolkata")
-  status      SlotStatus @default(AVAILABLE)
-  bookedAt    DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  profileId       String
+  offeringId      String
+  ruleId          String?
+  exceptionId     String?
+  title           String?
+  startTime       DateTime
+  endTime         DateTime
+  timezone        String     @default("Asia/Kolkata")
+  status          SlotStatus @default(AVAILABLE)
+  heldUntil       DateTime?
+  heldByUserId    String?
+  heldByBookingId String?
+  bookedAt        DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   profile   InstructorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
   offering  InstructorOffering     @relation(fields: [offeringId], references: [id], onDelete: Cascade)
   rule      AvailabilityRule?      @relation(fields: [ruleId], references: [id], onDelete: SetNull)
   exception AvailabilityException? @relation(fields: [exceptionId], references: [id], onDelete: SetNull)
+  bookings  Booking[]
 
   @@unique([offeringId, startTime, endTime])
   @@index([offeringId, status, startTime])
   @@index([profileId, status, startTime])
   @@index([ruleId, status, startTime])
   @@index([exceptionId, status, startTime])
+  @@index([status, heldUntil])
   @@map("availability_slots")
 }
 
@@ -287,4 +306,33 @@ model AvailabilityException {
   @@index([profileId, status, startTime])
   @@index([offeringId, status])
   @@map("availability_exceptions")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  slotId          String
+  studentId       String
+  offeringId      String
+  profileId       String
+  status          BookingStatus @default(PAYMENT_PENDING)
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String
+  hourlyRate      Decimal       @db.Decimal(10, 2)
+  durationMinutes Int
+  holdExpiresAt   DateTime
+  cancelledAt     DateTime?
+  cancelledBy     String?
+  cancelReason    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  slot     AvailabilitySlot   @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  student  User               @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Restrict)
+  profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, status, createdAt])
+  @@index([profileId, status, createdAt])
+  @@index([slotId, status])
+  @@map("bookings")
 }

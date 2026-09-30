@@ -14,6 +14,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
 import { SlotModule } from './modules/slot/slot.module';
 import { LoggerModule } from './shared/logger/logger.module';
+import { BookingModule } from './modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LoggerModule } from './shared/logger/logger.module';
     AdminModule,
     InstructorModule,
     SlotModule,
+    BookingModule,
   ],
   providers: [
     {
@@ -47,4 +49,4 @@ import { LoggerModule } from './shared/logger/logger.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -43,6 +43,8 @@ export class SlotEntity {
     endTime!: Date;
     timezone!: string;
     status!: SlotStatus;
+    heldUntil!: Date | null;
+    heldByUserId!: string | null;
     bookedAt!: Date | null;
     createdAt!: Date;
     updatedAt!: Date;

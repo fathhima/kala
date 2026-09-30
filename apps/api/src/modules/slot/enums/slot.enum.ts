@@ -15,6 +15,7 @@ export enum AvailabilityExceptionStatus {
 
 export enum SlotStatus {
     AVAILABLE = 'AVAILABLE',
+    HELD = 'HELD',
     BOOKED = 'BOOKED',
-    CANCELLED = 'CANCELLED'
+    CANCELLED = 'CANCELLED',
 }

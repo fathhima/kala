@@ -18,8 +18,6 @@ export interface IBookingRepository {
 
     cancelBooking(input: CancelBookingInput): Promise<BookingEntity>;
 
-    confirmBooking(input: ConfirmBookingInput): Promise<BookingEntity>;
-
     completeBooking(input: CompleteBookingInput): Promise<BookingEntity>;
     
     expireHolds(): Promise<number>;

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { IBookingRepository } from './interfaces/booking.interface';
@@ -7,8 +7,8 @@ import { BookingEntity, PaginatedBookingEntity } from '../entities/booking.entit
 import { BookingListQuery, CancelBookingInput, CompleteBookingInput, ConfirmBookingInput, CreateBookingInput, } from '../types/booking.type';
 import { BookingStatus } from '../enums/booking.enum';
 import { SlotStatus } from '@/modules/slot/enums/slot.enum';
-import { UserRole } from '@/shared/enums/role.enum';
 import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/enums/instructor.enum';
+import { BookingConflictError, BookingNotFoundError, BookingValidationError, SlotNotFoundError } from '../errors/booking.errors';
 
 type LockedSlotRow = {
     id: string;
@@ -26,13 +26,6 @@ type LockedSlotRow = {
     profileStatus: InstructorProfileStatus;
 };
 
-const ACTIVE_BOOKING_STATUSES: BookingStatus[] = [
-    BookingStatus.PAYMENT_PENDING,
-    BookingStatus.CONFIRMED,
-    BookingStatus.COMPLETED,
-    BookingStatus.REFUND_PENDING,
-];
-
 @Injectable()
 export class PrismaBookingRepository implements IBookingRepository {
     constructor(private readonly _prisma: PrismaService) { }
@@ -41,8 +34,20 @@ export class PrismaBookingRepository implements IBookingRepository {
         try {
             return await this._prisma.$transaction(
                 async (tx) => {
+                    /* 
+                    $executeRaw - for executing raw sql
+                                   - it supports tagged template literal
+                    LOCAL - apply setting only to current transaction
+                    lock_timeout - maximum time to wait
+                    */
                     await tx.$executeRaw`SET LOCAL lock_timeout = '3s'`;
 
+                    /* 
+                    $queryRaw - execute the SQL query and return the row in array
+                    LockedSlotRow - return type
+                    FOR NO KEY UPDATE - lock the selected row with a NO KEY UPDATE row lock
+                                      - row lock means, it locks the row, so another transaction cannot make changes
+                    */
                     const rows = await tx.$queryRaw<LockedSlotRow[]>`
                         SELECT
                             s.id,
@@ -66,38 +71,37 @@ export class PrismaBookingRepository implements IBookingRepository {
                     `;
 
                     const slot = rows[0];
+                    
                     if (!slot) {
-                        throw new NotFoundException('Slot not found');
+                        throw new SlotNotFoundError('Slot not found');
                     }
 
                     if (slot.instructorUserId === input.studentId) {
-                        throw new BadRequestException('You cannot book your own session');
+                        throw new BookingValidationError('You cannot book your own session');
                     }
 
                     if (
                         slot.offeringStatus !== OfferingStatus.APPROVED ||
                         slot.profileStatus !== InstructorProfileStatus.APPROVED
                     ) {
-                        throw new ConflictException('This offering is not available for booking');
+                        throw new BookingConflictError('This offering is not available for booking');
                     }
 
                     const now = new Date();
+
                     if (slot.startTime <= now) {
-                        throw new BadRequestException('This slot has already started');
+                        throw new BookingValidationError('This slot has already started');
                     }
 
                     if (slot.status === SlotStatus.CANCELLED) {
-                        throw new ConflictException('This slot was cancelled by the instructor');
+                        throw new BookingConflictError('This slot was cancelled by the instructor');
                     }
 
                     if (slot.status === SlotStatus.BOOKED) {
-                        throw new ConflictException('This slot is already booked');
+                        throw new BookingConflictError('This slot is already booked');
                     }
 
-                    const holdIsLive =
-                        slot.status === SlotStatus.HELD &&
-                        slot.heldUntil !== null &&
-                        slot.heldUntil > now;
+                    const holdIsLive = slot.status === SlotStatus.HELD && slot.heldUntil !== null && slot.heldUntil > now;
 
                     if (holdIsLive && slot.heldByUserId === input.studentId) {
                         const existing = await tx.booking.findFirst({
@@ -108,11 +112,12 @@ export class PrismaBookingRepository implements IBookingRepository {
                             },
                             include: bookingInclude,
                         });
+
                         if (existing) return BookingMapper.toEntity(existing);
                     }
 
                     if (holdIsLive && slot.heldByUserId !== input.studentId) {
-                        throw new ConflictException('This slot is currently held by another student');
+                        throw new BookingConflictError('This slot is currently held by another student');
                     }
 
                     if (slot.status === SlotStatus.HELD && !holdIsLive) {
@@ -158,6 +163,9 @@ export class PrismaBookingRepository implements IBookingRepository {
 
                     return BookingMapper.toEntity(created);
                 },
+                /* 
+                timeout - transaction will not run more than 10s
+                 */
                 { timeout: 10_000, isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
             );
         } catch (error) {
@@ -203,7 +211,8 @@ export class PrismaBookingRepository implements IBookingRepository {
                     where: { id: input.bookingId },
                     select: { id: true, slotId: true },
                 });
-                if (!preview) throw new NotFoundException('Booking not found');
+
+                if (!preview) throw new BookingNotFoundError('Booking not found');
 
                 await tx.$queryRaw`
                     SELECT id FROM availability_slots
@@ -215,7 +224,8 @@ export class PrismaBookingRepository implements IBookingRepository {
                     where: { id: input.bookingId },
                     include: bookingInclude,
                 });
-                if (!record) throw new NotFoundException('Booking not found');
+
+                if (!record) throw new BookingNotFoundError('Booking not found');
 
                 await tx.$queryRaw`
                     SELECT id FROM bookings
@@ -223,16 +233,8 @@ export class PrismaBookingRepository implements IBookingRepository {
                     FOR UPDATE
                 `;
 
-                const isAdmin = input.roles.includes(UserRole.ADMIN);
-                const isStudent = record.studentId === input.actorId;
-                const isInstructor = record.profile.user.id === input.actorId;
-
-                if (!isAdmin && !isStudent && !isInstructor) {
-                    throw new NotFoundException('Booking not found');
-                }
-
                 if (record.status === BookingStatus.COMPLETED) {
-                    throw new BadRequestException('Completed bookings cannot be cancelled');
+                    throw new BookingValidationError('Completed bookings cannot be cancelled');
                 }
 
                 if (
@@ -240,18 +242,14 @@ export class PrismaBookingRepository implements IBookingRepository {
                     record.status === BookingStatus.EXPIRED ||
                     record.status === BookingStatus.REFUNDED
                 ) {
-                    throw new BadRequestException('Booking is already cancelled');
-                }
-
-                if (isInstructor && !isAdmin && record.status !== BookingStatus.CONFIRMED) {
-                    throw new BadRequestException('Instructors can only cancel confirmed sessions');
+                    throw new BookingValidationError('Booking is already cancelled');
                 }
 
                 if (
                     record.status !== BookingStatus.PAYMENT_PENDING &&
                     record.status !== BookingStatus.CONFIRMED
                 ) {
-                    throw new BadRequestException('Booking cannot be cancelled in its current state');
+                    throw new BookingValidationError('Booking cannot be cancelled in its current state');
                 }
 
                 const updated = await tx.booking.update({
@@ -283,87 +281,14 @@ export class PrismaBookingRepository implements IBookingRepository {
         }
     }
 
-    async confirmBooking(input: ConfirmBookingInput): Promise<BookingEntity> {
-        try {
-            return await this._prisma.$transaction(async (tx) => {
-                await tx.$executeRaw`SET LOCAL lock_timeout = '3s'`;
-
-                const preview = await tx.booking.findUnique({
-                    where: { id: input.bookingId },
-                    select: { id: true, slotId: true },
-                });
-                if (!preview) throw new NotFoundException('Booking not found');
-
-                await tx.$queryRaw`
-                    SELECT id FROM availability_slots
-                    WHERE id = ${preview.slotId}
-                    FOR NO KEY UPDATE
-                `;
-
-                const record = await tx.booking.findUnique({
-                    where: { id: input.bookingId },
-                    include: bookingInclude,
-                });
-                if (!record) throw new NotFoundException('Booking not found');
-
-                await tx.$queryRaw`
-                    SELECT id FROM bookings
-                    WHERE id = ${input.bookingId}
-                    FOR UPDATE
-                `;
-
-                if (record.studentId !== input.actorId) {
-                    throw new NotFoundException('Booking not found');
-                }
-
-                if (record.status === BookingStatus.CONFIRMED) {
-                    return BookingMapper.toEntity(record);
-                }
-
-                if (record.status !== BookingStatus.PAYMENT_PENDING) {
-                    throw new ConflictException('Booking cannot be confirmed in its current state');
-                }
-
-                const now = new Date();
-                const slotStillHeldForThisStudent =
-                    record.slot.status === SlotStatus.HELD &&
-                    record.slot.heldByUserId === record.studentId;
-
-                if (!slotStillHeldForThisStudent) {
-                    throw new ConflictException('Hold expired. Please book the slot again');
-                }
-
-                const updated = await tx.booking.update({
-                    where: { id: record.id },
-                    data: { status: BookingStatus.CONFIRMED },
-                    include: bookingInclude,
-                });
-
-                await tx.availabilitySlot.update({
-                    where: { id: record.slotId },
-                    data: {
-                        status: SlotStatus.BOOKED,
-                        bookedAt: now,
-                        heldUntil: null,
-                        heldByUserId: null,
-                    },
-                });
-
-                return BookingMapper.toEntity(updated);
-            });
-        } catch (error) {
-            this._rethrowLockOrUnique(error);
-            throw error;
-        }
-    }
-
     async completeBooking(input: CompleteBookingInput): Promise<BookingEntity> {
         return this._prisma.$transaction(async (tx) => {
             const preview = await tx.booking.findUnique({
                 where: { id: input.bookingId },
                 select: { id: true, slotId: true },
             });
-            if (!preview) throw new NotFoundException('Booking not found');
+
+            if (!preview) throw new BookingNotFoundError('Booking not found');
 
             await tx.$queryRaw`
                 SELECT id FROM availability_slots
@@ -375,22 +300,19 @@ export class PrismaBookingRepository implements IBookingRepository {
                 where: { id: input.bookingId },
                 include: bookingInclude,
             });
-            if (!record) throw new NotFoundException('Booking not found');
 
-            if (record.profile.user.id !== input.instructorUserId) {
-                throw new NotFoundException('Booking not found');
-            }
+            if (!record) throw new BookingNotFoundError('Booking not found');
 
             if (record.status === BookingStatus.COMPLETED) {
                 return BookingMapper.toEntity(record);
             }
 
             if (record.status !== BookingStatus.CONFIRMED) {
-                throw new BadRequestException('Only confirmed sessions can be completed');
+                throw new BookingValidationError('Only confirmed sessions can be completed');
             }
 
             if (record.slot.endTime > new Date()) {
-                throw new BadRequestException('Session has not ended yet');
+                throw new BookingValidationError('Session has not ended yet');
             }
 
             const updated = await tx.booking.update({
@@ -437,10 +359,7 @@ export class PrismaBookingRepository implements IBookingRepository {
         });
     }
 
-    private async _paginate(
-        whereBase: Prisma.BookingWhereInput,
-        query: BookingListQuery,
-    ): Promise<PaginatedBookingEntity> {
+    private async _paginate(whereBase: Prisma.BookingWhereInput, query: BookingListQuery,): Promise<PaginatedBookingEntity> {
         const where: Prisma.BookingWhereInput = {
             ...whereBase,
             status: query.status,
@@ -471,12 +390,12 @@ export class PrismaBookingRepository implements IBookingRepository {
 
     private _rethrowLockOrUnique(error: unknown): void {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-            throw new ConflictException('This slot is already booked');
+            throw new BookingConflictError('This slot is already booked');
         }
 
         const message = error instanceof Error ? error.message : '';
         if (message.includes('lock timeout') || message.includes('55P03')) {
-            throw new ConflictException('This slot is being booked by another student, please retry');
+            throw new BookingConflictError('This slot is being booked by another student, please retry');
         }
     }
 }

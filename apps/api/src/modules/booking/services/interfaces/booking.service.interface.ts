@@ -9,7 +9,7 @@ export interface IBookingService {
 
     getById(userId: string, roles: UserRole[], bookingId: string): Promise<BookingEntity>;
 
-    listMine(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
+    listStudent(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
 
     listInstructor(userId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
 
@@ -17,9 +17,7 @@ export interface IBookingService {
 
     cancel(userId: string, roles: UserRole[], bookingId: string, reason?: string): Promise<BookingEntity>;
 
-    confirm(studentId: string, bookingId: string, allowManual: boolean): Promise<BookingEntity>;
-
     complete(instructorUserId: string, bookingId: string): Promise<BookingEntity>;
-    
+
     expireHolds(): Promise<number>;
 }

@@ -4,7 +4,6 @@ import { BookingService } from './services/booking.service';
 import { BOOKING_SERVICE } from './services/interfaces/booking.service.interface';
 import { PrismaBookingRepository } from './repositories/prisma-booking.repository';
 import { BOOKING_REPOSITORY } from './repositories/interfaces/booking.interface';
-import { HoldExpiryService } from './services/hold-expiry.service';
 import { PrismaModule } from '@/shared/prisma/prisma.module';
 
 @Module({
@@ -20,7 +19,6 @@ import { PrismaModule } from '@/shared/prisma/prisma.module';
             provide: BOOKING_REPOSITORY,
             useExisting: PrismaBookingRepository,
         },
-        HoldExpiryService,
     ],
     exports: [BOOKING_SERVICE],
 })

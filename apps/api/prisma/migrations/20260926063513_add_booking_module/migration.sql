@@ -15,15 +15,16 @@
 
 */
 -- AlterEnum
--- This migration adds more than one value to an enum.
--- With PostgreSQL versions 11 and earlier, this is not possible
--- in a single migration. This can be worked around by creating
--- multiple migrations, each migration adding only one value to
--- the enum.
+-- New enum values must be committed before they can be used in
+-- indexes/defaults. We break out of the implicit transaction so
+-- each ADD VALUE is its own committed statement.
 
+COMMIT;
 
-ALTER TYPE "BookingStatus" ADD VALUE 'REFUND_PENDING';
-ALTER TYPE "BookingStatus" ADD VALUE 'REFUNDED';
+ALTER TYPE "BookingStatus" ADD VALUE IF NOT EXISTS 'REFUND_PENDING';
+ALTER TYPE "BookingStatus" ADD VALUE IF NOT EXISTS 'REFUNDED';
+
+BEGIN;
 
 -- DropIndex
 DROP INDEX "bookings_instructorProfileId_status_startTime_idx";
@@ -71,7 +72,9 @@ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_offeringId_fkey" FOREIGN KEY ("o
 -- AddForeignKey
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "instructor_profiles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+COMMIT;
 ALTER TYPE "SlotStatus" ADD VALUE IF NOT EXISTS 'HELD';
+BEGIN;
 
 CREATE UNIQUE INDEX "bookings_one_active_per_slot"
 ON "bookings" ("slotId")

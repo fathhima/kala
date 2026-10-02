@@ -3,6 +3,7 @@ import { BookingStatus } from '../enums/booking.enum';
 export type CreateBookingInput = {
     studentId: string;
     slotId: string;
+    idempotencyKey?: string;
 };
 
 export type CancelBookingInput = {

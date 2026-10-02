@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable,NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IBookingService } from './interfaces/booking.service.interface';
 import { BOOKING_REPOSITORY, type IBookingRepository } from '../repositories/interfaces/booking.interface';
@@ -34,11 +34,11 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         if (this._holdExpiryTimer) clearInterval(this._holdExpiryTimer);
     }
 
-    async hold(studentId: string, slotId: string): Promise<BookingEntity> {
+    async hold(studentId: string, slotId: string, idempotencyKey?: string): Promise<BookingEntity> {
         const ttl = this._configService.getOrThrow<number>('BOOKING_HOLD_TTL_SECONDS');
 
         try {
-            return await this._bookingRepository.holdSlot({ studentId, slotId }, ttl);
+            return await this._bookingRepository.holdSlot({ studentId, slotId, idempotencyKey }, ttl);
         } catch (error) {
             this._translateDomainError(error);
         }

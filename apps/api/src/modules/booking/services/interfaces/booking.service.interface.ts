@@ -5,8 +5,8 @@ import { UserRole } from '@/shared/enums/role.enum';
 export const BOOKING_SERVICE = Symbol('BOOKING_SERVICE');
 
 export interface IBookingService {
-    hold(studentId: string, slotId: string): Promise<BookingEntity>;
-
+    hold(studentId: string, slotId: string, idempotencyKey?: string): Promise<BookingEntity>;
+    
     getById(userId: string, roles: UserRole[], bookingId: string): Promise<BookingEntity>;
 
     getBookingForPayment(bookingId: string, studentId: string): Promise<BookingEntity>;

@@ -31,6 +31,16 @@ export class PrismaBookingRepository implements IBookingRepository {
     constructor(private readonly _prisma: PrismaService) { }
 
     async holdSlot(input: CreateBookingInput, holdTtlSeconds: number): Promise<BookingEntity> {
+        // ─── Idempotency check ─────────────────────────────────────────
+        if (input.idempotencyKey) {
+            const existing = await this._prisma.booking.findUnique({
+                where: { idempotencyKey: input.idempotencyKey },
+                include: bookingInclude,
+            });
+
+            if (existing) return BookingMapper.toEntity(existing);
+        }
+
         try {
             return await this._prisma.$transaction(
                 async (tx) => {
@@ -157,6 +167,7 @@ export class PrismaBookingRepository implements IBookingRepository {
                             hourlyRate: slot.hourlyRate,
                             durationMinutes,
                             holdExpiresAt,
+                            idempotencyKey: input.idempotencyKey ?? null,  // <-- ADD THIS
                         },
                         include: bookingInclude,
                     });

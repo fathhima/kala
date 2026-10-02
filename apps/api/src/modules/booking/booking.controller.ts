@@ -21,8 +21,8 @@ export class BookingController {
     @Roles(UserRole.STUDENT)
     @ApiOperation({ summary: 'Hold a slot for 10 minutes pending payment' })
     @ApiCreatedResponse({ type: BookingResponseDto })
-    async hold(@UserId() userId: string, @Body() dto: CreateBookingDto) {
-        const booking = await this._bookingService.hold(userId, dto.slotId);
+    async hold(@UserId() userId: string, @Body() dto: CreateBookingDto, @Headers('idempotency-key') idempotencyKey?: string,) {
+        const booking = await this._bookingService.hold(userId, dto.slotId, idempotencyKey);
 
         return BookingResponseDto.fromEntity('Slot held successfully. Complete payment to confirm.', booking);
     }

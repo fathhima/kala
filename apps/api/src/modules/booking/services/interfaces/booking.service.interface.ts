@@ -9,6 +9,8 @@ export interface IBookingService {
 
     getById(userId: string, roles: UserRole[], bookingId: string): Promise<BookingEntity>;
 
+    getBookingForPayment(bookingId: string, studentId: string): Promise<BookingEntity>;
+
     listStudent(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
 
     listInstructor(userId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;

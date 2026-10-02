@@ -53,6 +53,24 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         return booking;
     }
 
+    async getBookingForPayment(bookingId: string, studentId: string): Promise<BookingEntity> {
+        const booking = await this._bookingRepository.findById(bookingId);
+
+        if (!booking || booking.studentId !== studentId) {
+            throw new NotFoundException('Booking not found');
+        }
+
+        if (booking.status !== BookingStatus.PAYMENT_PENDING) {
+            throw new BadRequestException('Booking is not in a payable state');
+        }
+
+        if (booking.holdExpiresAt < new Date()) {
+            throw new BadRequestException('Booking hold has expired. Please create a new booking.');
+        }
+
+        return booking;
+    }
+
     listStudent(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity> {
         return this._bookingRepository.findStudentBookings(studentId, query);
     }

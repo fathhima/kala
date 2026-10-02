@@ -71,7 +71,7 @@ export class PrismaBookingRepository implements IBookingRepository {
                     `;
 
                     const slot = rows[0];
-                    
+
                     if (!slot) {
                         throw new SlotNotFoundError('Slot not found');
                     }
@@ -239,8 +239,7 @@ export class PrismaBookingRepository implements IBookingRepository {
 
                 if (
                     record.status === BookingStatus.CANCELLED ||
-                    record.status === BookingStatus.EXPIRED ||
-                    record.status === BookingStatus.REFUNDED
+                    record.status === BookingStatus.EXPIRED
                 ) {
                     throw new BookingValidationError('Booking is already cancelled');
                 }

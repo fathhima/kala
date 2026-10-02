@@ -1,0 +1,13 @@
+export enum PaymentStatus {
+    PENDING = 'PENDING',
+    PROCESSING = 'PROCESSING',
+    SUCCEEDED = 'SUCCEEDED',
+    FAILED = 'FAILED',
+    REFUND_PENDING = 'REFUND_PENDING',
+    REFUNDED = 'REFUNDED',
+    PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+}
+
+export enum PaymentGateway {
+    RAZORPAY = 'RAZORPAY',
+}

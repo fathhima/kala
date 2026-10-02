@@ -78,6 +78,20 @@ enum BookingStatus {
   REFUNDED
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUND_PENDING
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentGateway {
+  RAZORPAY
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -95,6 +109,7 @@ model User {
 
   instructorProfile InstructorProfile?
   bookings          Booking[]
+  payments          Payment[]
 
   @@map("users")
 }
@@ -320,6 +335,7 @@ model Booking {
   hourlyRate      Decimal       @db.Decimal(10, 2)
   durationMinutes Int
   holdExpiresAt   DateTime
+  idempotencyKey  String?       @unique
   cancelledAt     DateTime?
   cancelledBy     String?
   cancelReason    String?
@@ -330,9 +346,38 @@ model Booking {
   student  User               @relation(fields: [studentId], references: [id], onDelete: Restrict)
   offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Restrict)
   profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  payments Payment[]
 
   @@index([studentId, status, createdAt])
   @@index([profileId, status, createdAt])
   @@index([slotId, status])
   @@map("bookings")
+}
+
+model Payment {
+  id               String         @id @default(cuid())
+  bookingId        String
+  studentId        String
+  amount           Decimal        @db.Decimal(10, 2)
+  currency         String
+  status           PaymentStatus  @default(PENDING)
+  gateway          PaymentGateway @default(RAZORPAY)
+  gatewayId        String?        @unique
+  gatewaySessionId String?
+  refundId         String?
+  refundAmount     Decimal?       @db.Decimal(10, 2)
+  metadata         Json?
+  failureReason    String?
+  paidAt           DateTime?
+  refundedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  student User    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, status])
+  @@index([studentId, status, createdAt])
+  @@index([gatewaySessionId])
+  @@map("payments")
 }

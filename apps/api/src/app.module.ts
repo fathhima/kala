@@ -15,6 +15,7 @@ import { InstructorModule } from './modules/instructor/instructor.module';
 import { SlotModule } from './modules/slot/slot.module';
 import { LoggerModule } from './shared/logger/logger.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { BookingModule } from './modules/booking/booking.module';
     InstructorModule,
     SlotModule,
     BookingModule,
+    PaymentModule
   ],
   providers: [
     {

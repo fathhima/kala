@@ -1,9 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-    IPaymentGatewayService,
-    PAYMENT_GATEWAY_PROVIDER,
-    type IPaymentGatewayProvider,
-} from './repositories/interfaces/payment-gateway.interface';
+import {IPaymentGatewayService,PAYMENT_GATEWAY_PROVIDER,type IPaymentGatewayProvider,} from './repositories/interfaces/payment-gateway.interface';
 import { CreateCheckoutInput } from './types/create-checkout.type';
 import { CheckoutSession } from './types/checkout-session.type';
 import { CreateRefundInput } from './types/create-refund.type';

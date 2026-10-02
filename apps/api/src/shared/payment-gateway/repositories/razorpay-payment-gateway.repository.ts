@@ -75,6 +75,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
         const payload = JSON.parse(rawBody.toString());
         const eventType: string = payload.event;
 
+        // 1. Success events
         if (eventType === 'payment.captured' || eventType === 'order.paid') {
             const payment = payload.payload?.payment?.entity;
             const orderId: string = payment?.order_id ?? '';
@@ -86,6 +87,43 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
                 amount: (payment?.amount ?? 0) / 100,
                 currency: (payment?.currency ?? '').toUpperCase(),
                 metadata: (payment?.notes ?? {}) as Record<string, string>,
+            };
+        }
+
+        // 2. Payment failed
+        if (eventType === 'payment.failed') {
+            const payment = payload.payload?.payment?.entity;
+            const orderId: string = payment?.order_id ?? '';
+
+            return {
+                type: eventType,
+                gatewaySessionId: orderId,
+                gatewayPaymentIntentId: payment?.id ?? '',
+                amount: (payment?.amount ?? 0) / 100,
+                currency: (payment?.currency ?? '').toUpperCase(),
+                metadata: (payment?.notes ?? {}) as Record<string, string>,
+                failureReason:
+                    payment?.error_description ||
+                    payment?.error_reason ||
+                    'Payment failed at gateway',
+            };
+        }
+
+        // 3. Refund processed / failed
+        if (eventType === 'refund.processed' || eventType === 'refund.failed') {
+            const refund = payload.payload?.refund?.entity;
+            return {
+                type: eventType,
+                gatewaySessionId: '',
+                gatewayPaymentIntentId: refund?.payment_id ?? '',
+                gatewayRefundId: refund?.id ?? '',
+                amount: (refund?.amount ?? 0) / 100,
+                currency: (refund?.currency ?? '').toUpperCase(),
+                metadata: (refund?.notes ?? {}) as Record<string, string>,
+                failureReason:
+                    refund?.error_description ||
+                    refund?.error_reason ||
+                    (eventType === 'refund.failed' ? 'Refund failed by issuing bank' : undefined),
             };
         }
 

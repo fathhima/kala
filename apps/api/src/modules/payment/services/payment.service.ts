@@ -1,37 +1,14 @@
-import {
-    BadRequestException,
-    Inject,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException, } from '@nestjs/common';
 import { IPaymentService } from './interfaces/payment.service.interface';
-import {
-    PAYMENT_REPOSITORY,
-    type IPaymentRepository,
-} from '../repositories/interfaces/payment.repository.interface';
-import {
-    PAYMENT_GATEWAY_SERVICE,
-    type IPaymentGatewayService,
-} from '@/shared/payment-gateway/repositories/interfaces/payment-gateway.interface';
-import {
-    BOOKING_SERVICE,
-    type IBookingService,
-} from '@/modules/booking/services/interfaces/booking.service.interface';
+import { PAYMENT_REPOSITORY, type IPaymentRepository, } from '../repositories/interfaces/payment.repository.interface';
+import { PAYMENT_GATEWAY_SERVICE, type IPaymentGatewayService, } from '@/shared/payment-gateway/repositories/interfaces/payment-gateway.interface';
+import { BOOKING_SERVICE, type IBookingService, } from '@/modules/booking/services/interfaces/booking.service.interface';
 import { CheckoutEntity, PaginatedPaymentEntity, PaymentEntity } from '../entities/payment.entity';
 import { PaymentListQuery } from '../types/payment.type';
 import { PaymentStatus } from '../enums/payment.enum';
-import { BookingStatus } from '@/modules/booking/enums/booking.enum';
-import {
-    type ILoggerService,
-    LOGGER_SERVICE,
-} from '@/shared/logger/repositories/interfaces/logger.interface';
-import {
-    PaymentGatewayError,
-    PaymentNotFoundError,
-    PaymentValidationError,
-    PaymentConflictError,
-} from '../errors/payment.errors';
+import { type ILoggerService, LOGGER_SERVICE, } from '@/shared/logger/repositories/interfaces/logger.interface';
+import { PaymentGatewayError, PaymentNotFoundError, PaymentValidationError, PaymentConflictError, } from '../errors/payment.errors';
+import { ConfigService } from '@nestjs/config/dist/config.service';
 
 @Injectable()
 export class PaymentService implements IPaymentService {
@@ -44,15 +21,31 @@ export class PaymentService implements IPaymentService {
         private readonly _bookingService: IBookingService,
         @Inject(LOGGER_SERVICE)
         private readonly _logger: ILoggerService,
+        private readonly _configService: ConfigService,
     ) { }
 
     async createCheckout(studentId: string, bookingId: string): Promise<CheckoutEntity> {
         const booking = await this._bookingService.getBookingForPayment(bookingId, studentId);
 
-        // Check for existing pending payment
+        // Check for existing payment
         const existingPayment = await this._paymentRepository.findByBookingId(bookingId);
-        if (existingPayment && existingPayment.status === PaymentStatus.SUCCEEDED) {
-            throw new BadRequestException('Payment has already been completed for this booking');
+        if (existingPayment) {
+            if (existingPayment.status === PaymentStatus.SUCCEEDED) {
+                throw new BadRequestException('Payment has already been completed for this booking');
+            }
+
+            // Reuse existing pending/processing order instead of creating a duplicate
+            if (
+                existingPayment.status === PaymentStatus.PENDING ||
+                existingPayment.status === PaymentStatus.PROCESSING
+            ) {
+                const entity = new CheckoutEntity();
+                entity.paymentId = existingPayment.id;
+                entity.checkoutUrl = '';
+                entity.sessionId = existingPayment.gatewaySessionId ?? '';
+                entity.gatewayKeyId = this._configService.getOrThrow<string>('RAZORPAY_KEY_ID');
+                return entity;
+            }
         }
 
         try {
@@ -99,10 +92,7 @@ export class PaymentService implements IPaymentService {
             throw new BadRequestException('Invalid webhook signature');
         }
 
-        this._logger.log(
-            `Processing webhook event: ${event.type}`,
-            PaymentService.name,
-        );
+        this._logger.log(`Processing webhook event: ${event.type}`, PaymentService.name,);
 
         switch (event.type) {
             case 'checkout.session.completed':
@@ -113,11 +103,29 @@ export class PaymentService implements IPaymentService {
                     event.gatewayPaymentIntentId,
                 );
                 break;
-            default:
-                this._logger.log(
-                    `Unhandled webhook event type: ${event.type}`,
-                    PaymentService.name,
+            case 'payment.failed':
+                await this._handlePaymentFailed(
+                    event.gatewaySessionId,
+                    event.gatewayPaymentIntentId,
+                    event.failureReason,
                 );
+                break;
+            case 'refund.processed':
+                await this._handleRefundProcessed(
+                    event.gatewayPaymentIntentId,
+                    event.gatewayRefundId,
+                    event.amount,
+                );
+                break;
+            case 'refund.failed':
+                await this._handleRefundFailed(
+                    event.gatewayPaymentIntentId,
+                    event.gatewayRefundId,
+                    event.failureReason,
+                );
+                break;
+            default:
+                this._logger.log(`Unhandled webhook event type: ${event.type}`, PaymentService.name,);
         }
     }
 
@@ -141,9 +149,7 @@ export class PaymentService implements IPaymentService {
         return payment;
     }
 
-    async listStudentPayments(
-        studentId: string, query: PaymentListQuery,
-    ): Promise<PaginatedPaymentEntity> {
+    async listStudentPayments(studentId: string, query: PaymentListQuery,): Promise<PaginatedPaymentEntity> {
         return this._paymentRepository.findStudentPayments(studentId, query);
     }
 
@@ -151,9 +157,7 @@ export class PaymentService implements IPaymentService {
         return this._paymentRepository.findAdminPayments(query);
     }
 
-    async refundPayment(
-        bookingId: string, actorId: string, reason?: string,
-    ): Promise<PaymentEntity> {
+    async refundPayment(bookingId: string, actorId: string, reason?: string,): Promise<PaymentEntity> {
         const payment = await this._paymentRepository.findByBookingId(bookingId);
 
         if (!payment) {
@@ -174,40 +178,130 @@ export class PaymentService implements IPaymentService {
                 reason,
             });
 
-            return await this._paymentRepository.refundPayment(
-                payment.id,
-                refundResult.refundId,
-                refundResult.amount,
-            );
+            return await this._paymentRepository.refundPayment(payment.id, refundResult.refundId, refundResult.amount,);
         } catch (error) {
             this._translateDomainError(error);
         }
     }
 
-    private async _handleCheckoutCompleted(
-        gatewaySessionId: string,
-        gatewayPaymentIntentId: string,
-    ): Promise<void> {
+    // ─── Add this method after refundPayment() ─────────────────────
+
+    async processAutoRefund(bookingId: string, refundPercentage: number, reason: string,): Promise<void> {
+        // Find the succeeded payment for this booking
+        const payment = await this._paymentRepository.findByBookingId(bookingId);
+
+        if (!payment || payment.status !== PaymentStatus.SUCCEEDED) {
+            // No succeeded payment to refund (e.g. PAYMENT_PENDING hold was cancelled)
+            return;
+        }
+
+        if (!payment.gatewayId) {
+            this._logger.warn(
+                `Auto-refund skipped: payment ${payment.id} has no gatewayId`,
+                PaymentService.name,
+            );
+            await this._paymentRepository.markRefundPending(payment.id);
+            return;
+        }
+
+        const refundAmount = refundPercentage === 100
+            ? undefined                                    // full refund — let Razorpay use full amount
+            : Math.round(payment.amount * (refundPercentage / 100) * 100) / 100;
+
+        try {
+            const refundResult = await this._paymentGateway.createRefund({
+                gatewayPaymentIntentId: payment.gatewayId,
+                amount: refundAmount,
+                reason,
+            });
+
+            await this._paymentRepository.markRefunded(
+                payment.id,
+                refundResult.refundId,
+                refundResult.amount,
+                refundPercentage < 100,
+            );
+
+            this._logger.log(
+                `Auto-refund processed: booking=${bookingId} payment=${payment.id} ` +
+                `percentage=${refundPercentage}% amount=${refundResult.amount}`,
+                PaymentService.name,
+            );
+        } catch (error) {
+            // Best-effort: don't let refund failure break the cancellation flow.
+            // Flag as REFUND_PENDING so admin can manually retry.
+            this._logger.error(
+                `Auto-refund failed for booking=${bookingId} payment=${payment.id}: ` +
+                `flagging as REFUND_PENDING for admin review`,
+                error instanceof Error ? error.stack : String(error),
+                PaymentService.name,
+            );
+
+            try {
+                await this._paymentRepository.markRefundPending(payment.id);
+            } catch (flagError) {
+                this._logger.error(
+                    `Failed to flag payment ${payment.id} as REFUND_PENDING`,
+                    flagError instanceof Error ? flagError.stack : String(flagError),
+                    PaymentService.name,
+                );
+            }
+        }
+    }
+
+    private async _handleCheckoutCompleted(gatewaySessionId: string, gatewayPaymentIntentId: string,): Promise<void> {
         try {
             await this._paymentRepository.confirmPayment({
                 gatewaySessionId,
                 gatewayPaymentIntentId,
             });
 
-            this._logger.log(
-                `Payment confirmed for session: ${gatewaySessionId}`,
-                PaymentService.name,
-            );
+            this._logger.log(`Payment confirmed for session: ${gatewaySessionId}`, PaymentService.name,);
         } catch (error) {
             if (error instanceof PaymentNotFoundError) {
-                this._logger.warn(
-                    `Webhook received for unknown session: ${gatewaySessionId}`,
-                    PaymentService.name,
-                );
+                this._logger.warn(`Webhook received for unknown session: ${gatewaySessionId}`, PaymentService.name,);
                 return;
             }
             throw error;
         }
+    }
+
+    private async _handlePaymentFailed(gatewaySessionId: string, gatewayPaymentIntentId?: string, failureReason?: string,
+    ): Promise<void> {
+        const payment = await this._paymentRepository.failPayment(gatewaySessionId, gatewayPaymentIntentId, failureReason,);
+
+        if (!payment) {
+            this._logger.warn(`payment.failed webhook received for unknown session: ${gatewaySessionId}`, PaymentService.name,);
+            return;
+        }
+
+        this._logger.warn(`Payment marked as FAILED for session ${gatewaySessionId}: ${failureReason}`, PaymentService.name,);
+    }
+
+    private async _handleRefundProcessed(gatewayPaymentIntentId: string, gatewayRefundId?: string, amount?: number,): Promise<void> {
+        const payment = await this._paymentRepository.confirmRefundWebhook(gatewayPaymentIntentId, gatewayRefundId, amount,);
+
+        if (!payment) {
+            this._logger.warn(`refund.processed webhook received for unknown payment: ${gatewayPaymentIntentId}`,
+                PaymentService.name,);
+            return;
+        }
+
+        this._logger.log(`Refund confirmed via webhook for payment ${payment.id} (refund: ${gatewayRefundId})`,
+            PaymentService.name,);
+    }
+
+    private async _handleRefundFailed(gatewayPaymentIntentId: string, gatewayRefundId?: string, failureReason?: string,)
+        : Promise<void> {
+        const payment = await this._paymentRepository.failRefundWebhook(gatewayPaymentIntentId, gatewayRefundId, failureReason,);
+
+        if (!payment) {
+            this._logger.warn(`refund.failed webhook received for unknown payment: ${gatewayPaymentIntentId}`,
+                PaymentService.name,);
+            return;
+        }
+
+        this._logger.error(`Refund failed via webhook for payment ${payment.id}: ${failureReason}. Status reverted to SUCCEEDED for admin action.`, '', PaymentService.name,);
     }
 
     private _translateDomainError(error: unknown): never {

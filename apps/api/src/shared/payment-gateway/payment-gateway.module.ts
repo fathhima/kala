@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PaymentGatewayService } from './payment-gateway.service';
-import {
-    PAYMENT_GATEWAY_PROVIDER,
-    PAYMENT_GATEWAY_SERVICE,
-} from './repositories/interfaces/payment-gateway.interface';
+import {PAYMENT_GATEWAY_PROVIDER,PAYMENT_GATEWAY_SERVICE,} from './repositories/interfaces/payment-gateway.interface';
 import { RazorpayPaymentGatewayProvider } from './repositories/razorpay-payment-gateway.repository';
 
 @Module({

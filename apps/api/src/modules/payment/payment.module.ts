@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './services/payment.service';
 import { PAYMENT_SERVICE } from './services/interfaces/payment.service.interface';
@@ -9,7 +9,7 @@ import { BookingModule } from '@/modules/booking/booking.module';
 import { PaymentGatewayModule } from '@/shared/payment-gateway/payment-gateway.module';
 
 @Module({
-    imports: [PrismaModule, BookingModule, PaymentGatewayModule],
+    imports: [PrismaModule, forwardRef(() => BookingModule), PaymentGatewayModule],
     controllers: [PaymentController],
     providers: [
         {

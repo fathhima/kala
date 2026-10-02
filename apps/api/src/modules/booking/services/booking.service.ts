@@ -1,4 +1,6 @@
-import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+    BadRequestException, ConflictException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit, forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IBookingService } from './interfaces/booking.service.interface';
 import { BOOKING_REPOSITORY, type IBookingRepository } from '../repositories/interfaces/booking.interface';
@@ -8,6 +10,8 @@ import { UserRole } from '@/shared/enums/role.enum';
 import { type ILoggerService, LOGGER_SERVICE } from '@/shared/logger/repositories/interfaces/logger.interface';
 import { BookingStatus } from '../enums/booking.enum';
 import { BookingConflictError, BookingNotFoundError, BookingValidationError, SlotNotFoundError } from '../errors/booking.errors';
+import { PAYMENT_SERVICE, type IPaymentService } from '@/modules/payment/services/interfaces/payment.service.interface';
+import { calculateRefundEligibility } from '../utils/refund-policy';
 
 @Injectable()
 export class BookingService implements IBookingService, OnModuleInit, OnModuleDestroy {
@@ -19,6 +23,8 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         private readonly _configService: ConfigService,
         @Inject(LOGGER_SERVICE)
         private readonly _logger: ILoggerService,
+        @Inject(forwardRef(() => PAYMENT_SERVICE))
+        private readonly _paymentService: IPaymentService,
     ) { }
 
     onModuleInit() {
@@ -46,6 +52,7 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
 
     async getById(userId: string, roles: UserRole[], bookingId: string): Promise<BookingEntity> {
         const booking = await this._bookingRepository.findById(bookingId);
+
         if (!booking || !this._canView(booking, userId, roles)) {
             throw new NotFoundException('Booking not found');
         }
@@ -103,11 +110,24 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         if (isInstructor && !isAdmin && booking.status !== BookingStatus.CONFIRMED)
             throw new BadRequestException('Instructors can only cancel confirmed sessions');
 
+        // Capture the status before cancellation to determine refund eligibility
+        const wasPaid = booking.status === BookingStatus.CONFIRMED;
+
+        let cancelled: BookingEntity;
         try {
-            return await this._bookingRepository.cancelBooking({ bookingId, actorId: userId, reason });
+            cancelled = await this._bookingRepository.cancelBooking({ bookingId, actorId: userId, reason });
         } catch (error) {
             this._translateDomainError(error);
         }
+
+        // ─── Auto-refund for non-admin cancellations of paid bookings ───
+        if (wasPaid && !isAdmin) {
+            await this._processRefundAfterCancel(
+                cancelled, isInstructor, reason,
+            );
+        }
+
+        return cancelled;
     }
 
     async complete(instructorUserId: string, bookingId: string): Promise<BookingEntity> {
@@ -126,6 +146,31 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
 
     expireHolds(): Promise<number> {
         return this._bookingRepository.expireHolds();
+    }
+
+    // ─── Private helpers ────────────────────────────────────────────
+
+    /**
+     * Determines refund % and delegates to PaymentService.
+     * Best-effort: never throws — errors are logged internally
+     * by processAutoRefund.
+     */
+    private async _processRefundAfterCancel(booking: BookingEntity, isInstructorCancel: boolean, reason?: string,): Promise<void> {
+        // Instructor cancels → always 100 % (not the student's fault)
+        if (isInstructorCancel) {
+            await this._paymentService.processAutoRefund(booking.id, 100, reason ?? 'Cancelled by instructor — full refund',);
+            return;
+        }
+
+        // Student cancels → apply time-based policy
+        const eligibility = calculateRefundEligibility(booking.slot.startTime);
+
+        if (!eligibility.eligible) {
+            this._logger.log(`No refund for booking ${booking.id}: ${eligibility.reason}`, BookingService.name,);
+            return;
+        }
+
+        await this._paymentService.processAutoRefund(booking.id, eligibility.refundPercentage, reason ?? eligibility.reason,);
     }
 
     private _canView(booking: BookingEntity, userId: string, roles: UserRole[]): boolean {

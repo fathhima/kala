@@ -145,16 +145,6 @@ export class PrismaBookingRepository implements IBookingRepository {
                         .toDecimalPlaces(2);
                     const holdExpiresAt = new Date(now.getTime() + holdTtlSeconds * 1000);
 
-                    await tx.availabilitySlot.update({
-                        where: { id: slot.id },
-                        data: {
-                            status: SlotStatus.HELD,
-                            heldUntil: holdExpiresAt,
-                            heldByUserId: input.studentId,
-                            bookedAt: null,
-                        },
-                    });
-
                     const created = await tx.booking.create({
                         data: {
                             slotId: slot.id,
@@ -167,9 +157,20 @@ export class PrismaBookingRepository implements IBookingRepository {
                             hourlyRate: slot.hourlyRate,
                             durationMinutes,
                             holdExpiresAt,
-                            idempotencyKey: input.idempotencyKey ?? null,  // <-- ADD THIS
+                            idempotencyKey: input.idempotencyKey ?? null,
                         },
                         include: bookingInclude,
+                    });
+
+                    await tx.availabilitySlot.update({
+                        where: { id: slot.id },
+                        data: {
+                            status: SlotStatus.HELD,
+                            heldUntil: holdExpiresAt,
+                            heldByUserId: input.studentId,
+                            heldByBookingId: created.id,
+                            bookedAt: null,
+                        },
                     });
 
                     return BookingMapper.toEntity(created);
@@ -279,6 +280,7 @@ export class PrismaBookingRepository implements IBookingRepository {
                         status: SlotStatus.AVAILABLE,
                         heldUntil: null,
                         heldByUserId: null,
+                        heldByBookingId: null,
                         bookedAt: null,
                     },
                 });
@@ -362,6 +364,7 @@ export class PrismaBookingRepository implements IBookingRepository {
                     status: SlotStatus.AVAILABLE,
                     heldUntil: null,
                     heldByUserId: null,
+                    heldByBookingId: null,
                 },
             });
 

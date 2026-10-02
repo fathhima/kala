@@ -5,15 +5,9 @@ import { Public } from '@/shared/decorators/public.decorator';
 import { UserId } from '@/shared/decorators/user-id.decorator';
 import { RawBody } from '@/shared/decorators/raw-body.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
-import {
-    PAYMENT_SERVICE, type IPaymentService,
-} from './services/interfaces/payment.service.interface';
+import {PAYMENT_SERVICE, type IPaymentService,} from './services/interfaces/payment.service.interface';
 import { CreateCheckoutDto, PaymentQueryDto, RefundPaymentDto } from './dto/request/payment.request.dto';
-import {
-    CheckoutResponseDto,
-    PaginatedPaymentsResponseDto,
-    PaymentResponseDto,
-} from './dto/response/payment.response.dto';
+import {CheckoutResponseDto,PaginatedPaymentsResponseDto,PaymentResponseDto,} from './dto/response/payment.response.dto';
 import { PaymentListQuery } from './types/payment.type';
 
 @ApiTags('Payments')
@@ -38,10 +32,7 @@ export class PaymentController {
     @Public()
     @ApiOperation({ summary: 'Razorpay webhook endpoint' })
     @ApiOkResponse({ description: 'Webhook processed' })
-    async handleWebhook(
-        @RawBody() rawBody: Buffer,
-        @Headers('x-razorpay-signature') signature: string,
-    ) {
+    async handleWebhook(@RawBody() rawBody: Buffer,@Headers('x-razorpay-signature') signature: string,) {
         await this._paymentService.handleWebhook(rawBody, signature);
 
         return { received: true };
@@ -61,9 +52,7 @@ export class PaymentController {
     @Roles(UserRole.STUDENT)
     @ApiOperation({ summary: 'Get payment for a booking' })
     @ApiOkResponse({ type: PaymentResponseDto })
-    async getPaymentByBooking(
-        @UserId() userId: string, @Param('bookingId') bookingId: string,
-    ) {
+    async getPaymentByBooking(@UserId() userId: string, @Param('bookingId') bookingId: string,) {
         const payment = await this._paymentService.getPaymentByBooking(bookingId, userId);
 
         return PaymentResponseDto.fromEntity('Payment fetched successfully', payment);
@@ -74,9 +63,7 @@ export class PaymentController {
     @ApiOperation({ summary: 'List student payments' })
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
     async listStudentPayments(@UserId() userId: string, @Query() query: PaymentQueryDto) {
-        const payments = await this._paymentService.listStudentPayments(
-            userId, this._toListQuery(query),
-        );
+        const payments = await this._paymentService.listStudentPayments(userId, this._toListQuery(query),);
 
         return PaginatedPaymentsResponseDto.fromEntity('Payments fetched successfully', payments);
     }
@@ -86,14 +73,8 @@ export class PaymentController {
     @ApiTags('Admin Payments')
     @ApiOperation({ summary: 'Refund a payment (admin only)' })
     @ApiOkResponse({ type: PaymentResponseDto })
-    async refundPayment(
-        @UserId() userId: string,
-        @Param('bookingId') bookingId: string,
-        @Body() dto: RefundPaymentDto,
-    ) {
-        const payment = await this._paymentService.refundPayment(
-            bookingId, userId, dto.reason,
-        );
+    async refundPayment(@UserId() userId: string,@Param('bookingId') bookingId: string,@Body() dto: RefundPaymentDto,) {
+        const payment = await this._paymentService.refundPayment(bookingId, userId, dto.reason,);
 
         return PaymentResponseDto.fromEntity('Payment refunded successfully', payment);
     }

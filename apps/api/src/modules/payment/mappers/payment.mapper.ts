@@ -29,9 +29,7 @@ export class PaymentMapper {
         return entity;
     }
 
-    static toPaginated(
-        records: PaymentRecord[], total: number, page: number, limit: number,
-    ): PaginatedPaymentEntity {
+    static toPaginated(records: PaymentRecord[], total: number, page: number, limit: number,): PaginatedPaymentEntity {
         const entity = new PaginatedPaymentEntity();
         entity.items = records.map(PaymentMapper.toEntity);
         entity.total = total;

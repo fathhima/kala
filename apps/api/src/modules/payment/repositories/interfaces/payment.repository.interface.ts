@@ -23,7 +23,37 @@ export interface IPaymentRepository {
      */
     refundPayment(paymentId: string, refundId: string, refundAmount: number): Promise<PaymentEntity>;
 
+    /**
+     * Updates only the payment record with refund info.
+     * Used by auto-refund flow where booking/slot are already
+     * handled by the cancellation transaction.
+     */
+    markRefunded(paymentId: string, refundId: string, refundAmount: number, isPartial: boolean,): Promise<PaymentEntity>;
+
+    /**
+     * Flags a payment as REFUND_PENDING for admin follow-up
+     * (used when auto-refund gateway call fails).
+     */
+    markRefundPending(paymentId: string): Promise<void>;
+
     findStudentPayments(studentId: string, query: PaymentListQuery): Promise<PaginatedPaymentEntity>;
 
     findAdminPayments(query: PaymentListQuery): Promise<PaginatedPaymentEntity>;
+
+    /**
+    * Marks a payment as FAILED. Does not cancel the slot hold,
+    * so student can still retry payment if hold is active.
+    */
+    failPayment(gatewaySessionId: string, gatewayPaymentIntentId?: string, failureReason?: string,): Promise<PaymentEntity | null>;
+
+    /**
+     * Confirms that a refund has settled via refund.processed webhook.
+     */
+    confirmRefundWebhook(gatewayPaymentIntentId: string, gatewayRefundId?: string, refundAmount?: number,): Promise<PaymentEntity | null>;
+
+    /**
+     * Handles refund.failed webhook. Reverts payment back to SUCCEEDED
+     * and logs the failure reason.
+     */
+    failRefundWebhook(gatewayPaymentIntentId: string, gatewayRefundId?: string, failureReason?: string,): Promise<PaymentEntity | null>;
 }

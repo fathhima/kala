@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-    CheckoutEntity, PaymentEntity, PaginatedPaymentEntity,
-} from '../../entities/payment.entity';
+import { CheckoutEntity, PaymentEntity, PaginatedPaymentEntity, } from '../../entities/payment.entity';
 import { PaymentStatus, PaymentGateway } from '../../enums/payment.enum';
 
 export class PaymentDto {
@@ -140,9 +138,7 @@ export class PaginatedPaymentsResponseDto {
     @ApiProperty({ type: PaginatedPaymentsDataDto })
     data!: PaginatedPaymentsDataDto;
 
-    static fromEntity(
-        message: string, entity: PaginatedPaymentEntity,
-    ): PaginatedPaymentsResponseDto {
+    static fromEntity(message: string, entity: PaginatedPaymentEntity,): PaginatedPaymentsResponseDto {
         const dto = new PaginatedPaymentsResponseDto();
         dto.message = message;
         dto.data = {

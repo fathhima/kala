@@ -1,8 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-    IsEnum, IsInt, IsISO8601, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min,
-} from 'class-validator';
+import {IsEnum, IsInt, IsISO8601, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min,} from 'class-validator';
 import { PaymentStatus } from '../../enums/payment.enum';
 
 export class CreateCheckoutDto {

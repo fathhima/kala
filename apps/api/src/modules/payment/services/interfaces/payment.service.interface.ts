@@ -17,4 +17,11 @@ export interface IPaymentService {
     listAdminPayments(query: PaymentListQuery): Promise<PaginatedPaymentEntity>;
 
     refundPayment(bookingId: string, actorId: string, reason?: string): Promise<PaymentEntity>;
+
+    /**
+     * Best-effort auto-refund triggered by booking cancellation.
+     * Does NOT throw on failure — logs the error and flags payment
+     * as REFUND_PENDING for admin follow-up.
+     */
+    processAutoRefund(bookingId: string, refundPercentage: number, reason: string,): Promise<void>;
 }

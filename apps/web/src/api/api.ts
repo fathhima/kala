@@ -67,6 +67,93 @@ export interface AuthResponseDto {
     'message': string;
     'data': AuthDataDto;
 }
+export interface BookingDto {
+    'id': string;
+    'slotId': string;
+    'studentId': string;
+    'offeringId': string;
+    'profileId': string;
+    'status': BookingDtoStatusEnum;
+    'amount': number;
+    'currency': string;
+    'hourlyRate': number;
+    'durationMinutes': number;
+    'holdExpiresAt': string;
+    'cancelledAt'?: object | null;
+    'cancelledBy'?: object | null;
+    'cancelReason'?: object | null;
+    'createdAt': string;
+    'updatedAt': string;
+    'slot': BookingSlotDto;
+    'student': BookingStudentDto;
+    'offering': BookingOfferingDto;
+    'instructor': BookingInstructorDto;
+}
+
+export const BookingDtoStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+
+export type BookingDtoStatusEnum = typeof BookingDtoStatusEnum[keyof typeof BookingDtoStatusEnum];
+
+export interface BookingInstructorDto {
+    'profileId': string;
+    'userId': string;
+    'name': string;
+    'imageUrl'?: object | null;
+}
+export interface BookingOfferingDto {
+    'id': string;
+    'title'?: object | null;
+    'hourlyRate': number;
+    'currency': string;
+    'subcategory': object;
+}
+export interface BookingPaginationMetaDto {
+    'page': number;
+    'limit': number;
+    'total': number;
+    'totalPages': number;
+}
+export interface BookingResponseDto {
+    'message': string;
+    'data': BookingDto;
+}
+export interface BookingSlotDto {
+    'id': string;
+    'startTime': string;
+    'endTime': string;
+    'timezone': string;
+    'title'?: object | null;
+    'status': BookingSlotDtoStatusEnum;
+    'heldUntil'?: object | null;
+}
+
+export const BookingSlotDtoStatusEnum = {
+    Available: 'AVAILABLE',
+    Held: 'HELD',
+    Booked: 'BOOKED',
+    Cancelled: 'CANCELLED'
+} as const;
+
+export type BookingSlotDtoStatusEnum = typeof BookingSlotDtoStatusEnum[keyof typeof BookingSlotDtoStatusEnum];
+
+export interface BookingStudentDto {
+    'id': string;
+    'name': string;
+    'email': string;
+    'imageUrl'?: object | null;
+}
+export interface CancelBookingDto {
+    /**
+     * Optional cancel reason
+     */
+    'reason'?: string;
+}
 export interface CategoryDto {
     'id': string;
     'name': string;
@@ -117,6 +204,10 @@ export interface ChangePasswordDto {
     'currentPassword'?: string;
     'newPassword': string;
 }
+export interface CheckoutResponseDto {
+    'message': string;
+    'data': object;
+}
 export interface ConfirmCategoryImageUploadDto {
     'storageKey': string;
 }
@@ -133,6 +224,12 @@ export const ConfirmOfferingMediaUploadDtoTypeEnum = {
 
 export type ConfirmOfferingMediaUploadDtoTypeEnum = typeof ConfirmOfferingMediaUploadDtoTypeEnum[keyof typeof ConfirmOfferingMediaUploadDtoTypeEnum];
 
+export interface CreateBookingDto {
+    /**
+     * Availability slot to hold
+     */
+    'slotId': string;
+}
 export interface CreateCategoryDto {
     /**
      * Name of the category.
@@ -150,6 +247,12 @@ export interface CreateCategoryDto {
      * Optional display order of the category. Lower values appear before higher values.
      */
     'sortOrder'?: number;
+}
+export interface CreateCheckoutDto {
+    /**
+     * Booking ID to create checkout for
+     */
+    'bookingId': string;
 }
 export interface CreateOfferingDto {
     'subcategoryId': string;
@@ -398,6 +501,14 @@ export interface PaginatedAdminUsersResponseDto {
     'message': string;
     'data': PaginatedAdminUsersDataDto;
 }
+export interface PaginatedBookingsDataDto {
+    'items': Array<BookingDto>;
+    'meta': BookingPaginationMetaDto;
+}
+export interface PaginatedBookingsResponseDto {
+    'message': string;
+    'data': PaginatedBookingsDataDto;
+}
 export interface PaginatedCategoryDataDto {
     'items': Array<CategoryDto>;
     'meta': PaginationMetaDto;
@@ -416,12 +527,65 @@ export interface PaginatedInstructorApplicationsResponseDto {
     'message': string;
     'data': PaginatedInstructorApplicationsDataDto;
 }
+export interface PaginatedPaymentsDataDto {
+    'items': Array<PaymentDto>;
+    'meta': PaymentPaginationMetaDto;
+}
+export interface PaginatedPaymentsResponseDto {
+    'message': string;
+    'data': PaginatedPaymentsDataDto;
+}
 export interface PaginationMetaDto {
     'page': number;
     'limit': number;
     'total': number;
     'hasNextPage': boolean;
     'hasPrevPage': boolean;
+}
+export interface PaymentDto {
+    'id': string;
+    'bookingId': string;
+    'studentId': string;
+    'amount': number;
+    'currency': string;
+    'status': PaymentDtoStatusEnum;
+    'gateway': PaymentDtoGatewayEnum;
+    'gatewayId'?: object | null;
+    'refundId'?: object | null;
+    'refundAmount'?: object | null;
+    'failureReason'?: object | null;
+    'paidAt'?: object | null;
+    'refundedAt'?: object | null;
+    'createdAt': string;
+    'updatedAt': string;
+}
+
+export const PaymentDtoStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+
+export type PaymentDtoStatusEnum = typeof PaymentDtoStatusEnum[keyof typeof PaymentDtoStatusEnum];
+export const PaymentDtoGatewayEnum = {
+    Razorpay: 'RAZORPAY'
+} as const;
+
+export type PaymentDtoGatewayEnum = typeof PaymentDtoGatewayEnum[keyof typeof PaymentDtoGatewayEnum];
+
+export interface PaymentPaginationMetaDto {
+    'page': number;
+    'limit': number;
+    'total': number;
+    'totalPages': number;
+}
+export interface PaymentResponseDto {
+    'message': string;
+    'data': PaymentDto;
 }
 export interface PresignedDownloadDataDto {
     'storageKey': string;
@@ -515,6 +679,12 @@ export interface RefreshResponseDto {
     'success': boolean;
     'message': string;
     'data': RefreshDataDto;
+}
+export interface RefundPaymentDto {
+    /**
+     * Reason for refund
+     */
+    'reason'?: string;
 }
 export interface RegisterDto {
     /**
@@ -827,6 +997,148 @@ export interface VerifyOtpDto {
      */
     'otp': string;
 }
+
+/**
+ * AdminBookingsApi - axios parameter creator
+ */
+export const AdminBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListAdmin: async (status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminBookingsApi - functional programming interface
+ */
+export const AdminBookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminBookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBookingsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerListAdmin(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminBookingsApi.bookingControllerListAdmin']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminBookingsApi - factory interface
+ */
+export const AdminBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminBookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBookingsResponseDto> {
+            return localVarFp.bookingControllerListAdmin(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminBookingsApi - object-oriented interface
+ */
+export class AdminBookingsApi extends BaseAPI {
+    /**
+     * 
+     * @summary List all bookings
+     * @param {BookingControllerListAdminStatusEnum} [status] 
+     * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return AdminBookingsApiFp(this.configuration).bookingControllerListAdmin(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const BookingControllerListAdminStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type BookingControllerListAdminStatusEnum = typeof BookingControllerListAdminStatusEnum[keyof typeof BookingControllerListAdminStatusEnum];
+
 
 /**
  * AdminCategoriesApi - axios parameter creator
@@ -2298,6 +2610,226 @@ export type AdminInstructorControllerFindAllStatusEnum = typeof AdminInstructorC
 
 
 /**
+ * AdminPaymentsApi - axios parameter creator
+ */
+export const AdminPaymentsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListAdminPayments: async (status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerRefundPayment: async (bookingId: string, refundPaymentDto: RefundPaymentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('paymentControllerRefundPayment', 'bookingId', bookingId)
+            // verify required parameter 'refundPaymentDto' is not null or undefined
+            assertParamExists('paymentControllerRefundPayment', 'refundPaymentDto', refundPaymentDto)
+            const localVarPath = `/api/payments/booking/{bookingId}/refund`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(refundPaymentDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminPaymentsApi - functional programming interface
+ */
+export const AdminPaymentsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminPaymentsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedPaymentsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerListAdminPayments(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminPaymentsApi.paymentControllerListAdminPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerRefundPayment(bookingId, refundPaymentDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminPaymentsApi.paymentControllerRefundPayment']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminPaymentsApi - factory interface
+ */
+export const AdminPaymentsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminPaymentsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedPaymentsResponseDto> {
+            return localVarFp.paymentControllerListAdminPayments(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig): AxiosPromise<PaymentResponseDto> {
+            return localVarFp.paymentControllerRefundPayment(bookingId, refundPaymentDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminPaymentsApi - object-oriented interface
+ */
+export class AdminPaymentsApi extends BaseAPI {
+    /**
+     * 
+     * @summary List all payments (admin)
+     * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+     * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return AdminPaymentsApiFp(this.configuration).paymentControllerListAdminPayments(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Refund a payment (admin only)
+     * @param {string} bookingId 
+     * @param {RefundPaymentDto} refundPaymentDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig) {
+        return AdminPaymentsApiFp(this.configuration).paymentControllerRefundPayment(bookingId, refundPaymentDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const PaymentControllerListAdminPaymentsStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+export type PaymentControllerListAdminPaymentsStatusEnum = typeof PaymentControllerListAdminPaymentsStatusEnum[keyof typeof PaymentControllerListAdminPaymentsStatusEnum];
+
+
+/**
  * AdminUserManagementApi - axios parameter creator
  */
 export const AdminUserManagementApiAxiosParamCreator = function (configuration?: Configuration) {
@@ -3418,6 +3950,656 @@ export class AuthenticationApi extends BaseAPI {
 
 
 /**
+ * BookingsApi - axios parameter creator
+ */
+export const BookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Cancel a pending hold or confirmed session and release the slot
+         * @param {string} bookingId 
+         * @param {CancelBookingDto} cancelBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerCancel: async (bookingId: string, cancelBookingDto: CancelBookingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('bookingControllerCancel', 'bookingId', bookingId)
+            // verify required parameter 'cancelBookingDto' is not null or undefined
+            assertParamExists('bookingControllerCancel', 'cancelBookingDto', cancelBookingDto)
+            const localVarPath = `/api/bookings/{bookingId}/cancel`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(cancelBookingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerComplete: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('bookingControllerComplete', 'bookingId', bookingId)
+            const localVarPath = `/api/instructor/bookings/{bookingId}/complete`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a booking by id (student, instructor, or admin)
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerGetById: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('bookingControllerGetById', 'bookingId', bookingId)
+            const localVarPath = `/api/bookings/{bookingId}`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Hold a slot for 10 minutes pending payment
+         * @param {string} idempotencyKey 
+         * @param {CreateBookingDto} createBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerHold: async (idempotencyKey: string, createBookingDto: CreateBookingDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'idempotencyKey' is not null or undefined
+            assertParamExists('bookingControllerHold', 'idempotencyKey', idempotencyKey)
+            // verify required parameter 'createBookingDto' is not null or undefined
+            assertParamExists('bookingControllerHold', 'createBookingDto', createBookingDto)
+            const localVarPath = `/api/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            if (idempotencyKey != null) {
+                localVarHeaderParameter['idempotency-key'] = String(idempotencyKey);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createBookingDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListAdmin: async (status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListInstructor: async (status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructor/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List current student bookings
+         * @param {BookingControllerListStudentStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListStudent: async (status?: BookingControllerListStudentStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * BookingsApi - functional programming interface
+ */
+export const BookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = BookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Cancel a pending hold or confirmed session and release the slot
+         * @param {string} bookingId 
+         * @param {CancelBookingDto} cancelBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerCancel(bookingId: string, cancelBookingDto: CancelBookingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerCancel(bookingId, cancelBookingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerCancel']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerComplete(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerComplete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a booking by id (student, instructor, or admin)
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerGetById(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerGetById(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerGetById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Hold a slot for 10 minutes pending payment
+         * @param {string} idempotencyKey 
+         * @param {CreateBookingDto} createBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerHold(idempotencyKey: string, createBookingDto: CreateBookingDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerHold(idempotencyKey, createBookingDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerHold']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBookingsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerListAdmin(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerListAdmin']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBookingsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerListInstructor(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerListInstructor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List current student bookings
+         * @param {BookingControllerListStudentStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerListStudent(status?: BookingControllerListStudentStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBookingsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerListStudent(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.bookingControllerListStudent']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * BookingsApi - factory interface
+ */
+export const BookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = BookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Cancel a pending hold or confirmed session and release the slot
+         * @param {string} bookingId 
+         * @param {CancelBookingDto} cancelBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerCancel(bookingId: string, cancelBookingDto: CancelBookingDto, options?: RawAxiosRequestConfig): AxiosPromise<BookingResponseDto> {
+            return localVarFp.bookingControllerCancel(bookingId, cancelBookingDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingResponseDto> {
+            return localVarFp.bookingControllerComplete(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a booking by id (student, instructor, or admin)
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerGetById(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingResponseDto> {
+            return localVarFp.bookingControllerGetById(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Hold a slot for 10 minutes pending payment
+         * @param {string} idempotencyKey 
+         * @param {CreateBookingDto} createBookingDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerHold(idempotencyKey: string, createBookingDto: CreateBookingDto, options?: RawAxiosRequestConfig): AxiosPromise<BookingResponseDto> {
+            return localVarFp.bookingControllerHold(idempotencyKey, createBookingDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List all bookings
+         * @param {BookingControllerListAdminStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBookingsResponseDto> {
+            return localVarFp.bookingControllerListAdmin(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBookingsResponseDto> {
+            return localVarFp.bookingControllerListInstructor(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List current student bookings
+         * @param {BookingControllerListStudentStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListStudent(status?: BookingControllerListStudentStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBookingsResponseDto> {
+            return localVarFp.bookingControllerListStudent(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * BookingsApi - object-oriented interface
+ */
+export class BookingsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Cancel a pending hold or confirmed session and release the slot
+     * @param {string} bookingId 
+     * @param {CancelBookingDto} cancelBookingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerCancel(bookingId: string, cancelBookingDto: CancelBookingDto, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerCancel(bookingId, cancelBookingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mark a confirmed session as completed after it ends
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerComplete(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a booking by id (student, instructor, or admin)
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerGetById(bookingId: string, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerGetById(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Hold a slot for 10 minutes pending payment
+     * @param {string} idempotencyKey 
+     * @param {CreateBookingDto} createBookingDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerHold(idempotencyKey: string, createBookingDto: CreateBookingDto, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerHold(idempotencyKey, createBookingDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List all bookings
+     * @param {BookingControllerListAdminStatusEnum} [status] 
+     * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerListAdmin(status?: BookingControllerListAdminStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerListAdmin(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List bookings for the current instructor
+     * @param {BookingControllerListInstructorStatusEnum} [status] 
+     * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerListInstructor(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List current student bookings
+     * @param {BookingControllerListStudentStatusEnum} [status] 
+     * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerListStudent(status?: BookingControllerListStudentStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).bookingControllerListStudent(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const BookingControllerListAdminStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type BookingControllerListAdminStatusEnum = typeof BookingControllerListAdminStatusEnum[keyof typeof BookingControllerListAdminStatusEnum];
+export const BookingControllerListInstructorStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type BookingControllerListInstructorStatusEnum = typeof BookingControllerListInstructorStatusEnum[keyof typeof BookingControllerListInstructorStatusEnum];
+export const BookingControllerListStudentStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type BookingControllerListStudentStatusEnum = typeof BookingControllerListStudentStatusEnum[keyof typeof BookingControllerListStudentStatusEnum];
+
+
+/**
  * CategoriesApi - axios parameter creator
  */
 export const CategoriesApiAxiosParamCreator = function (configuration?: Configuration) {
@@ -4477,6 +5659,821 @@ export class InstructorApi extends BaseAPI {
     }
 }
 
+
+
+/**
+ * InstructorBookingsApi - axios parameter creator
+ */
+export const InstructorBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerComplete: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('bookingControllerComplete', 'bookingId', bookingId)
+            const localVarPath = `/api/instructor/bookings/{bookingId}/complete`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListInstructor: async (status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructor/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * InstructorBookingsApi - functional programming interface
+ */
+export const InstructorBookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = InstructorBookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerComplete(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorBookingsApi.bookingControllerComplete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBookingsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bookingControllerListInstructor(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorBookingsApi.bookingControllerListInstructor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * InstructorBookingsApi - factory interface
+ */
+export const InstructorBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = InstructorBookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Mark a confirmed session as completed after it ends
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingResponseDto> {
+            return localVarFp.bookingControllerComplete(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List bookings for the current instructor
+         * @param {BookingControllerListInstructorStatusEnum} [status] 
+         * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBookingsResponseDto> {
+            return localVarFp.bookingControllerListInstructor(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * InstructorBookingsApi - object-oriented interface
+ */
+export class InstructorBookingsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Mark a confirmed session as completed after it ends
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerComplete(bookingId: string, options?: RawAxiosRequestConfig) {
+        return InstructorBookingsApiFp(this.configuration).bookingControllerComplete(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List bookings for the current instructor
+     * @param {BookingControllerListInstructorStatusEnum} [status] 
+     * @param {string} [from] Filter by slot startTime &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by slot startTime &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public bookingControllerListInstructor(status?: BookingControllerListInstructorStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return InstructorBookingsApiFp(this.configuration).bookingControllerListInstructor(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const BookingControllerListInstructorStatusEnum = {
+    PaymentPending: 'PAYMENT_PENDING',
+    Confirmed: 'CONFIRMED',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type BookingControllerListInstructorStatusEnum = typeof BookingControllerListInstructorStatusEnum[keyof typeof BookingControllerListInstructorStatusEnum];
+
+
+/**
+ * PaymentsApi - axios parameter creator
+ */
+export const PaymentsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Create a Razorpay checkout session for a booking
+         * @param {CreateCheckoutDto} createCheckoutDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerCreateCheckout: async (createCheckoutDto: CreateCheckoutDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createCheckoutDto' is not null or undefined
+            assertParamExists('paymentControllerCreateCheckout', 'createCheckoutDto', createCheckoutDto)
+            const localVarPath = `/api/payments/checkout`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createCheckoutDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a payment by ID
+         * @param {string} paymentId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPayment: async (paymentId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'paymentId' is not null or undefined
+            assertParamExists('paymentControllerGetPayment', 'paymentId', paymentId)
+            const localVarPath = `/api/payments/{paymentId}`
+                .replace(`{${"paymentId"}}`, encodeURIComponent(String(paymentId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get payment for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPaymentByBooking: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('paymentControllerGetPaymentByBooking', 'bookingId', bookingId)
+            const localVarPath = `/api/payments/booking/{bookingId}`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Razorpay webhook endpoint
+         * @param {string} xRazorpaySignature 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerHandleWebhook: async (xRazorpaySignature: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'xRazorpaySignature' is not null or undefined
+            assertParamExists('paymentControllerHandleWebhook', 'xRazorpaySignature', xRazorpaySignature)
+            const localVarPath = `/api/payments/webhook`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+            if (xRazorpaySignature != null) {
+                localVarHeaderParameter['x-razorpay-signature'] = String(xRazorpaySignature);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListAdminPayments: async (status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List student payments
+         * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListStudentPayments: async (status?: PaymentControllerListStudentPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerRefundPayment: async (bookingId: string, refundPaymentDto: RefundPaymentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('paymentControllerRefundPayment', 'bookingId', bookingId)
+            // verify required parameter 'refundPaymentDto' is not null or undefined
+            assertParamExists('paymentControllerRefundPayment', 'refundPaymentDto', refundPaymentDto)
+            const localVarPath = `/api/payments/booking/{bookingId}/refund`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(refundPaymentDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * PaymentsApi - functional programming interface
+ */
+export const PaymentsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = PaymentsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Create a Razorpay checkout session for a booking
+         * @param {CreateCheckoutDto} createCheckoutDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerCreateCheckout(createCheckoutDto: CreateCheckoutDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CheckoutResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerCreateCheckout(createCheckoutDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerCreateCheckout']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a payment by ID
+         * @param {string} paymentId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerGetPayment(paymentId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetPayment(paymentId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerGetPayment']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get payment for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerGetPaymentByBooking(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetPaymentByBooking(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerGetPaymentByBooking']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Razorpay webhook endpoint
+         * @param {string} xRazorpaySignature 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerHandleWebhook(xRazorpaySignature: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerHandleWebhook(xRazorpaySignature, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerHandleWebhook']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedPaymentsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerListAdminPayments(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerListAdminPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List student payments
+         * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerListStudentPayments(status?: PaymentControllerListStudentPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedPaymentsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerListStudentPayments(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerListStudentPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerRefundPayment(bookingId, refundPaymentDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerRefundPayment']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * PaymentsApi - factory interface
+ */
+export const PaymentsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = PaymentsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Create a Razorpay checkout session for a booking
+         * @param {CreateCheckoutDto} createCheckoutDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerCreateCheckout(createCheckoutDto: CreateCheckoutDto, options?: RawAxiosRequestConfig): AxiosPromise<CheckoutResponseDto> {
+            return localVarFp.paymentControllerCreateCheckout(createCheckoutDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a payment by ID
+         * @param {string} paymentId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPayment(paymentId: string, options?: RawAxiosRequestConfig): AxiosPromise<PaymentResponseDto> {
+            return localVarFp.paymentControllerGetPayment(paymentId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get payment for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPaymentByBooking(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<PaymentResponseDto> {
+            return localVarFp.paymentControllerGetPaymentByBooking(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Razorpay webhook endpoint
+         * @param {string} xRazorpaySignature 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerHandleWebhook(xRazorpaySignature: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerHandleWebhook(xRazorpaySignature, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List all payments (admin)
+         * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedPaymentsResponseDto> {
+            return localVarFp.paymentControllerListAdminPayments(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List student payments
+         * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListStudentPayments(status?: PaymentControllerListStudentPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedPaymentsResponseDto> {
+            return localVarFp.paymentControllerListStudentPayments(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Refund a payment (admin only)
+         * @param {string} bookingId 
+         * @param {RefundPaymentDto} refundPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig): AxiosPromise<PaymentResponseDto> {
+            return localVarFp.paymentControllerRefundPayment(bookingId, refundPaymentDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * PaymentsApi - object-oriented interface
+ */
+export class PaymentsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Create a Razorpay checkout session for a booking
+     * @param {CreateCheckoutDto} createCheckoutDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerCreateCheckout(createCheckoutDto: CreateCheckoutDto, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerCreateCheckout(createCheckoutDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a payment by ID
+     * @param {string} paymentId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerGetPayment(paymentId: string, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerGetPayment(paymentId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get payment for a booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerGetPaymentByBooking(bookingId: string, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerGetPaymentByBooking(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Razorpay webhook endpoint
+     * @param {string} xRazorpaySignature 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerHandleWebhook(xRazorpaySignature: string, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerHandleWebhook(xRazorpaySignature, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List all payments (admin)
+     * @param {PaymentControllerListAdminPaymentsStatusEnum} [status] 
+     * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerListAdminPayments(status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerListAdminPayments(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List student payments
+     * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
+     * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerListStudentPayments(status?: PaymentControllerListStudentPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerListStudentPayments(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Refund a payment (admin only)
+     * @param {string} bookingId 
+     * @param {RefundPaymentDto} refundPaymentDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerRefundPayment(bookingId: string, refundPaymentDto: RefundPaymentDto, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerRefundPayment(bookingId, refundPaymentDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const PaymentControllerListAdminPaymentsStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+export type PaymentControllerListAdminPaymentsStatusEnum = typeof PaymentControllerListAdminPaymentsStatusEnum[keyof typeof PaymentControllerListAdminPaymentsStatusEnum];
+export const PaymentControllerListStudentPaymentsStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+export type PaymentControllerListStudentPaymentsStatusEnum = typeof PaymentControllerListStudentPaymentsStatusEnum[keyof typeof PaymentControllerListStudentPaymentsStatusEnum];
 
 
 /**

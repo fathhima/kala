@@ -6,6 +6,7 @@ import { BOOKING_SERVICE, type IBookingService, } from '@/modules/booking/servic
 import { CheckoutEntity, PaginatedPaymentEntity, PaymentEntity } from '../entities/payment.entity';
 import { PaymentListQuery } from '../types/payment.type';
 import { PaymentStatus } from '../enums/payment.enum';
+import { UserRole } from '@/shared/enums/role.enum';
 import { type ILoggerService, LOGGER_SERVICE, } from '@/shared/logger/repositories/interfaces/logger.interface';
 import { PaymentGatewayError, PaymentNotFoundError, PaymentValidationError, PaymentConflictError, } from '../errors/payment.errors';
 import { ConfigService } from '@nestjs/config/dist/config.service';
@@ -139,11 +140,25 @@ export class PaymentService implements IPaymentService {
         return payment;
     }
 
-    async getPaymentByBooking(bookingId: string, studentId: string): Promise<PaymentEntity> {
+    async getPaymentByBooking(
+        bookingId: string,
+        userId: string,
+        roles?: UserRole[],
+    ): Promise<PaymentEntity> {
+        if (roles && roles.length > 0) {
+            await this._bookingService.getById(userId, roles, bookingId);
+        }
+
         const payment = await this._paymentRepository.findByBookingId(bookingId);
 
-        if (!payment || payment.studentId !== studentId) {
+        if (!payment) {
             throw new NotFoundException('Payment not found for this booking');
+        }
+
+        if (!roles || roles.length === 0) {
+            if (payment.studentId !== userId) {
+                throw new NotFoundException('Payment not found for this booking');
+            }
         }
 
         return payment;
@@ -155,6 +170,16 @@ export class PaymentService implements IPaymentService {
 
     async listAdminPayments(query: PaymentListQuery): Promise<PaginatedPaymentEntity> {
         return this._paymentRepository.findAdminPayments(query);
+    }
+
+    async getAdminPayment(paymentId: string): Promise<PaymentEntity> {
+        const payment = await this._paymentRepository.findById(paymentId);
+
+        if (!payment) {
+            throw new NotFoundException('Payment not found');
+        }
+
+        return payment;
     }
 
     async refundPayment(bookingId: string, actorId: string, reason?: string,): Promise<PaymentEntity> {
@@ -202,7 +227,7 @@ export class PaymentService implements IPaymentService {
         }
 
         const refundAmount = refundPercentage === 100
-            ? undefined                                    // full refund — let Razorpay use full amount
+            ? payment.amount
             : Math.round(payment.amount * (refundPercentage / 100) * 100) / 100;
 
         try {
@@ -244,6 +269,49 @@ export class PaymentService implements IPaymentService {
                 );
             }
         }
+    }
+
+    async confirmDevPayment(studentId: string, bookingId: string): Promise<PaymentEntity> {
+        if (this._configService.get('NODE_ENV') !== 'development') {
+            throw new BadRequestException('Development payment simulation is only available in development mode');
+        }
+
+        const payment = await this._paymentRepository.findByBookingId(bookingId);
+        if (!payment || payment.studentId !== studentId) {
+            throw new NotFoundException('Payment record not found for this booking');
+        }
+
+        const confirmed = await this._paymentRepository.confirmPayment({
+            gatewaySessionId: payment.gatewaySessionId ?? `order_dev_${Date.now()}`,
+            gatewayPaymentIntentId: `pay_dev_${Date.now()}`,
+        });
+
+        this._logger.log(
+            `Dev payment simulated & confirmed for booking=${bookingId} payment=${payment.id}`,
+            PaymentService.name,
+        );
+
+        return confirmed;
+    }
+
+    async recordPaymentFailure(studentId: string, bookingId: string, reason?: string): Promise<PaymentEntity> {
+        const payment = await this._paymentRepository.findByBookingId(bookingId);
+
+        if (!payment || payment.studentId !== studentId) {
+            throw new NotFoundException('Payment not found');
+        }
+
+        if (payment.status === PaymentStatus.SUCCEEDED) {
+            return payment;
+        }
+
+        const failed = await this._paymentRepository.failPayment(
+            payment.gatewaySessionId ?? '',
+            payment.gatewayId ?? undefined,
+            reason ?? 'Payment failed or was declined',
+        );
+
+        return failed ?? payment;
     }
 
     private async _handleCheckoutCompleted(gatewaySessionId: string, gatewayPaymentIntentId: string,): Promise<void> {

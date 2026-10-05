@@ -1,6 +1,19 @@
 import { Link } from 'react-router-dom'
 import { Star, MapPin, BadgeCheck } from 'lucide-react'
-import type { InstructorProfile } from '../../types'
+export interface InstructorProfile {
+  id: string
+  user: {
+    name: string
+    avatarUrl?: string
+  }
+  isTopRated?: boolean
+  location?: string
+  bio?: string
+  skills: Array<{ id: string; name: string }>
+  avgRating: number
+  pricing: number
+  portfolioItems: Array<{ imageUrl: string }>
+}
 import { Card } from '../ui/Card'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'

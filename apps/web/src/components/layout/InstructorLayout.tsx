@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, Image, Sparkles, Star, Settings, Menu, LogOut, Clock, CreditCard, ArrowLeftRight, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Image, Sparkles, Settings, Menu, LogOut, CalendarCheck, GraduationCap } from 'lucide-react'
 import { DashboardSidebar } from './DashboardSidebar'
 import { Avatar } from '../ui/Avatar'
 import { useAuthStore } from '@/features/auth/store'
@@ -12,9 +12,7 @@ const navItems = [
   { label: 'Portfolio', path: '/instructor/portfolio', icon: <Image size={18} /> },
   { label: 'Offerings', path: '/instructor/offerings', icon: <Sparkles size={18} /> },
   { label: 'Manage Slots', path: '/instructor/slots', icon: <CalendarDays size={18} /> },
-  { label: 'My Sessions', path: '/instructor/sessions', icon: <Clock size={18} /> },
-  { label: 'Reviews', path: '/instructor/reviews', icon: <Star size={18} /> },
-  { label: 'Payments', path: '/instructor/payments', icon: <CreditCard size={18} /> },
+  { label: 'My Sessions', path: '/instructor/sessions', icon: <CalendarCheck size={18} /> },
   { label: 'Profile Settings', path: '/instructor/settings', icon: <Settings size={18} /> },
 ]
 

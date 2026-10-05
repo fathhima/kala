@@ -177,17 +177,24 @@ function previewRuleSlots(
   return slots
 }
 
-// ─── Error helper ─────────────────────────────────────────────────────────────
-
 function getErrorMessage(error: unknown): string {
-  if (
-    typeof error === 'object' &&
-    error &&
-    'response' in error &&
-    typeof (error as { response?: unknown }).response === 'object' &&
-    (error as { response?: { data?: { message?: string } } }).response?.data?.message
-  ) {
-    return (error as { response: { data: { message: string } } }).response.data.message
+  if (typeof error === 'object' && error !== null) {
+    const err = error as any
+    const resData = err.response?.data
+    if (resData) {
+      if (typeof resData.message === 'string' && resData.message.trim()) {
+        return resData.message
+      }
+      if (Array.isArray(resData.message) && resData.message.length > 0) {
+        return resData.message.join(', ')
+      }
+      if (typeof resData.error === 'string' && resData.error.trim()) {
+        return resData.error
+      }
+    }
+    if (typeof err.message === 'string' && err.message.trim()) {
+      return err.message
+    }
   }
   return 'Something went wrong. Please try again.'
 }
@@ -533,9 +540,7 @@ function WeeklyRulesTab({
   const [error, setError] = useState('')
   const [showPreview, setShowPreview] = useState(false)
   const [showTimetable, setShowTimetable] = useState(true)
-  const [ruleToBlock, setRuleToBlock] = useState<SlotRule | null>(null)
   const [ruleToDelete, setRuleToDelete] = useState<SlotRule | null>(null)
-  const [exceptionToUnblock, setExceptionToUnblock] = useState<SlotException | null>(null)
 
   const rules = availabilityQuery.data?.rules ?? []
 
@@ -849,29 +854,15 @@ function WeeklyRulesTab({
               <RuleCard
                 key={rule.id}
                 rule={rule}
-                exceptions={availabilityQuery.data?.exceptions ?? []}
                 onToggleStatus={() => handleToggleStatus(rule)}
                 onEdit={() => onEditRule(rule)}
                 onDelete={() => setRuleToDelete(rule)}
-                onBlock={() => setRuleToBlock(rule)}
-                onUnblock={(ex) => setExceptionToUnblock(ex)}
                 updating={updateRuleMutation.isPending}
               />
             ))}
           </div>
         )}
       </div>
-
-      <ConfirmBlockModal
-        rule={ruleToBlock}
-        exceptions={availabilityQuery.data?.exceptions ?? []}
-        onClose={() => setRuleToBlock(null)}
-      />
-
-      <ConfirmUnblockModal
-        exception={exceptionToUnblock}
-        onClose={() => setExceptionToUnblock(null)}
-      />
 
       <ConfirmDeleteRuleModal
         rule={ruleToDelete}
@@ -881,58 +872,19 @@ function WeeklyRulesTab({
   )
 }
 
-function ConfirmBlockModal({
-  rule,
-  exceptions = [],
+function ConfirmBlockSlotModal({
+  slot,
   onClose,
 }: {
-  rule: SlotRule | null
-  exceptions?: SlotException[]
+  slot: Slot | null
   onClose: () => void
 }) {
   const createExceptionMutation = useCreateSlotExceptionMutation()
   const [error, setError] = useState('')
 
-  if (!rule) return null
+  if (!slot) return null
 
-  // Calculate target occurrence
-  const now = new Date()
-  const istTimeStr = new Intl.DateTimeFormat('en-GB', {
-    timeZone: TIMEZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(now)
-  const [h, m] = istTimeStr.split(':').map(Number)
-  const currentMinute = h * 60 + m
-
-  const weekdayStr = new Intl.DateTimeFormat('en-US', {
-    timeZone: TIMEZONE,
-    weekday: 'short',
-  }).format(now)
-  const map: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
-  const todayWeekday = map[weekdayStr] ?? now.getDay()
-
-  let daysAhead = rule.weekday - todayWeekday
-  if (daysAhead === 0) {
-    if (currentMinute >= rule.endMinute) {
-      daysAhead = 7
-    }
-  } else if (daysAhead < 0) {
-    daysAhead += 7
-  }
-
-  const occurrence = new Date(now)
-  occurrence.setDate(occurrence.getDate() + daysAhead)
-
-  const dateStr = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(occurrence)
-
-  const friendlyDate = occurrence.toLocaleDateString('en-IN', {
+  const friendlyDate = new Date(slot.startTime).toLocaleDateString('en-IN', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -940,34 +892,17 @@ function ConfirmBlockModal({
     timeZone: TIMEZONE,
   })
 
-  const startISO = new Date(`${dateStr}T${minutesToTime(rule.startMinute)}:00+05:30`).toISOString()
-  const endISO = new Date(`${dateStr}T${minutesToTime(rule.endMinute)}:00+05:30`).toISOString()
-
-  const isAlreadyBlocked = exceptions.some((e) => {
-    if (e.type !== 'BLOCK') return false
-    if (e.offeringId && e.offeringId !== rule.offeringId) return false
-    const exStart = new Date(e.startTime).getTime()
-    const exEnd = new Date(e.endTime).getTime()
-    const targetStart = new Date(startISO).getTime()
-    const targetEnd = new Date(endISO).getTime()
-    return exStart < targetEnd && exEnd > targetStart
-  })
-
   async function handleConfirm() {
-    if (!rule) return
-    if (isAlreadyBlocked) {
-      setError('This upcoming date is already blocked.')
-      return
-    }
+    if (!slot) return
     setError('')
     try {
       await createExceptionMutation.mutateAsync({
         type: 'BLOCK',
-        offeringId: rule.offeringId,
-        title: `Block – ${WEEKDAY_FULL[rule.weekday]} ${friendlyDate}`,
-        startTime: startISO,
-        endTime: endISO,
-        timezone: TIMEZONE,
+        offeringId: slot.offeringId,
+        title: `Blocked slot – ${formatTime(slot.startTime)}`,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        timezone: slot.timezone || TIMEZONE,
       })
       onClose()
     } catch (err) {
@@ -977,32 +912,26 @@ function ConfirmBlockModal({
 
   return (
     <Modal
-      open={Boolean(rule)}
+      open={Boolean(slot)}
       onClose={createExceptionMutation.isPending ? () => {} : onClose}
-      title={`Block ${WEEKDAY_FULL[rule.weekday]}?`}
+      title="Block This Slot?"
     >
       <div className="space-y-4">
         <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 text-xs text-amber-900">
           <p className="text-sm font-semibold">{friendlyDate}</p>
           <p className="mt-1 font-medium text-stone-700">
-            Window: <strong>{formatMinuteTo12Hour(rule.startMinute)} – {formatMinuteTo12Hour(rule.endMinute)} (IST)</strong>
+            Window: <strong>{formatTime(slot.startTime)} – {formatTime(slot.endTime)} (IST)</strong>
           </p>
-          {rule.offering && (
+          {slot.offering && (
             <p className="mt-0.5 text-stone-500">
-              Offering: {rule.offering.title || rule.offering.subcategory.name}
+              Offering: {slot.offering.title || slot.offering.subcategory.name}
             </p>
           )}
         </div>
 
         <p className="text-xs text-stone-500">
-          This will cancel all <strong>open available slots</strong> in this window on this day. Your recurring weekly rule remains intact for future weeks. Any confirmed student bookings will not be cancelled.
+          This will cancel and block this specific slot so students cannot book it. Any recurring weekly rules for other weeks will remain active.
         </p>
-
-        {isAlreadyBlocked && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-            ⚠️ This upcoming occurrence ({friendlyDate}) is already blocked.
-          </div>
-        )}
 
         {error && <ErrorBanner message={error} />}
 
@@ -1018,89 +947,10 @@ function ConfirmBlockModal({
           <Button
             variant="destructive"
             loading={createExceptionMutation.isPending}
-            disabled={isAlreadyBlocked}
             onClick={handleConfirm}
           >
             <Ban size={14} />
-            Confirm &amp; Block
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  )
-}
-
-function ConfirmUnblockModal({
-  exception,
-  onClose,
-}: {
-  exception: SlotException | null
-  onClose: () => void
-}) {
-  const deleteExceptionMutation = useDeleteSlotExceptionMutation()
-  const [error, setError] = useState('')
-
-  if (!exception) return null
-
-  const friendlyStart = new Date(exception.startTime).toLocaleDateString('en-IN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: TIMEZONE,
-  })
-
-  async function handleConfirm() {
-    if (!exception) return
-    setError('')
-    try {
-      await deleteExceptionMutation.mutateAsync(exception.id)
-      onClose()
-    } catch (err) {
-      setError(getErrorMessage(err))
-    }
-  }
-
-  return (
-    <Modal
-      open={Boolean(exception)}
-      onClose={deleteExceptionMutation.isPending ? () => {} : onClose}
-      title="Unblock This Date?"
-    >
-      <div className="space-y-4">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 text-xs text-emerald-900">
-          <p className="text-sm font-semibold">{friendlyStart}</p>
-          <p className="mt-1 font-medium text-stone-700">
-            Window: <strong>{formatTime(exception.startTime)} – {formatTime(exception.endTime)} (IST)</strong>
-          </p>
-          {exception.title && (
-            <p className="mt-0.5 text-stone-500">Note: {exception.title}</p>
-          )}
-        </div>
-
-        <p className="text-xs text-stone-500">
-          This will remove the time off block. Any open slots generated by your weekly schedule for this day will be automatically restored for student booking.
-        </p>
-
-        {error && <ErrorBanner message={error} />}
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            disabled={deleteExceptionMutation.isPending}
-            onClick={onClose}
-            className="rounded-xl border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <Button
-            variant="default"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            loading={deleteExceptionMutation.isPending}
-            onClick={handleConfirm}
-          >
-            <CheckCircle2 size={14} />
-            Confirm &amp; Unblock
+            Confirm &amp; Block Slot
           </Button>
         </div>
       </div>
@@ -1178,88 +1028,18 @@ function ConfirmDeleteRuleModal({
 
 function RuleCard({
   rule,
-  exceptions = [],
   onToggleStatus,
   onEdit,
   onDelete,
-  onBlock,
-  onUnblock,
   updating,
 }: {
   rule: SlotRule
-  exceptions?: SlotException[]
   onToggleStatus: () => void
   onEdit: () => void
   onDelete: () => void
-  onBlock: () => void
-  onUnblock: (exception: SlotException) => void
   updating: boolean
 }) {
   const isActive = rule.status === 'ACTIVE'
-
-  // Next occurrence calculation
-  const nextOccur = useMemo(() => {
-    const now = new Date()
-    const istTimeStr = new Intl.DateTimeFormat('en-GB', {
-      timeZone: TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(now)
-    const [h, m] = istTimeStr.split(':').map(Number)
-    const currentMinute = h * 60 + m
-
-    const weekdayStr = new Intl.DateTimeFormat('en-US', {
-      timeZone: TIMEZONE,
-      weekday: 'short',
-    }).format(now)
-    const map: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
-    const todayWeekday = map[weekdayStr] ?? now.getDay()
-
-    let daysAhead = rule.weekday - todayWeekday
-    if (daysAhead === 0) {
-      if (currentMinute >= rule.endMinute) {
-        daysAhead = 7
-      }
-    } else if (daysAhead < 0) {
-      daysAhead += 7
-    }
-
-    const occurrence = new Date(now)
-    occurrence.setDate(occurrence.getDate() + daysAhead)
-
-    const dateStr = new Intl.DateTimeFormat('en-CA', {
-      timeZone: TIMEZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(occurrence)
-
-    const friendlyDate = occurrence.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      timeZone: TIMEZONE,
-    })
-
-    const startISO = new Date(`${dateStr}T${minutesToTime(rule.startMinute)}:00+05:30`).toISOString()
-    const endISO = new Date(`${dateStr}T${minutesToTime(rule.endMinute)}:00+05:30`).toISOString()
-
-    return { dateStr, friendlyDate, startISO, endISO, daysAhead }
-  }, [rule])
-
-  const activeBlockException = useMemo(() => {
-    return exceptions.find((e) => {
-      if (e.type !== 'BLOCK') return false
-      if (e.offeringId && e.offeringId !== rule.offeringId) return false
-      const exStart = new Date(e.startTime).getTime()
-      const exEnd = new Date(e.endTime).getTime()
-      const targetStart = new Date(nextOccur.startISO).getTime()
-      const targetEnd = new Date(nextOccur.endISO).getTime()
-      return exStart < targetEnd && exEnd > targetStart
-    })
-  }, [exceptions, rule.offeringId, nextOccur])
-
-  const occurrenceDayLabel = nextOccur.daysAhead === 0 ? 'Today' : WEEKDAY_FULL[rule.weekday]
 
   return (
     <Card className={cn('flex flex-col gap-3 p-4 transition-all sm:flex-row sm:items-center sm:gap-4', !isActive && 'bg-stone-50/60 opacity-80')}>
@@ -1284,6 +1064,11 @@ function RuleCard({
               {rule.offering.title || rule.offering.subcategory.name}
             </span>
           )}
+          {!isActive && (
+            <span className="rounded-md border border-stone-200 bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold text-stone-500 uppercase">
+              Paused
+            </span>
+          )}
         </div>
         <p className="mt-0.5 text-xs text-stone-500">
           Every {WEEKDAY_FULL[rule.weekday]} • {formatMinuteTo12Hour(rule.startMinute)} – {formatMinuteTo12Hour(rule.endMinute)} • {rule.slotDurationMinutes} min slots
@@ -1295,42 +1080,14 @@ function RuleCard({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
-        {/* ── Block / Unblock this Day quick-action ── */}
-        {isActive && (
-          activeBlockException ? (
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/90 px-2.5 py-1 text-xs font-semibold text-red-700 shadow-2xs">
-              <Ban size={12} className="text-red-500 shrink-0" />
-              <span>{occurrenceDayLabel} ({nextOccur.friendlyDate}) Blocked</span>
-              <button
-                type="button"
-                onClick={() => onUnblock(activeBlockException)}
-                title="Click to remove this block and restore slots"
-                className="ml-1 rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-red-700 shadow-2xs hover:bg-red-100 hover:text-red-900 transition-colors"
-              >
-                Unblock
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onBlock}
-              title={`Cancel all open slots for ${occurrenceDayLabel} (${nextOccur.friendlyDate}) without changing your recurring weekly rule`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700 transition-colors hover:bg-orange-100"
-            >
-              <Ban size={12} />
-              Block {occurrenceDayLabel} ({nextOccur.friendlyDate})
-            </button>
-          )
-        )}
-
         {/* ── Active / Inactive Status Switch ── */}
         <button
           type="button"
           onClick={onToggleStatus}
           disabled={updating}
-          title={isActive ? 'Click to pause this rule (cancels future open slots)' : 'Click to activate this rule (generates slots)'}
+          title={isActive ? 'Click to deactivate/pause this rule (cancels future open slots)' : 'Click to activate this rule (generates slots)'}
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors',
+            'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
             isActive
               ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
               : 'border-stone-300 bg-stone-100 text-stone-600 hover:bg-stone-200',
@@ -1338,11 +1095,11 @@ function RuleCard({
         >
           <span
             className={cn(
-              'h-1.5 w-1.5 rounded-full',
+              'h-2 w-2 rounded-full',
               isActive ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400',
             )}
           />
-          {isActive ? 'Active' : 'Paused'}
+          {isActive ? 'Active' : 'Inactive'}
         </button>
 
         {/* ── Edit Button ── */}
@@ -1432,10 +1189,14 @@ function ExtraTimeTab({
         slotDurationMinutes: duration,
       })
       setTitle('')
+      setError('')
     } catch (err) {
       setError(getErrorMessage(err))
     }
   }
+
+  const [slotToBlock, setSlotToBlock] = useState<Slot | null>(null)
+  const [exceptionToUnblock, setExceptionToUnblock] = useState<SlotException | null>(null)
 
   return (
     <div className="space-y-6">
@@ -1459,7 +1220,10 @@ function ExtraTimeTab({
             <SectionLabel>Offering</SectionLabel>
             <OfferingSelect
               value={offeringId}
-              onChange={setOfferingId}
+              onChange={(v) => {
+                setOfferingId(v)
+                setError('')
+              }}
               offerings={offerings}
               id="extra-offering"
             />
@@ -1468,7 +1232,10 @@ function ExtraTimeTab({
             <SectionLabel>Label (optional)</SectionLabel>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                setError('')
+              }}
               placeholder="e.g. Weekend Masterclass or Extra Office Hours"
               className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm font-medium text-stone-800 shadow-sm transition-colors focus:border-kala-amber focus:outline-none focus:ring-2 focus:ring-kala-amber/20"
             />
@@ -1482,13 +1249,19 @@ function ExtraTimeTab({
               <DateInput
                 id="extra-start-date"
                 value={startDate}
-                onChange={setStartDate}
+                onChange={(v) => {
+                  setStartDate(v)
+                  setError('')
+                }}
                 min={todayISO()}
               />
               <TimeInput
                 id="extra-start-time"
                 value={startTime}
-                onChange={setStartTime}
+                onChange={(v) => {
+                  setStartTime(v)
+                  setError('')
+                }}
               />
             </div>
           </div>
@@ -1499,13 +1272,19 @@ function ExtraTimeTab({
               <DateInput
                 id="extra-end-date"
                 value={endDate}
-                onChange={setEndDate}
+                onChange={(v) => {
+                  setEndDate(v)
+                  setError('')
+                }}
                 min={startDate}
               />
               <TimeInput
                 id="extra-end-time"
                 value={endTime}
-                onChange={setEndTime}
+                onChange={(v) => {
+                  setEndTime(v)
+                  setError('')
+                }}
                 minTime={startDate === endDate ? startTime : undefined}
               />
             </div>
@@ -1514,8 +1293,10 @@ function ExtraTimeTab({
 
         <div>
           <SectionLabel>Slot Duration</SectionLabel>
-          <DurationPicker value={duration} onChange={setDuration} />
+          <DurationPicker value={duration} onChange={(v) => { setDuration(v); setError('') }} />
         </div>
+
+        <ErrorBanner message={error} />
 
         <div className="border-t border-stone-100 pt-4">
           <Button
@@ -1542,9 +1323,24 @@ function ExtraTimeTab({
             sublabel="Any one-off slots added above will be listed here."
           />
         ) : (
-          <UpcomingSlotsGrid slots={upcomingExtraSlots} />
+          <UpcomingSlotsGrid
+            slots={upcomingExtraSlots}
+            exceptions={availabilityQuery.data?.exceptions ?? []}
+            onBlockSlot={setSlotToBlock}
+            onUnblockSlot={setExceptionToUnblock}
+          />
         )}
       </div>
+
+      <ConfirmBlockSlotModal
+        slot={slotToBlock}
+        onClose={() => setSlotToBlock(null)}
+      />
+
+      <ConfirmDeleteExceptionModal
+        exception={exceptionToUnblock}
+        onClose={() => setExceptionToUnblock(null)}
+      />
     </div>
   )
 }
@@ -1732,7 +1528,17 @@ function BlockTimeTab({
 
 // ─── Upcoming Slots Grid ──────────────────────────────────────────────────────
 
-function UpcomingSlotsGrid({ slots }: { slots: Slot[] }) {
+function UpcomingSlotsGrid({
+  slots,
+  exceptions = [],
+  onBlockSlot,
+  onUnblockSlot,
+}: {
+  slots: Slot[]
+  exceptions?: SlotException[]
+  onBlockSlot?: (slot: Slot) => void
+  onUnblockSlot?: (exception: SlotException) => void
+}) {
   const grouped = useMemo(() => {
     const map = new Map<string, Slot[]>()
     for (const slot of slots) {
@@ -1793,12 +1599,50 @@ function UpcomingSlotsGrid({ slots }: { slots: Slot[] }) {
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge variant={slotStatusVariant(slot.status)}>
-                      {isCancelled ? 'BLOCKED' : slot.status}
-                    </Badge>
-                    {origin && (
-                      <span className="text-[10px] font-medium text-stone-400">{origin}</span>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={slotStatusVariant(slot.status)}>
+                        {isCancelled ? 'BLOCKED' : slot.status}
+                      </Badge>
+                      {origin && (
+                        <span className="text-[10px] font-medium text-stone-400">{origin}</span>
+                      )}
+                    </div>
+                    {/* Action buttons on individual slot card */}
+                    {slot.status === 'AVAILABLE' && onBlockSlot && (
+                      <button
+                        type="button"
+                        onClick={() => onBlockSlot(slot)}
+                        title={`Block slot on ${formatTime(slot.startTime)} – ${formatTime(slot.endTime)}`}
+                        className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-stone-600 shadow-2xs transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Ban size={11} className="text-red-500" />
+                        <span>Block</span>
+                      </button>
+                    )}
+                    {isCancelled && onUnblockSlot && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const slotStart = new Date(slot.startTime).getTime()
+                          const slotEnd = new Date(slot.endTime).getTime()
+                          const matchingEx = exceptions.find(
+                            (e) =>
+                              e.type === 'BLOCK' &&
+                              (!e.offeringId || e.offeringId === slot.offeringId) &&
+                              new Date(e.startTime).getTime() <= slotStart &&
+                              new Date(e.endTime).getTime() >= slotEnd,
+                          )
+                          if (matchingEx) {
+                            onUnblockSlot(matchingEx)
+                          }
+                        }}
+                        title="Unblock and restore this slot"
+                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 shadow-2xs transition-colors hover:bg-emerald-100"
+                      >
+                        <CheckCircle2 size={11} className="text-emerald-600" />
+                        <span>Unblock</span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1976,6 +1820,9 @@ function UpcomingPanel({
 }) {
   const [filterOfferingId, setFilterOfferingId] = useState('')
   const [statusFilter, setStatusFilter] = useState<'AVAILABLE' | 'BLOCKED' | 'ALL'>('AVAILABLE')
+  const [slotToBlock, setSlotToBlock] = useState<Slot | null>(null)
+  const [exceptionToUnblock, setExceptionToUnblock] = useState<SlotException | null>(null)
+
   const availabilityQuery = useInstructorAvailabilityQuery(
     filterOfferingId ? { offeringId: filterOfferingId } : undefined,
   )
@@ -2119,8 +1966,23 @@ function UpcomingPanel({
           }
         />
       ) : (
-        <UpcomingSlotsGrid slots={displayedSlots} />
+        <UpcomingSlotsGrid
+          slots={displayedSlots}
+          exceptions={availabilityQuery.data?.exceptions ?? []}
+          onBlockSlot={setSlotToBlock}
+          onUnblockSlot={setExceptionToUnblock}
+        />
       )}
+
+      <ConfirmBlockSlotModal
+        slot={slotToBlock}
+        onClose={() => setSlotToBlock(null)}
+      />
+
+      <ConfirmDeleteExceptionModal
+        exception={exceptionToUnblock}
+        onClose={() => setExceptionToUnblock(null)}
+      />
     </div>
   )
 }

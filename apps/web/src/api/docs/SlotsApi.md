@@ -6,7 +6,8 @@ All URIs are relative to *http://localhost:4000*
 |------------- | ------------- | -------------|
 |[**slotControllerCreateException**](#slotcontrollercreateexception) | **POST** /api/instructor/availability/exceptions | Create an availability exception|
 |[**slotControllerCreateRule**](#slotcontrollercreaterule) | **POST** /api/instructor/availability/rules | Create a new availability rule|
-|[**slotControllerDisableRule**](#slotcontrollerdisablerule) | **DELETE** /api/instructor/availability/rules/{ruleId} | Disable an availability rule|
+|[**slotControllerDeleteException**](#slotcontrollerdeleteexception) | **DELETE** /api/instructor/availability/exceptions/{exceptionId} | Delete an availability exception|
+|[**slotControllerDeleteRule**](#slotcontrollerdeleterule) | **DELETE** /api/instructor/availability/rules/{ruleId} | Delete an availability rule|
 |[**slotControllerGetPublicAvailability**](#slotcontrollergetpublicavailability) | **GET** /api/public/instructors/{profileId}/availability | Get public slot availability for an instructor|
 |[**slotControllerListInstructorAvailability**](#slotcontrollerlistinstructoravailability) | **GET** /api/instructor/availability | Get instructor availability rules and exceptions|
 |[**slotControllerUpdateRule**](#slotcontrollerupdaterule) | **PATCH** /api/instructor/availability/rules/{ruleId} | Update an existing availability rule|
@@ -113,8 +114,58 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **slotControllerDisableRule**
-> MessageResponseDto slotControllerDisableRule()
+# **slotControllerDeleteException**
+> MessageResponseDto slotControllerDeleteException()
+
+
+### Example
+
+```typescript
+import {
+    SlotsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new SlotsApi(configuration);
+
+let exceptionId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.slotControllerDeleteException(
+    exceptionId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **exceptionId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**MessageResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **slotControllerDeleteRule**
+> MessageResponseDto slotControllerDeleteRule()
 
 
 ### Example
@@ -130,7 +181,7 @@ const apiInstance = new SlotsApi(configuration);
 
 let ruleId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.slotControllerDisableRule(
+const { status, data } = await apiInstance.slotControllerDeleteRule(
     ruleId
 );
 ```

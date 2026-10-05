@@ -120,9 +120,13 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
             this._translateDomainError(error);
         }
 
-        // ─── Auto-refund for non-admin cancellations of paid bookings ───
-        if (wasPaid && !isAdmin) {
-            await this._processRefundAfterCancel(cancelled, isInstructor, reason,);
+        // ─── Auto-refund for cancellations of paid bookings ───
+        if (wasPaid) {
+            await this._processRefundAfterCancel(
+                cancelled,
+                isInstructor || isAdmin,
+                reason ?? (isAdmin ? 'Cancelled by administrator — full refund' : undefined),
+            );
         }
 
         return cancelled;
@@ -153,10 +157,18 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
      * Best-effort: never throws — errors are logged internally
      * by processAutoRefund.
      */
-    private async _processRefundAfterCancel(booking: BookingEntity, isInstructorCancel: boolean, reason?: string,): Promise<void> {
-        // Instructor cancels → always 100 % (not the student's fault)
-        if (isInstructorCancel) {
-            await this._paymentService.processAutoRefund(booking.id, 100, reason ?? 'Cancelled by instructor — full refund',);
+    private async _processRefundAfterCancel(
+        booking: BookingEntity,
+        isFullRefundActor: boolean,
+        reason?: string,
+    ): Promise<void> {
+        // Instructor or Admin cancels → always 100% (not the student's fault)
+        if (isFullRefundActor) {
+            await this._paymentService.processAutoRefund(
+                booking.id,
+                100,
+                reason ?? 'Cancelled by platform/instructor — full refund',
+            );
             return;
         }
 
@@ -164,11 +176,18 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         const eligibility = calculateRefundEligibility(booking.slot.startTime);
 
         if (!eligibility.eligible) {
-            this._logger.log(`No refund for booking ${booking.id}: ${eligibility.reason}`, BookingService.name,);
+            this._logger.log(
+                `No refund for booking ${booking.id}: ${eligibility.reason}`,
+                BookingService.name,
+            );
             return;
         }
 
-        await this._paymentService.processAutoRefund(booking.id, eligibility.refundPercentage, reason ?? eligibility.reason,);
+        await this._paymentService.processAutoRefund(
+            booking.id,
+            eligibility.refundPercentage,
+            reason ?? eligibility.reason,
+        );
     }
 
     private _canView(booking: BookingEntity, userId: string, roles: UserRole[]): boolean {

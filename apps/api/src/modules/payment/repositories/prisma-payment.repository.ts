@@ -38,12 +38,7 @@ export class PrismaPaymentRepository implements IPaymentRepository {
 
     async findByBookingId(bookingId: string): Promise<PaymentEntity | null> {
         const record = await this._prisma.payment.findFirst({
-            where: {
-                bookingId,
-                status: {
-                    in: [PaymentStatus.PENDING, PaymentStatus.PROCESSING, PaymentStatus.SUCCEEDED],
-                },
-            },
+            where: { bookingId },
             orderBy: { createdAt: 'desc' },
         });
 

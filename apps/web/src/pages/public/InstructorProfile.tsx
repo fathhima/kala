@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   BookOpen,
   LogIn,
   Briefcase,
+  Sparkles,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
@@ -21,6 +22,7 @@ import { Card } from '@/components/ui/Card'
 import { cn, formatTime } from '@/lib/utils'
 import { usePublicInstructorQuery } from '@/features/instructor/hooks'
 import { usePublicAvailabilityQuery } from '@/features/slots/hooks'
+import { useHoldSlotMutation } from '@/features/booking/hooks'
 import { useAuthStore } from '@/features/auth/store'
 
 function todayInIndia() {
@@ -38,23 +40,55 @@ export function InstructorProfile() {
   const { isAuthenticated } = useAuthStore()
 
   const query = usePublicInstructorQuery(profileId ?? '')
+  const holdSlotMutation = useHoldSlotMutation()
+
   const [selectedOfferingId, setSelectedOfferingId] = useState<string | null>(null)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [date, setDate] = useState('')
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [mediaTab, setMediaTab] = useState<'images' | 'videos'>('images')
+  const [bookingError, setBookingError] = useState<string | null>(null)
 
-  const from = date ? `${date}T00:00:00.000Z` : ''
-  const nextDay = date ? new Date(new Date(date).getTime() + 86400000) : null
-  const to = nextDay ? `${nextDay.toISOString().split('T')[0]}T00:00:00.000Z` : ''
+  const activeOfferingId = selectedOfferingId || query.data?.offerings[0]?.id || ''
+
+  // Convert selected date to full day in Indian Standard Time (UTC+05:30)
+  const from = date ? new Date(`${date}T00:00:00+05:30`).toISOString() : ''
+  const to = date ? new Date(`${date}T23:59:59.999+05:30`).toISOString() : ''
 
   const availability = usePublicAvailabilityQuery({
     profileId: profileId ?? '',
-    offeringId: selectedOfferingId ?? '',
+    offeringId: activeOfferingId,
     from,
     to,
-    enabled: Boolean(profileId && selectedOfferingId && date && bookingOpen),
+    enabled: Boolean(profileId && activeOfferingId && date && bookingOpen),
   })
+
+  // Query next 30 days of upcoming slots to discover available dates for this offering
+  const next30DaysFrom = useMemo(() => new Date().toISOString(), [])
+  const next30DaysTo = useMemo(() => new Date(Date.now() + 30 * 86400000).toISOString(), [])
+
+  const upcomingAvailability = usePublicAvailabilityQuery({
+    profileId: profileId ?? '',
+    offeringId: activeOfferingId,
+    from: next30DaysFrom,
+    to: next30DaysTo,
+    enabled: Boolean(profileId && activeOfferingId && bookingOpen),
+  })
+
+  const availableDates = useMemo(() => {
+    if (!upcomingAvailability.data) return []
+    const dates = new Set<string>()
+    for (const slot of upcomingAvailability.data) {
+      const d = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(slot.startTime))
+      dates.add(d)
+    }
+    return Array.from(dates).sort()
+  }, [upcomingAvailability.data])
 
   if (!profileId) return <Navigate to="/instructors" replace />
 
@@ -84,7 +118,7 @@ export function InstructorProfile() {
   }
 
   const instructor = query.data
-  const selectedOffering = instructor.offerings.find((o) => o.id === selectedOfferingId) ?? instructor.offerings[0] ?? null
+  const selectedOffering = instructor.offerings.find((o) => o.id === activeOfferingId) ?? instructor.offerings[0] ?? null
 
   function selectOffering(id: string) {
     setSelectedOfferingId(id)
@@ -102,6 +136,30 @@ export function InstructorProfile() {
     setBookingOpen(true)
     setDate('')
     setSelectedSlotId(null)
+    setBookingError(null)
+  }
+
+  async function handleConfirmBooking() {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { redirectTo: `/instructors/${profileId}` } })
+      return
+    }
+    if (!selectedSlotId) return
+
+    setBookingError(null)
+    try {
+      const booking = await holdSlotMutation.mutateAsync({
+        slotId: selectedSlotId,
+        idempotencyKey: crypto.randomUUID(),
+      })
+      navigate(`/checkout/${booking.id}`, { state: { bookingId: booking.id } })
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to hold slot. It might already be reserved or unavailable.'
+      setBookingError(message)
+    }
   }
 
   const images = selectedOffering?.media.filter((m) => m.type === 'IMAGE') ?? []
@@ -379,8 +437,8 @@ export function InstructorProfile() {
                 ) : (
                   /* ── Date + slot picker ── */
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-2">
+                    <div className="space-y-2.5">
+                      <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider">
                         Select date
                       </label>
                       <input
@@ -393,12 +451,49 @@ export function InstructorProfile() {
                         }}
                         className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-kala-amber/40 focus:border-kala-amber"
                       />
+
+                      {/* Quick-pick dates from upcoming availability */}
+                      {availableDates.length > 0 && (
+                        <div className="pt-1 space-y-1.5">
+                          <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider flex items-center gap-1">
+                            <Sparkles size={11} className="text-kala-amber" /> Available dates:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {availableDates.slice(0, 4).map((d) => {
+                              const isSelected = date === d
+                              const label = new Date(`${d}T12:00:00+05:30`).toLocaleDateString('en-IN', {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'short',
+                              })
+                              return (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => {
+                                    setDate(d)
+                                    setSelectedSlotId(null)
+                                  }}
+                                  className={cn(
+                                    'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all',
+                                    isSelected
+                                      ? 'bg-kala-brown text-white border-kala-brown shadow-xs'
+                                      : 'bg-white text-stone-700 border-stone-200 hover:border-kala-amber hover:bg-amber-50/50',
+                                  )}
+                                >
+                                  {label}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {!date && (
                       <div className="flex items-center justify-center gap-2 py-6 text-sm text-stone-400">
                         <CalendarDays size={18} className="text-stone-300" />
-                        Pick a date to see slots
+                        {availableDates.length > 0 ? 'Pick a date or select above to see slots' : 'Pick a date to see slots'}
                       </div>
                     )}
 
@@ -417,8 +512,32 @@ export function InstructorProfile() {
                     )}
 
                     {date && !availability.isLoading && availability.data?.length === 0 && (
-                      <div className="text-center py-6 text-sm text-stone-400">
-                        No available slots on this date.
+                      <div className="text-center py-5 px-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-2 text-xs text-stone-500">
+                        <p className="font-semibold text-stone-700">No available slots on this date.</p>
+                        {availableDates.length > 0 && (
+                          <div>
+                            <p className="mb-2 text-stone-400">Try one of the upcoming available days:</p>
+                            <div className="flex flex-wrap justify-center gap-1.5">
+                              {availableDates.slice(0, 3).map((d) => (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => {
+                                    setDate(d)
+                                    setSelectedSlotId(null)
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-white border border-stone-300 text-kala-brown font-semibold hover:border-kala-amber shadow-xs text-xs"
+                                >
+                                  {new Date(`${d}T12:00:00+05:30`).toLocaleDateString('en-IN', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                  })}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -441,11 +560,13 @@ export function InstructorProfile() {
                               )}
                             >
                               <span className="flex items-center gap-2 font-medium">
-                                <Clock size={14} className="text-kala-amber" />
-                                {formatTime(slot.startTime)}
+                                <Clock size={14} className="text-kala-amber shrink-0" />
+                                <span className="font-semibold text-stone-800">
+                                  {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+                                </span>
                               </span>
-                              <span className="text-stone-400 text-xs">
-                                until {formatTime(slot.endTime)}
+                              <span className="text-xs font-medium text-stone-400">
+                                Available
                               </span>
                             </button>
                           ))}
@@ -456,11 +577,21 @@ export function InstructorProfile() {
                     {/* Confirm CTA */}
                     {selectedSlotId && (
                       <div className="pt-1 space-y-2">
-                        <Button className="w-full" size="lg">
+                        {bookingError && (
+                          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                            {bookingError}
+                          </div>
+                        )}
+                        <Button
+                          className="w-full"
+                          size="lg"
+                          loading={holdSlotMutation.isPending}
+                          onClick={handleConfirmBooking}
+                        >
                           <CalendarDays size={16} /> Confirm Booking
                         </Button>
                         <p className="text-center text-xs text-stone-400">
-                          You'll be redirected to payment.
+                          Confirm slot and proceed to checkout.
                         </p>
                       </div>
                     )}

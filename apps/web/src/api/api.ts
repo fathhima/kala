@@ -79,9 +79,9 @@ export interface BookingDto {
     'hourlyRate': number;
     'durationMinutes': number;
     'holdExpiresAt': string;
-    'cancelledAt'?: object | null;
-    'cancelledBy'?: object | null;
-    'cancelReason'?: object | null;
+    'cancelledAt'?: string | null;
+    'cancelledBy'?: string | null;
+    'cancelReason'?: string | null;
     'createdAt': string;
     'updatedAt': string;
     'slot': BookingSlotDto;
@@ -550,12 +550,13 @@ export interface PaymentDto {
     'currency': string;
     'status': PaymentDtoStatusEnum;
     'gateway': PaymentDtoGatewayEnum;
-    'gatewayId'?: object | null;
-    'refundId'?: object | null;
-    'refundAmount'?: object | null;
-    'failureReason'?: object | null;
-    'paidAt'?: object | null;
-    'refundedAt'?: object | null;
+    'gatewayId'?: string | null;
+    'gatewaySessionId'?: string | null;
+    'refundId'?: string | null;
+    'refundAmount'?: number | null;
+    'failureReason'?: string | null;
+    'paidAt'?: string | null;
+    'refundedAt'?: string | null;
     'createdAt': string;
     'updatedAt': string;
 }
@@ -940,7 +941,16 @@ export interface UpdateSlotRuleDto {
     'endMinute'?: number;
     'slotDurationMinutes'?: number;
     'effectiveUntil'?: string;
+    'status'?: UpdateSlotRuleDtoStatusEnum;
 }
+
+export const UpdateSlotRuleDtoStatusEnum = {
+    Active: 'ACTIVE',
+    Inactive: 'INACTIVE'
+} as const;
+
+export type UpdateSlotRuleDtoStatusEnum = typeof UpdateSlotRuleDtoStatusEnum[keyof typeof UpdateSlotRuleDtoStatusEnum];
+
 export interface UpdateSubcategoryDto {
     /**
      * Updated name of the subcategory.
@@ -5981,14 +5991,48 @@ export const SlotsApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
-         * @summary Disable an availability rule
+         * @summary Delete an availability exception
+         * @param {string} exceptionId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slotControllerDeleteException: async (exceptionId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'exceptionId' is not null or undefined
+            assertParamExists('slotControllerDeleteException', 'exceptionId', exceptionId)
+            const localVarPath = `/api/instructor/availability/exceptions/{exceptionId}`
+                .replace(`{${"exceptionId"}}`, encodeURIComponent(String(exceptionId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerDisableRule: async (ruleId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        slotControllerDeleteRule: async (ruleId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'ruleId' is not null or undefined
-            assertParamExists('slotControllerDisableRule', 'ruleId', ruleId)
+            assertParamExists('slotControllerDeleteRule', 'ruleId', ruleId)
             const localVarPath = `/api/instructor/availability/rules/{ruleId}`
                 .replace(`{${"ruleId"}}`, encodeURIComponent(String(ruleId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6183,15 +6227,28 @@ export const SlotsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Disable an availability rule
+         * @summary Delete an availability exception
+         * @param {string} exceptionId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slotControllerDeleteException(exceptionId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerDeleteException(exceptionId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerDeleteException']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerDisableRule(ruleId, options);
+        async slotControllerDeleteRule(ruleId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slotControllerDeleteRule(ruleId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerDisableRule']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SlotsApi.slotControllerDeleteRule']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -6270,13 +6327,23 @@ export const SlotsApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
-         * @summary Disable an availability rule
+         * @summary Delete an availability exception
+         * @param {string} exceptionId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slotControllerDeleteException(exceptionId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.slotControllerDeleteException(exceptionId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete an availability rule
          * @param {string} ruleId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
-            return localVarFp.slotControllerDisableRule(ruleId, options).then((request) => request(axios, basePath));
+        slotControllerDeleteRule(ruleId: string, options?: RawAxiosRequestConfig): AxiosPromise<MessageResponseDto> {
+            return localVarFp.slotControllerDeleteRule(ruleId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6345,13 +6412,24 @@ export class SlotsApi extends BaseAPI {
 
     /**
      * 
-     * @summary Disable an availability rule
+     * @summary Delete an availability exception
+     * @param {string} exceptionId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public slotControllerDeleteException(exceptionId: string, options?: RawAxiosRequestConfig) {
+        return SlotsApiFp(this.configuration).slotControllerDeleteException(exceptionId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete an availability rule
      * @param {string} ruleId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public slotControllerDisableRule(ruleId: string, options?: RawAxiosRequestConfig) {
-        return SlotsApiFp(this.configuration).slotControllerDisableRule(ruleId, options).then((request) => request(this.axios, this.basePath));
+    public slotControllerDeleteRule(ruleId: string, options?: RawAxiosRequestConfig) {
+        return SlotsApiFp(this.configuration).slotControllerDeleteRule(ruleId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

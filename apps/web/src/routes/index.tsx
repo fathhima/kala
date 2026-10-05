@@ -21,21 +21,14 @@ import { InstructorLayout } from "@/components/layout/InstructorLayout";
 import { StudentDashboard } from "@/pages/student/Dashboard";
 import { MyBookings } from "@/pages/student/MyBookings";
 import { BookingDetails } from "@/pages/student/BookingDetails";
-import { BookingChat } from "@/pages/student/BookingChat";
-import { PaymentHistory } from "@/pages/student/PaymentHistory";
 import { BecomeInstructor } from "@/pages/student/BecomeInstructor";
 import { Payment } from "@/pages/student/Payment";
-import { VideoCall } from "@/pages/student/VideoCall";
 import { InstructorDashboard } from "@/pages/instructor/Dashboard";
 import { ManageSlots } from "@/pages/instructor/ManageSlots";
 import { MySessions } from "@/pages/instructor/MySessions";
 import { InstructorSessionDetails } from "@/pages/instructor/SessionDetails";
-import { InstructorSessionChat } from "@/pages/instructor/SessionChat";
 import { Portfolio } from "@/pages/instructor/Portfolio";
 import { InstructorSkills } from "@/pages/instructor/Skills";
-import { Reviews } from "@/pages/instructor/Reviews";
-import { InstructorPayments } from "@/pages/instructor/Payments";
-import { InstructorProfileSettings } from "@/pages/instructor/ProfileSettings";
 import { InstructorApplications } from "@/pages/admin/InstructorApplications";
 import { ApplicationDetails } from "@/pages/admin/ApplicationDetails";
 import { ManageSkills } from "@/pages/admin/ManageSkills";
@@ -135,22 +128,38 @@ export const router = createBrowserRouter([
     element: <StudentApp />,
     children: [
       { index: true, element: <StudentDashboard /> },
-      // { path: 'bookings', element: <MyBookings /> },
-      // { path: 'bookings/:id', element: <BookingDetails /> },
+      { path: 'bookings', element: <MyBookings /> },
+      { path: 'bookings/:id', element: <BookingDetails /> },
       // { path: 'bookings/:id/chat', element: <BookingChat /> },
       // { path: 'payments', element: <PaymentHistory /> },
       { path: 'become-instructor', element: <BecomeInstructor /> },
       { path: 'settings', element: <AccountSettings /> },
     ]
   },
-  // {
-  //   path: '/dashboard/payment',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Payment />
-  //     </ProtectedRoute>
-  //   ),
-  // },
+  {
+    path: '/checkout/:bookingId',
+    element: (
+      <ProtectedRoute>
+        <Payment />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/dashboard/payment',
+    element: (
+      <ProtectedRoute>
+        <Payment />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/dashboard/payment/:bookingId',
+    element: (
+      <ProtectedRoute>
+        <Payment />
+      </ProtectedRoute>
+    ),
+  },
   // {
   //   path: '/session/:id',
   //   element: (
@@ -168,12 +177,11 @@ export const router = createBrowserRouter([
       { path: 'portfolio', element: <Portfolio /> },
       { path: 'offerings', element: <InstructorOfferings /> },
       { path: 'slots', element: <ManageSlots /> },
-      // { path: 'sessions', element: <MySessions /> },
-      // { path: 'sessions/:id', element: <InstructorSessionDetails /> },
+      { path: 'sessions', element: <MySessions /> },
+      { path: 'sessions/:id', element: <InstructorSessionDetails /> },
       // { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
       // { path: 'reviews', element: <Reviews /> },
       // { path: 'payments', element: <InstructorPayments /> },
-      // { path: 'settings', element: <InstructorProfileSettings /> },
       { path: 'settings', element: <AccountSettings /> },
     ]
   },
@@ -187,10 +195,10 @@ export const router = createBrowserRouter([
       { path: 'skills', element: <ManageSkills /> },
       { path: 'users', element: <ManageUsers /> },
       { path: 'users/:id', element: <UserDetails /> },
-      // { path: 'bookings', element: <BookingMonitoring /> },
-      // { path: 'bookings/:id', element: <AdminBookingDetails /> },
-      // { path: 'payments', element: <PaymentsOverview /> },
-      // { path: 'payments/:id', element: <AdminPaymentDetails /> },
+      { path: 'bookings', element: <BookingMonitoring /> },
+      { path: 'bookings/:id', element: <AdminBookingDetails /> },
+      { path: 'payments', element: <PaymentsOverview /> },
+      { path: 'payments/:id', element: <AdminPaymentDetails /> },
     ]
   },
   {

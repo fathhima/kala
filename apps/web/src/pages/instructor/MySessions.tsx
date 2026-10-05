@@ -1,51 +1,116 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Video, MessageSquare, ChevronRight } from 'lucide-react'
-import { useBookingStore } from '../../stores/bookingStore'
-import { useInstructorStore } from '../../stores/instructorStore'
-import { Avatar } from '../../components/ui/Avatar'
-import { Button } from '../../components/ui/Button'
-import { cn, formatDateTime, formatPrice, getBookingStatusColor, getBookingStatusLabel } from '../../lib/utils'
-import type { BookingStatus } from '../../types'
+import { useState, useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  Calendar,
+  Clock,
+  ChevronRight,
+  RefreshCw,
+  CalendarDays,
+  Mail,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react'
+import { useInstructorBookingsQuery } from '@/features/booking/hooks'
+import { Avatar } from '@/components/ui/Avatar'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Pagination } from '@/components/ui/Pagination'
+import {
+  cn,
+  formatDate,
+  formatTime,
+  formatPrice,
+  getBookingStatusColor,
+  getBookingStatusLabel,
+} from '@/lib/utils'
+import type { BookingDto } from '@/api'
 
-const tabs: { label: string; statuses: BookingStatus[] }[] = [
-  { label: 'Upcoming', statuses: ['CONFIRMED', 'INITIATED'] },
+const tabFilters = [
+  { label: 'All', statuses: [] as string[] },
+  { label: 'Upcoming', statuses: ['CONFIRMED', 'PAYMENT_PENDING'] },
   { label: 'Completed', statuses: ['COMPLETED'] },
-  { label: 'Cancelled', statuses: ['CANCELLED'] },
+  { label: 'Cancelled & Expired', statuses: ['CANCELLED', 'EXPIRED'] },
 ]
 
 export function MySessions() {
-  const { bookings } = useBookingStore()
-  const { profile } = useInstructorStore()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(0)
+  const [page, setPage] = useState(1)
+  const limit = 10
 
-  const myBookings = bookings.filter((b) => b.instructorId === profile?.id)
-  const filtered = myBookings.filter((b) => tabs[activeTab].statuses.includes(b.status))
+  const { data, isLoading, isError, refetch, isFetching } = useInstructorBookingsQuery({
+    page,
+    limit,
+  })
+
+  const allBookings: BookingDto[] = data?.items ?? []
+  const meta = data?.meta
+
+  const filteredBookings = useMemo(() => {
+    const filter = tabFilters[activeTab]
+    if (!filter || filter.statuses.length === 0) return allBookings
+    return allBookings.filter((b) => filter.statuses.includes(b.status))
+  }, [allBookings, activeTab])
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-kala-brown">My Sessions</h1>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-kala-brown">My Sessions</h1>
+          <p className="text-stone-500 text-sm mt-0.5">
+            View and manage all booked sessions with your students.
+          </p>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-stone-100 p-1 rounded-xl w-fit">
-        {tabs.map((tab, i) => {
-          const count = myBookings.filter((b) => tabs[i].statuses.includes(b.status)).length
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-stone-500 hover:text-stone-800"
+            title="Refresh sessions"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </Button>
+
+          <Link to="/instructor/slots">
+            <Button size="sm" variant="outline" className="gap-1.5">
+              <CalendarDays size={15} /> Manage Slots
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="flex gap-1.5 bg-stone-100 p-1.5 rounded-2xl w-fit overflow-x-auto max-w-full">
+        {tabFilters.map((tab, i) => {
+          const count =
+            tab.statuses.length === 0
+              ? allBookings.length
+              : allBookings.filter((b) => tab.statuses.includes(b.status)).length
+
           return (
             <button
               key={tab.label}
               type="button"
               onClick={() => setActiveTab(i)}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                activeTab === i ? 'bg-white text-kala-brown shadow-sm' : 'text-stone-500 hover:text-stone-700'
-              )}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                activeTab === i
+                  ? 'bg-white text-kala-brown shadow-xs'
+                  : 'text-stone-500 hover:text-stone-800'
+              }`}
             >
               {tab.label}
-              <span className={cn(
-                'ml-1.5 text-xs px-1.5 py-0.5 rounded-full',
-                activeTab === i ? 'bg-kala-amber/10 text-kala-terracotta' : 'bg-stone-200 text-stone-500'
-              )}>
+              <span
+                className={`ml-2 text-xs px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === i
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-stone-200/70 text-stone-500'
+                }`}
+              >
                 {count}
               </span>
             </button>
@@ -53,71 +118,176 @@ export function MySessions() {
         })}
       </div>
 
-      {filtered.length > 0 ? (
-        <div className="space-y-3">
-          {filtered.map((booking) => (
+      {/* ── Content ── */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((n) => (
             <div
-              key={booking.id}
-              onClick={() => navigate(`/instructor/sessions/${booking.id}`)}
-              className="flex items-center gap-4 bg-white border border-stone-100 rounded-2xl px-5 py-4 shadow-sm cursor-pointer hover:border-kala-amber/40 hover:shadow-md transition-all group"
+              key={n}
+              className="bg-white border border-stone-200/60 rounded-2xl p-5 animate-pulse flex items-center justify-between"
             >
-              <Avatar name={booking.studentName} size="md" />
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="font-semibold text-stone-800 truncate">{booking.studentName}</p>
-                  <span className={cn(
-                    'flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium',
-                    getBookingStatusColor(booking.status)
-                  )}>
-                    {getBookingStatusLabel(booking.status)}
-                  </span>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-stone-200 rounded-full" />
+                <div className="space-y-2">
+                  <div className="w-40 h-4 bg-stone-200 rounded" />
+                  <div className="w-24 h-3 bg-stone-100 rounded" />
                 </div>
-                <p className="text-sm text-stone-500">{formatDateTime(booking.slot.startTime)}</p>
-                {booking.slot.title && (
-                  <p className="text-xs text-stone-400 mt-0.5 truncate">{booking.slot.title}</p>
-                )}
               </div>
-
-              {booking.payment && (
-                <p className="flex-shrink-0 text-sm font-semibold text-kala-terracotta hidden sm:block">
-                  {formatPrice(booking.payment.amount)}
-                </p>
-              )}
-
-              {/* Quick inline action buttons (stop propagation so clicking doesn't open detail) */}
-              <div
-                className="flex items-center gap-2 flex-shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {booking.status === 'CONFIRMED' && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="gap-1.5 hidden sm:flex"
-                      onClick={() => navigate(`/session/${booking.id}`)}
-                    >
-                      <Video size={13} /> Join
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 hidden sm:flex"
-                      onClick={() => navigate(`/instructor/sessions/${booking.id}/chat`)}
-                    >
-                      <MessageSquare size={13} /> Chat
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <ChevronRight size={16} className="text-stone-300 group-hover:text-kala-amber transition-colors flex-shrink-0" />
+              <div className="w-20 h-6 bg-stone-200 rounded" />
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <Card className="p-8 text-center space-y-3 border-red-100">
+          <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+            <AlertCircle size={20} />
+          </div>
+          <p className="text-stone-800 font-semibold">Failed to load instructor sessions</p>
+          <p className="text-stone-500 text-sm">
+            An error occurred while fetching your sessions list.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => refetch()}>
+            Try again
+          </Button>
+        </Card>
+      ) : filteredBookings.length === 0 ? (
+        <div className="text-center py-16 px-4 bg-white border border-dashed border-stone-200 rounded-2xl space-y-3">
+          <div className="w-12 h-12 rounded-full bg-stone-50 flex items-center justify-center mx-auto text-stone-400">
+            <Calendar size={24} />
+          </div>
+          <h3 className="text-base font-semibold text-stone-800">
+            No {tabFilters[activeTab].label.toLowerCase()} sessions
+          </h3>
+          <p className="text-stone-500 text-sm max-w-sm mx-auto">
+            {activeTab === 1
+              ? 'You do not have any upcoming booked sessions. Make sure you have open slots published so learners can discover and book your classes.'
+              : 'Sessions booked by learners will appear here.'}
+          </p>
+          <div className="pt-2">
+            <Link to="/instructor/slots">
+              <Button size="sm" className="gap-1.5">
+                <CalendarDays size={15} /> Publish Available Slots
+              </Button>
+            </Link>
+          </div>
+        </div>
       ) : (
-        <div className="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
-          <p className="text-stone-500">No {tabs[activeTab].label.toLowerCase()} sessions.</p>
+        <div className="space-y-3.5">
+          {filteredBookings.map((booking) => {
+            const subcategoryName = (booking.offering as any)?.subcategory?.name || ''
+            const offeringTitle =
+              booking.offering.title || subcategoryName || 'One-on-One Session'
+            const isConfirmed = booking.status === 'CONFIRMED'
+            const isCompleted = booking.status === 'COMPLETED'
+            const isCancelled = booking.status === 'CANCELLED'
+
+            return (
+              <Card
+                key={booking.id}
+                hover
+                onClick={() => navigate(`/instructor/sessions/${booking.id}`)}
+                className="p-5 transition-all cursor-pointer border-stone-200/80 hover:border-kala-amber/40 hover:shadow-md group"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Left: Student info & session details */}
+                  <div className="flex items-start gap-4 min-w-0">
+                    <Avatar
+                      name={booking.student?.name || 'Student'}
+                      src={
+                        typeof booking.student?.imageUrl === 'string'
+                          ? booking.student.imageUrl
+                          : undefined
+                      }
+                      size="md"
+                      className="ring-1 ring-stone-200 shrink-0"
+                    />
+
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-stone-900 text-base truncate">
+                          {booking.student?.name || 'Learner'}
+                        </p>
+                        {subcategoryName && (
+                          <Badge variant="default" className="text-[10px] py-0 px-2">
+                            {subcategoryName}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-stone-600 font-medium truncate">
+                        {offeringTitle}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-xs text-stone-500 pt-0.5 flex-wrap">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-kala-amber" />
+                          {formatDate(booking.slot.startTime)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={13} className="text-kala-amber" />
+                          {formatTime(booking.slot.startTime)} – {formatTime(booking.slot.endTime)}
+                        </span>
+                        {booking.student?.email && (
+                          <span className="hidden md:inline-flex items-center gap-1 text-stone-400">
+                            <Mail size={12} />
+                            {booking.student.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Status, earnings & action */}
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-stone-100">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                          getBookingStatusColor(booking.status),
+                        )}
+                      >
+                        {getBookingStatusLabel(booking.status)}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-base font-bold text-kala-terracotta">
+                        {formatPrice(booking.amount)}
+                      </p>
+                      <span className="text-[10px] text-stone-400 font-medium">Session Fee</span>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-2 mt-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-xs"
+                        onClick={() => navigate(`/instructor/sessions/${booking.id}`)}
+                      >
+                        Session Details <ChevronRight size={13} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+
+          {meta && meta.totalPages > 1 && (
+            <div className="pt-4">
+              <Pagination
+                page={page}
+                limit={limit}
+                total={meta.total}
+                hasNextPage={meta.page < meta.totalPages}
+                hasPrevPage={meta.page > 1}
+                onPageChange={(p) => setPage(p)}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

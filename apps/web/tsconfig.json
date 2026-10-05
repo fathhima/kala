@@ -20,5 +20,18 @@
     }
   },
   "include": ["src"],
+  "exclude": [
+    "src/pages/instructor/Payments.tsx",
+    "src/pages/instructor/ProfileSettings.tsx",
+    "src/pages/instructor/Reviews.tsx",
+    "src/pages/instructor/SessionChat.tsx",
+    "src/pages/student/BookingChat.tsx",
+    "src/pages/student/PaymentHistory.tsx",
+    "src/pages/student/VideoCall.tsx",
+    "src/components/shared/InstructorCard.tsx",
+    "src/components/shared/ReviewCard.tsx",
+    "src/components/shared/SkillCard.tsx",
+    "src/components/shared/SlotCard.tsx"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

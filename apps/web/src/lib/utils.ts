@@ -1,6 +1,13 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import type { BookingStatus } from '../types'
+export type BookingStatus =
+  | 'INITIATED'
+  | 'PAYMENT_PENDING'
+  | 'CONFIRMED'
+  | 'COMPLETED'
+  | 'EXPIRED'
+  | 'CANCELLED'
+  | (string & {})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -39,25 +46,27 @@ export function formatPrice(amount: number): string {
 }
 
 export function getBookingStatusColor(status: BookingStatus): string {
-  const map: Record<BookingStatus, string> = {
-    INITIATED: 'bg-amber-100 text-amber-800',
-    PAYMENT_PENDING: 'bg-orange-100 text-orange-800',
-    CONFIRMED: 'bg-green-100 text-green-800',
-    COMPLETED: 'bg-blue-100 text-blue-800',
-    CANCELLED: 'bg-red-100 text-red-800',
+  const map: Record<string, string> = {
+    INITIATED: 'bg-amber-100 text-amber-800 border-amber-200',
+    PAYMENT_PENDING: 'bg-orange-100 text-orange-800 border-orange-200',
+    CONFIRMED: 'bg-green-100 text-green-800 border-green-200',
+    COMPLETED: 'bg-blue-100 text-blue-800 border-blue-200',
+    EXPIRED: 'bg-stone-200 text-stone-700 border-stone-300',
+    CANCELLED: 'bg-red-100 text-red-800 border-red-200',
   }
-  return map[status]
+  return map[status] || 'bg-stone-100 text-stone-700'
 }
 
 export function getBookingStatusLabel(status: BookingStatus): string {
-  const map: Record<BookingStatus, string> = {
+  const map: Record<string, string> = {
     INITIATED: 'Initiated',
     PAYMENT_PENDING: 'Payment Pending',
     CONFIRMED: 'Confirmed',
     COMPLETED: 'Completed',
+    EXPIRED: 'Expired',
     CANCELLED: 'Cancelled',
   }
-  return map[status]
+  return map[status] || status
 }
 
 export function generateInitials(name: string): string {

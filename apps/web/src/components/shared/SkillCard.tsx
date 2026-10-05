@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import type { Skill } from '../../types'
+export interface Skill {
+  id: string
+  name: string
+  slug: string
+  description: string
+}
 import { Card } from '../ui/Card'
 
 const skillColors: Record<string, string> = {

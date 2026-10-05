@@ -53,6 +53,12 @@ export interface ISlotRepository {
         endTime: Date;
     }): Promise<void>;
 
+    findActiveSlotsInRange(input: {
+        profileId: string;
+        from: Date;
+        to: Date;
+    }): Promise<SlotEntity[]>;
+
     findInstructorAvailability(input: {
         profileId: string;
         offeringId?: string;

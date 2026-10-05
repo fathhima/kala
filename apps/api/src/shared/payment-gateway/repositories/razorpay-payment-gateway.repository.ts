@@ -26,38 +26,107 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     }
 
     async createCheckoutSession(input: CreateCheckoutInput): Promise<CheckoutSession> {
-        const order = await this._razorpay.orders.create({
-            amount: Math.round(input.amount * 100), // paise
-            currency: input.currency.toUpperCase(),
-            receipt: input.bookingId,
-            notes: {
-                bookingId: input.bookingId,
-                customerEmail: input.customerEmail,
-                description: input.description,
-            },
-        });
+        try {
+            // Set 8-second timeout so it never hangs for 22+ seconds if api.razorpay.com is blocked
+            const orderPromise = this._razorpay.orders.create({
+                amount: Math.round(input.amount * 100), // paise
+                currency: input.currency.toUpperCase(),
+                receipt: input.bookingId.slice(0, 40),
+                notes: {
+                    bookingId: input.bookingId,
+                    customerEmail: input.customerEmail,
+                    description: input.description.slice(0, 255),
+                },
+            });
 
-        return {
-            sessionId: order.id,        // e.g. "order_xxxxxxxx"
-            checkoutUrl: '',            // Razorpay uses client-side modal
-            gatewayKeyId: this._keyId,  // Frontend needs this to init Razorpay
-        };
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(
+                    () =>
+                        reject(
+                            new Error(
+                                'Razorpay payment gateway connection timed out. api.razorpay.com is unreachable.',
+                            ),
+                        ),
+                    8000,
+                ),
+            );
+
+            const order = (await Promise.race([orderPromise, timeoutPromise])) as any;
+
+            return {
+                sessionId: order.id,        // e.g. "order_xxxxxxxx"
+                checkoutUrl: '',            // Razorpay uses client-side modal
+                gatewayKeyId: this._keyId,  // Frontend needs this to init Razorpay
+            };
+        } catch (error: any) {
+            const rawMessage = error?.message || error?.error?.description || String(error);
+            const isNetworkOrTimeout =
+                rawMessage.includes('timed out') ||
+                rawMessage.includes('status') ||
+                rawMessage.includes('ECONN') ||
+                rawMessage.includes('ETIMEDOUT') ||
+                rawMessage.includes('socket hang up');
+
+            const isDev = this._configService.get('NODE_ENV') === 'development';
+
+            // In development mode, if the network / ISP blocks api.razorpay.com:
+            if (isDev && isNetworkOrTimeout) {
+                const devSessionId = `order_dev_${Date.now()}`;
+                return {
+                    sessionId: devSessionId,
+                    checkoutUrl: '',
+                    gatewayKeyId: this._keyId,
+                };
+            }
+
+            throw new Error(`Razorpay gateway error: ${rawMessage}`);
+        }
     }
 
     async createRefund(input: CreateRefundInput): Promise<RefundResult> {
-        const refund = await this._razorpay.payments.refund(
-            input.gatewayPaymentIntentId,
-            {
-                amount: input.amount ? Math.round(input.amount * 100) : undefined,
-                notes: { reason: input.reason ?? 'requested_by_customer' },
-            },
-        );
+        const isDev = this._configService.get('NODE_ENV') === 'development';
+        const isDevPayment = input.gatewayPaymentIntentId?.startsWith('pay_dev_');
 
-        return {
-            refundId: refund.id,
-            amount: (refund.amount ?? 0) / 100,
-            status: refund.status ?? 'unknown',
-        };
+        if (isDevPayment) {
+            return {
+                refundId: `rfnd_dev_${Date.now()}`,
+                amount: input.amount ?? 0,
+                status: 'processed',
+            };
+        }
+
+        try {
+            const refund = await this._razorpay.payments.refund(
+                input.gatewayPaymentIntentId,
+                {
+                    amount: input.amount ? Math.round(input.amount * 100) : undefined,
+                    notes: { reason: input.reason ?? 'requested_by_customer' },
+                },
+            );
+
+            return {
+                refundId: refund.id,
+                amount: (refund.amount ?? 0) / 100,
+                status: refund.status ?? 'unknown',
+            };
+        } catch (error) {
+            const rawMessage = error instanceof Error ? error.message : String(error);
+            const isNetworkOrTimeout =
+                rawMessage.includes('status') ||
+                rawMessage.includes('ECONN') ||
+                rawMessage.includes('ETIMEDOUT') ||
+                rawMessage.includes('socket hang up');
+
+            if (isDev && isNetworkOrTimeout) {
+                return {
+                    refundId: `rfnd_dev_${Date.now()}`,
+                    amount: input.amount ?? 0,
+                    status: 'processed',
+                };
+            }
+
+            throw error;
+        }
     }
 
     constructWebhookEvent(rawBody: Buffer, signature: string): WebhookEvent {

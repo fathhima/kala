@@ -4,7 +4,7 @@ import { SlotMapper } from '../mappers/slot.mapper';
 import { ISlotRepository } from './interfaces/slot.interface';
 import { AvailabilityExceptionStatus, AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
 import { CreateSlotExceptionInput, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
-import { SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';
+import { SlotEntity, SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';
 
 @Injectable()
 export class PrismaSlotRepository implements ISlotRepository {
@@ -310,6 +310,32 @@ export class PrismaSlotRepository implements ISlotRepository {
             },
             data: { status: SlotStatus.CANCELLED },
         });
+    }
+
+    async findActiveSlotsInRange(input: {
+        profileId: string;
+        from: Date;
+        to: Date;
+    }): Promise<SlotEntity[]> {
+        const slots = await this._prisma.availabilitySlot.findMany({
+            where: {
+                profileId: input.profileId,
+                status: { in: [SlotStatus.AVAILABLE, SlotStatus.BOOKED] },
+                startTime: { lt: input.to },
+                endTime: { gt: input.from },
+            },
+            include: {
+                offering: {
+                    select: {
+                        id: true,
+                        title: true,
+                        subcategory: { select: { id: true, name: true } },
+                    },
+                },
+            },
+            orderBy: { startTime: 'asc' },
+        });
+        return slots.map(SlotMapper.toSlotEntity);
     }
 
     async findInstructorAvailability(input: {

@@ -105,13 +105,13 @@ export class BookingDto {
     @ApiProperty()
     holdExpiresAt!: string;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     cancelledAt!: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     cancelledBy!: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     cancelReason!: string | null;
 
     @ApiProperty()

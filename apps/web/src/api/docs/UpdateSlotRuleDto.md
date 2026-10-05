@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **endMinute** | **number** |  | [optional] [default to undefined]
 **slotDurationMinutes** | **number** |  | [optional] [default to undefined]
 **effectiveUntil** | **string** |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -22,6 +23,7 @@ const instance: UpdateSlotRuleDto = {
     endMinute,
     slotDurationMinutes,
     effectiveUntil,
+    status,
 };
 ```
 

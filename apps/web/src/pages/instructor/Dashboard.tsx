@@ -1,10 +1,13 @@
-import { ArrowLeftRight, CheckCircle, Clock3, Plus, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { ArrowLeftRight, CheckCircle, Clock3, Plus, Sparkles, CalendarCheck, Calendar, ChevronRight } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Avatar } from '@/components/ui/Avatar'
 import { useAuthStore } from '@/features/auth/store'
 import { useOnboardingWorkspaceQuery } from '@/features/instructor/hooks'
+import { useInstructorBookingsQuery } from '@/features/booking/hooks'
+import { formatDate, formatTime, formatPrice, getBookingStatusColor, getBookingStatusLabel, cn } from '@/lib/utils'
 
 const statusVariant = (
   status: string,
@@ -17,8 +20,11 @@ const statusVariant = (
 
 export function InstructorDashboard() {
   const user = useAuthStore((state) => state.user)
+  const navigate = useNavigate()
   const { data: workspace, isLoading, isError } = useOnboardingWorkspaceQuery()
+  const { data: bookingsData } = useInstructorBookingsQuery({ page: 1, limit: 5 })
 
+  const bookings = bookingsData?.items ?? []
   const offerings = workspace?.offerings ?? []
   const approvedOfferings = offerings.filter(
     (offering) => offering.status === 'APPROVED',
@@ -144,15 +150,88 @@ export function InstructorDashboard() {
         )}
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-stone-800">
-          Teaching operations
-        </h2>
-        <p className="mt-1 text-sm text-stone-500">
-          Slots, bookings, payments, and reviews belong here after their backend APIs
-          are connected.
-        </p>
-      </Card>
+      {/* ── Booked Sessions & Upcoming ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-stone-800">
+              Recent Booked Sessions
+            </h2>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Sessions booked by students for your offerings.
+            </p>
+          </div>
+          <Link
+            to="/instructor/sessions"
+            className="text-xs font-semibold text-kala-terracotta hover:underline flex items-center gap-1"
+          >
+            View all sessions <ChevronRight size={14} />
+          </Link>
+        </div>
+
+        {bookings.length === 0 ? (
+          <Card className="p-6 text-center space-y-2">
+            <CalendarCheck className="mx-auto text-stone-300" size={28} />
+            <p className="text-sm font-semibold text-stone-700">No student sessions booked yet</p>
+            <p className="text-xs text-stone-500 max-w-sm mx-auto">
+              Once learners book your slots, their details and scheduled sessions will appear here.
+            </p>
+            <div className="pt-2">
+              <Link to="/instructor/slots">
+                <Button size="sm" variant="outline">Manage Slots</Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {bookings.slice(0, 3).map((booking) => (
+              <Card
+                key={booking.id}
+                hover
+                onClick={() => navigate(`/instructor/sessions/${booking.id}`)}
+                className="p-4 cursor-pointer transition-all border-stone-200/80 hover:border-kala-amber/40"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar
+                      name={booking.student?.name || 'Student'}
+                      src={
+                        typeof booking.student?.imageUrl === 'string'
+                          ? booking.student.imageUrl
+                          : undefined
+                      }
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-stone-900 truncate">
+                        {booking.student?.name || 'Learner'}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {formatDate(booking.slot.startTime)} · {formatTime(booking.slot.startTime)} – {formatTime(booking.slot.endTime)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border',
+                        getBookingStatusColor(booking.status),
+                      )}
+                    >
+                      {getBookingStatusLabel(booking.status)}
+                    </span>
+                    <span className="font-bold text-sm text-kala-terracotta">
+                      {formatPrice(booking.amount)}
+                    </span>
+                    <ChevronRight size={16} className="text-stone-300" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

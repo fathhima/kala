@@ -24,22 +24,25 @@ export class PaymentDto {
     @ApiProperty({ enum: PaymentGateway })
     gateway!: PaymentGateway;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     gatewayId!: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
+    gatewaySessionId!: string | null;
+
+    @ApiPropertyOptional({ type: String, nullable: true })
     refundId!: string | null;
 
-    @ApiPropertyOptional({ nullable: true, example: 1500 })
+    @ApiPropertyOptional({ type: Number, nullable: true, example: 1500 })
     refundAmount!: number | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     failureReason!: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     paidAt!: string | null;
 
-    @ApiPropertyOptional({ nullable: true })
+    @ApiPropertyOptional({ type: String, nullable: true })
     refundedAt!: string | null;
 
     @ApiProperty()
@@ -58,6 +61,7 @@ export class PaymentDto {
         dto.status = entity.status;
         dto.gateway = entity.gateway;
         dto.gatewayId = entity.gatewayId;
+        dto.gatewaySessionId = entity.gatewaySessionId;
         dto.refundId = entity.refundId;
         dto.refundAmount = entity.refundAmount;
         dto.failureReason = entity.failureReason;

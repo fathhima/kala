@@ -109,20 +109,25 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
                 amount: (refund.amount ?? 0) / 100,
                 status: refund.status ?? 'unknown',
             };
-        } catch (error) {
-            const rawMessage = error instanceof Error ? error.message : String(error);
-            const isNetworkOrTimeout =
-                rawMessage.includes('status') ||
-                rawMessage.includes('ECONN') ||
-                rawMessage.includes('ETIMEDOUT') ||
-                rawMessage.includes('socket hang up');
+        } catch (error: any) {
+            const rawMessage =
+                error instanceof Error
+                    ? error.message
+                    : error?.error?.description || error?.message || String(error);
 
-            if (isDev && isNetworkOrTimeout) {
+            // In development, simulate a successful refund for ANY Razorpay error
+            // since dev payments are simulated and can't be refunded for real
+            if (isDev) {
                 return {
                     refundId: `rfnd_dev_${Date.now()}`,
                     amount: input.amount ?? 0,
                     status: 'processed',
                 };
+            }
+
+            // Razorpay SDK throws plain objects — wrap in a proper Error
+            if (!(error instanceof Error)) {
+                throw new Error(`Razorpay refund failed: ${rawMessage}`);
             }
 
             throw error;

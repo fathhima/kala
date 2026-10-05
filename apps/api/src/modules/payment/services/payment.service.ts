@@ -200,6 +200,7 @@ export class PaymentService implements IPaymentService {
         try {
             const refundResult = await this._paymentGateway.createRefund({
                 gatewayPaymentIntentId: payment.gatewayId,
+                amount: payment.amount,
                 reason,
             });
 
@@ -375,6 +376,8 @@ export class PaymentService implements IPaymentService {
         if (error instanceof PaymentValidationError) throw new BadRequestException(error.message);
         if (error instanceof PaymentGatewayError)
             throw new InternalServerErrorException(error.message);
-        throw error as Error;
+        if (error instanceof Error)
+            throw new InternalServerErrorException(error.message);
+        throw new InternalServerErrorException('An unexpected payment error occurred');
     }
 }

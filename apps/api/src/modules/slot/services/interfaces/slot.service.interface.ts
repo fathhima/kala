@@ -13,7 +13,11 @@ export interface ISlotService {
 
   disableRule(userId: string, ruleId: string): Promise<void>;
 
+  deleteRule(userId: string, ruleId: string): Promise<void>;
+
   createException(userId: string, input: CreateSlotExceptionCommand): Promise<SlotExceptionEntity>;
+
+  deleteException(userId: string, exceptionId: string): Promise<void>;
 
   getPublicAvailability(profileId: string, query: SlotAvailabilityQueryInput): Promise<SlotEntity[]>;
 }

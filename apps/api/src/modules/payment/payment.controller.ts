@@ -5,9 +5,9 @@ import { Public } from '@/shared/decorators/public.decorator';
 import { UserId } from '@/shared/decorators/user-id.decorator';
 import { RawBody } from '@/shared/decorators/raw-body.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
-import {PAYMENT_SERVICE, type IPaymentService,} from './services/interfaces/payment.service.interface';
+import { PAYMENT_SERVICE, type IPaymentService, } from './services/interfaces/payment.service.interface';
 import { CreateCheckoutDto, PaymentQueryDto, RefundPaymentDto } from './dto/request/payment.request.dto';
-import {CheckoutResponseDto,PaginatedPaymentsResponseDto,PaymentResponseDto,} from './dto/response/payment.response.dto';
+import { CheckoutResponseDto, PaginatedPaymentsResponseDto, PaymentResponseDto, } from './dto/response/payment.response.dto';
 import { PaymentListQuery } from './types/payment.type';
 
 @ApiTags('Payments')
@@ -32,7 +32,7 @@ export class PaymentController {
     @Public()
     @ApiOperation({ summary: 'Razorpay webhook endpoint' })
     @ApiOkResponse({ description: 'Webhook processed' })
-    async handleWebhook(@RawBody() rawBody: Buffer,@Headers('x-razorpay-signature') signature: string,) {
+    async handleWebhook(@RawBody() rawBody: Buffer, @Headers('x-razorpay-signature') signature: string,) {
         await this._paymentService.handleWebhook(rawBody, signature);
 
         return { received: true };
@@ -70,10 +70,9 @@ export class PaymentController {
 
     @Post('payments/booking/:bookingId/refund')
     @Roles(UserRole.ADMIN)
-    @ApiTags('Admin Payments')
     @ApiOperation({ summary: 'Refund a payment (admin only)' })
     @ApiOkResponse({ type: PaymentResponseDto })
-    async refundPayment(@UserId() userId: string,@Param('bookingId') bookingId: string,@Body() dto: RefundPaymentDto,) {
+    async refundPayment(@UserId() userId: string, @Param('bookingId') bookingId: string, @Body() dto: RefundPaymentDto,) {
         const payment = await this._paymentService.refundPayment(bookingId, userId, dto.reason,);
 
         return PaymentResponseDto.fromEntity('Payment refunded successfully', payment);
@@ -81,7 +80,6 @@ export class PaymentController {
 
     @Get('admin/payments')
     @Roles(UserRole.ADMIN)
-    @ApiTags('Admin Payments')
     @ApiOperation({ summary: 'List all payments (admin)' })
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
     async listAdminPayments(@Query() query: PaymentQueryDto) {

@@ -62,6 +62,7 @@ export class SlotController {
             endMinute: dto.endMinute,
             slotDurationMinutes: dto.slotDurationMinutes,
             effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
+            status: dto.status,
         });
 
         return SlotRuleResponseDto.fromEntity('Availability rule updated successfully', rule);
@@ -70,12 +71,12 @@ export class SlotController {
     @Delete('instructor/availability/rules/:ruleId')
     @Roles(UserRole.INSTRUCTOR)
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Disable an availability rule' })
+    @ApiOperation({ summary: 'Delete an availability rule' })
     @ApiOkResponse({ type: MessageResponseDto })
-    async disableRule(@UserId() userId: string, @Param('ruleId') ruleId: string) {
-        await this._slotService.disableRule(userId, ruleId);
+    async deleteRule(@UserId() userId: string, @Param('ruleId') ruleId: string) {
+        await this._slotService.deleteRule(userId, ruleId);
 
-        return MessageResponseDto.success('Availability rule disabled successfully');
+        return MessageResponseDto.success('Availability rule deleted successfully');
     }
 
     @Post('instructor/availability/exceptions')
@@ -94,6 +95,17 @@ export class SlotController {
         });
 
         return SlotExceptionResponseDto.fromEntity('Availability exception created successfully', exception);
+    }
+
+    @Delete('instructor/availability/exceptions/:exceptionId')
+    @Roles(UserRole.INSTRUCTOR)
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Delete an availability exception' })
+    @ApiOkResponse({ type: MessageResponseDto })
+    async deleteException(@UserId() userId: string, @Param('exceptionId') exceptionId: string) {
+        await this._slotService.deleteException(userId, exceptionId);
+
+        return MessageResponseDto.success('Availability exception deleted successfully');
     }
 
     @Public()

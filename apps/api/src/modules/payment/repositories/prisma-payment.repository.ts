@@ -192,8 +192,6 @@ export class PrismaPaymentRepository implements IPaymentRepository {
         });
     }
 
-    // ─── Add these two methods after refundPayment() ────────────────
-
     async markRefunded(paymentId: string, refundId: string, refundAmount: number, isPartial: boolean,): Promise<PaymentEntity> {
         const payment = await this._prisma.payment.findUnique({
             where: { id: paymentId },

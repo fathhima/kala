@@ -338,6 +338,17 @@ export class PrismaBookingRepository implements IBookingRepository {
     }
 
     async expireHolds(): Promise<number> {
+
+         // 1. Fast check: if nothing is expired, exit immediately without taking a transaction
+    const hasExpired = await this._prisma.availabilitySlot.findFirst({
+        where: {
+            status: SlotStatus.HELD,
+            heldUntil: { lt: new Date() },
+        },
+        select: { id: true },
+    });
+    if (!hasExpired) return 0;
+    
         return this._prisma.$transaction(async (tx) => {
             const rows = await tx.$queryRaw<{ id: string }[]>`
                 SELECT id

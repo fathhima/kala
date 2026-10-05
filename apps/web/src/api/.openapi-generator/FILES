@@ -4,10 +4,8 @@ api.ts
 base.ts
 common.ts
 configuration.ts
-docs/AdminBookingsApi.md
 docs/AdminCategoriesApi.md
 docs/AdminInstructorManagementApi.md
-docs/AdminPaymentsApi.md
 docs/AdminUserDetailDto.md
 docs/AdminUserListItemDto.md
 docs/AdminUserManagementApi.md
@@ -52,7 +50,6 @@ docs/InstructorApplicantUserDto.md
 docs/InstructorApplicationDto.md
 docs/InstructorApplicationProfileDto.md
 docs/InstructorApplicationResponseDto.md
-docs/InstructorBookingsApi.md
 docs/InstructorOfferingCategoryDto.md
 docs/InstructorOfferingDto.md
 docs/InstructorOfferingResponseDto.md

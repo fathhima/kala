@@ -39,6 +39,11 @@ export type SlotException = {
   timezone: string
   slotDurationMinutes: number | null
   status: string
+  offering?: {
+    id: string
+    title: string | null
+    subcategory: { id: string; name: string }
+  }
 }
 
 export type Slot = {
@@ -100,6 +105,7 @@ export type UpdateSlotRulePayload = {
   endMinute?: number
   slotDurationMinutes?: number
   effectiveUntil?: string
+  status?: RuleStatus
 }
 
 export async function createSlotRule(payload: CreateSlotRulePayload): Promise<SlotRule> {
@@ -156,6 +162,10 @@ export async function createSlotException(
     payload,
   )
   return response.data.data
+}
+
+export async function deleteSlotException(exceptionId: string): Promise<void> {
+  await apiClient.delete(`/api/instructor/availability/exceptions/${exceptionId}`)
 }
 
 // ─── Public availability ─────────────────────────────────────────────────────

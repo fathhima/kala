@@ -22,8 +22,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
             key_id: this._keyId,
             key_secret: this._configService.getOrThrow<string>('RAZORPAY_KEY_SECRET'),
         });
-        this._webhookSecret =
-            this._configService.getOrThrow<string>('RAZORPAY_WEBHOOK_SECRET');
+        this._webhookSecret = this._configService.getOrThrow<string>('RAZORPAY_WEBHOOK_SECRET');
     }
 
     async createCheckoutSession(input: CreateCheckoutInput): Promise<CheckoutSession> {
@@ -62,11 +61,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     }
 
     constructWebhookEvent(rawBody: Buffer, signature: string): WebhookEvent {
-        const isValid = validateWebhookSignature(
-            rawBody.toString(),
-            signature,
-            this._webhookSecret,
-        );
+        const isValid = validateWebhookSignature(rawBody.toString(), signature, this._webhookSecret,);
 
         if (!isValid) {
             throw new Error('Invalid Razorpay webhook signature');

@@ -122,9 +122,7 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
 
         // ─── Auto-refund for non-admin cancellations of paid bookings ───
         if (wasPaid && !isAdmin) {
-            await this._processRefundAfterCancel(
-                cancelled, isInstructor, reason,
-            );
+            await this._processRefundAfterCancel(cancelled, isInstructor, reason,);
         }
 
         return cancelled;

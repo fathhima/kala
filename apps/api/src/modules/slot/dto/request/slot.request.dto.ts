@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
-import { AvailabilityExceptionType } from '../../enums/slot.enum';
+import { AvailabilityExceptionType, AvailabilityRuleStatus } from '../../enums/slot.enum';
 
 export class CreateSlotRuleDto {
   @ApiProperty()
@@ -85,6 +85,11 @@ export class UpdateSlotRuleDto {
   @IsOptional()
   @IsDateString()
   effectiveUntil?: string;
+
+  @ApiPropertyOptional({ enum: AvailabilityRuleStatus })
+  @IsOptional()
+  @IsEnum(AvailabilityRuleStatus)
+  status?: AvailabilityRuleStatus;
 }
 
 export class CreateSlotExceptionDto {

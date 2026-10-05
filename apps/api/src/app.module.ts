@@ -38,7 +38,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     InstructorModule,
     SlotModule,
     BookingModule,
-    PaymentModule
+    PaymentModule,
   ],
   providers: [
     {
@@ -51,4 +51,4 @@ import { PaymentModule } from './modules/payment/payment.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -47,6 +47,17 @@ export class SlotService implements ISlotService {
 
         this._assertValidMinutes(input.startMinute, input.endMinute, input.slotDurationMinutes);
 
+        const existingRules = await this._slotRepository.findRulesByWeekday(profile.id, input.weekday);
+        this._validateRuleOverlap(
+            existingRules,
+            null,
+            input.weekday,
+            input.startMinute,
+            input.endMinute,
+            new Date(input.effectiveFrom),
+            input.effectiveUntil ? new Date(input.effectiveUntil) : null,
+        );
+
         const rule = await this._slotRepository.createRule({
             profileId: profile.id,
             offeringId: input.offeringId,
@@ -58,9 +69,14 @@ export class SlotService implements ISlotService {
             slotDurationMinutes: input.slotDurationMinutes,
             effectiveFrom: new Date(input.effectiveFrom),
             effectiveUntil: input.effectiveUntil ? new Date(input.effectiveUntil) : null,
-        })
+        });
 
-        await this._materializeRuleSlots(rule);
+        try {
+            await this._materializeRuleSlots(rule);
+        } catch (error) {
+            await this._slotRepository.deleteRule(rule.id);
+            throw error;
+        }
 
         return rule;
     }
@@ -72,7 +88,7 @@ export class SlotService implements ISlotService {
             throw new NotFoundException('Approved instructor profile not found');
         }
 
-        const existing = await this._slotRepository.findOwnedActiveRule(profile.id, ruleId);
+        const existing = await this._slotRepository.findOwnedRule(profile.id, ruleId);
 
         if (!existing) {
             throw new NotFoundException('Availability rule not found');
@@ -81,42 +97,109 @@ export class SlotService implements ISlotService {
         const startMinute = input.startMinute ?? existing.startMinute;
         const endMinute = input.endMinute ?? existing.endMinute;
         const duration = input.slotDurationMinutes ?? existing.slotDurationMinutes;
+        const targetStatus = input.status ?? existing.status;
 
         this._assertValidMinutes(startMinute, endMinute, duration);
 
-        await this._slotRepository.cancelFutureAvailableSlotsByRule(ruleId);
+        const effFrom = new Date(existing.effectiveFrom);
+        const effUntil = input.effectiveUntil !== undefined
+            ? (input.effectiveUntil ? new Date(input.effectiveUntil) : null)
+            : existing.effectiveUntil;
+
+        if (targetStatus === AvailabilityRuleStatus.ACTIVE) {
+            const existingRules = await this._slotRepository.findRulesByWeekday(profile.id, existing.weekday);
+            this._validateRuleOverlap(
+                existingRules,
+                ruleId,
+                existing.weekday,
+                startMinute,
+                endMinute,
+                effFrom,
+                effUntil,
+            );
+        }
+
+        const timeOrDurationChanged =
+            startMinute !== existing.startMinute ||
+            endMinute !== existing.endMinute ||
+            duration !== existing.slotDurationMinutes;
+
+        const isDeactivating =
+            existing.status === AvailabilityRuleStatus.ACTIVE &&
+            targetStatus === AvailabilityRuleStatus.INACTIVE;
+
+        const isActivating =
+            existing.status === AvailabilityRuleStatus.INACTIVE &&
+            targetStatus === AvailabilityRuleStatus.ACTIVE;
+
+        if (timeOrDurationChanged || isDeactivating) {
+            await this._slotRepository.deleteUnbookedFutureSlotsByRule(ruleId);
+        }
 
         const updated = await this._slotRepository.updateRule(ruleId, {
-            title: input.title == null ? input.title : input.title.trim() || null,
+            title: input.title === undefined ? undefined : (input.title?.trim() || null),
             startMinute,
             endMinute,
             slotDurationMinutes: duration,
-            effectiveUntil: input.effectiveUntil ? new Date(input.effectiveUntil) : undefined,
-        })
+            effectiveUntil: input.effectiveUntil === undefined ? undefined : (input.effectiveUntil ? new Date(input.effectiveUntil) : null),
+            status: targetStatus,
+        });
 
-        await this._materializeRuleSlots(updated);
+        if (targetStatus === AvailabilityRuleStatus.ACTIVE && (timeOrDurationChanged || isActivating)) {
+            await this._materializeRuleSlots(updated);
+        }
 
         return updated;
     }
 
     async disableRule(userId: string, ruleId: string): Promise<void> {
+        await this.updateRule(userId, ruleId, {
+            status: AvailabilityRuleStatus.INACTIVE,
+        });
+    }
+
+    async deleteRule(userId: string, ruleId: string): Promise<void> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
 
         if (!profile) {
             throw new NotFoundException('Approved instructor profile not found');
         }
 
-        const rule = await this._slotRepository.findOwnedActiveRule(profile.id, ruleId);
+        const rule = await this._slotRepository.findOwnedRule(profile.id, ruleId);
 
         if (!rule) {
             throw new NotFoundException('Availability rule not found');
         }
 
-        await this._slotRepository.updateRule(ruleId, {
-            status: AvailabilityRuleStatus.INACTIVE,
-        });
+        await this._slotRepository.deleteUnbookedFutureSlotsByRule(ruleId);
+        await this._slotRepository.deleteRule(ruleId);
+    }
 
-        await this._slotRepository.cancelFutureAvailableSlotsByRule(ruleId);
+    async deleteException(userId: string, exceptionId: string): Promise<void> {
+        const profile = await this._instructorService.findApprovedProfileByUserId(userId);
+
+        if (!profile) {
+            throw new NotFoundException('Approved instructor profile not found');
+        }
+
+        const exception = await this._slotRepository.findOwnedException(profile.id, exceptionId);
+
+        if (!exception) {
+            throw new NotFoundException('Availability exception not found');
+        }
+
+        if (exception.type === AvailabilityExceptionType.EXTRA) {
+            await this._slotRepository.deleteUnbookedSlotsByException(exceptionId);
+        }
+
+        await this._slotRepository.deleteException(exceptionId);
+
+        if (exception.type === AvailabilityExceptionType.BLOCK) {
+            const activeRules = await this._slotRepository.findActiveRulesByProfile(profile.id);
+            for (const rule of activeRules) {
+                await this._materializeRuleSlots(rule);
+            }
+        }
     }
 
     async createException(userId: string, input: CreateSlotExceptionCommand) {
@@ -129,20 +212,47 @@ export class SlotService implements ISlotService {
         const startTime = new Date(input.startTime);
         const endTime = new Date(input.endTime);
 
-        if (startTime <= new Date() || endTime <= startTime) {
-            throw new BadRequestException('Use a future start time and valid end time');
+        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+            throw new BadRequestException('Please provide valid start and end dates');
+        }
+
+        if (endTime <= startTime) {
+            throw new BadRequestException('End time must be after start time');
+        }
+
+        if (input.type === AvailabilityExceptionType.EXTRA) {
+            if (startTime <= new Date()) {
+                throw new BadRequestException('Start time must be in the future');
+            }
+            if (!input.offeringId) {
+                throw new BadRequestException('Extra availability requires an offering');
+            }
+            if (!input.slotDurationMinutes) {
+                throw new BadRequestException('Extra availability requires slot duration');
+            }
+        }
+
+        if (input.type === AvailabilityExceptionType.BLOCK) {
+            if (endTime <= new Date()) {
+                throw new BadRequestException('Block end time must be in the future');
+            }
+
+            const existingBlock = await this._slotRepository.findOverlappingBlockException({
+                profileId: profile.id,
+                offeringId: input.offeringId,
+                startTime,
+                endTime,
+            });
+
+            if (existingBlock) {
+                throw new ConflictException(
+                    'This time window is already blocked (or overlaps an existing time block)',
+                );
+            }
         }
 
         if (input.offeringId) {
             await this._instructorService.findApprovedOfferingForProfile(profile.id, input.offeringId);
-        }
-
-        if (input.type === AvailabilityExceptionType.EXTRA && !input.offeringId) {
-            throw new BadRequestException('Extra availability requires an offering');
-        }
-
-        if (input.type === AvailabilityExceptionType.EXTRA && !input.slotDurationMinutes) {
-            throw new BadRequestException('Extra availability requires slot duration');
         }
 
         const exception = await this._slotRepository.createException({
@@ -235,28 +345,56 @@ export class SlotService implements ISlotService {
         const effectiveUntil = rule.effectiveUntil ? new Date(rule.effectiveUntil) : generationEnd;
 
         const end = effectiveUntil < generationEnd ? effectiveUntil : generationEnd;
-        const cursor = new Date(effectiveFrom > new Date() ? effectiveFrom : new Date());
+        const now = new Date();
+        const cursor = new Date(effectiveFrom > now ? effectiveFrom : now);
+
+        const blockExceptions = await this._slotRepository.findActiveBlockExceptionsInRange({
+            profileId: rule.profileId,
+            offeringId: rule.offeringId,
+            from: now,
+            to: end,
+        });
 
         const slots: CreateSlotInput[] = [];
+        const WEEKDAY_MAP: Record<string, number> = {
+            Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+        };
 
         while (cursor <= end) {
-            if (cursor.getDay() === rule.weekday) {
-                const dateKey = cursor.toISOString().slice(0, 10);
+            const weekdayStr = new Intl.DateTimeFormat('en-US', {
+                timeZone: rule.timezone,
+                weekday: 'short',
+            }).format(cursor);
+            const cursorWeekday = WEEKDAY_MAP[weekdayStr];
+
+            if (cursorWeekday === rule.weekday) {
+                const dateKey = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: rule.timezone,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).format(cursor);
                 const dayStart = this._dateFromMinute(dateKey, rule.startMinute, rule.timezone);
                 const dayEnd = this._dateFromMinute(dateKey, rule.endMinute, rule.timezone);
 
-                slots.push(
-                    ...this._splitRangeIntoSlots({
-                        profileId: rule.profileId,
-                        offeringId: rule.offeringId,
-                        ruleId: rule.id,
-                        title: rule.title,
-                        startTime: dayStart,
-                        endTime: dayEnd,
-                        timezone: rule.timezone,
-                        durationMinutes: rule.slotDurationMinutes,
-                    }),
-                );
+                const daySlots = this._splitRangeIntoSlots({
+                    profileId: rule.profileId,
+                    offeringId: rule.offeringId,
+                    ruleId: rule.id,
+                    title: rule.title,
+                    startTime: dayStart,
+                    endTime: dayEnd,
+                    timezone: rule.timezone,
+                    durationMinutes: rule.slotDurationMinutes,
+                }).filter((s) => {
+                    if (s.startTime <= now) return false;
+                    const isBlocked = blockExceptions.some(
+                        (b) => s.startTime < b.endTime && s.endTime > b.startTime,
+                    );
+                    return !isBlocked;
+                });
+
+                slots.push(...daySlots);
             }
 
             cursor.setDate(cursor.getDate() + 1);
@@ -267,6 +405,51 @@ export class SlotService implements ISlotService {
         } catch {
             throw new ConflictException('Availability overlaps existing slots');
         }
+    }
+
+    private _validateRuleOverlap(
+        existingRules: SlotRuleEntity[],
+        targetRuleId: string | null,
+        weekday: number,
+        startMinute: number,
+        endMinute: number,
+        effectiveFrom: Date,
+        effectiveUntil: Date | null,
+    ) {
+        const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const weekdayName = WEEKDAY_NAMES[weekday] ?? `Day ${weekday}`;
+
+        for (const existing of existingRules) {
+            if (targetRuleId && existing.id === targetRuleId) continue;
+            if (existing.status !== AvailabilityRuleStatus.ACTIVE) continue;
+            if (existing.weekday !== weekday) continue;
+
+            const existEffFrom = new Date(existing.effectiveFrom);
+            const existEffUntil = existing.effectiveUntil ? new Date(existing.effectiveUntil) : null;
+
+            const dateRangesOverlap =
+                (!effectiveUntil || existEffFrom <= effectiveUntil) &&
+                (!existEffUntil || effectiveFrom <= existEffUntil);
+
+            if (dateRangesOverlap) {
+                if (startMinute < existing.endMinute && endMinute > existing.startMinute) {
+                    const startStr = this._minuteTo12Hour(existing.startMinute);
+                    const endStr = this._minuteTo12Hour(existing.endMinute);
+                    throw new ConflictException(
+                        `Weekly rule overlaps an existing active schedule on ${weekdayName} (${startStr} – ${endStr}). Please choose a different time window.`
+                    );
+                }
+            }
+        }
+    }
+
+    private _minuteTo12Hour(minute: number): string {
+        const hour24 = Math.floor(minute / 60);
+        const mins = minute % 60;
+        const period = hour24 >= 12 ? 'PM' : 'AM';
+        const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+        const minsFormatted = mins.toString().padStart(2, '0');
+        return `${hour12}:${minsFormatted} ${period}`;
     }
 
     private _splitRangeIntoSlots(input: {

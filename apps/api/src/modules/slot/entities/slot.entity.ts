@@ -15,6 +15,11 @@ export class SlotRuleEntity {
     status!: AvailabilityRuleStatus;
     createdAt!: Date;
     updatedAt!: Date;
+    offering?: {
+        id: string;
+        title: string | null;
+        subcategory: { id: string; name: string };
+    };
 }
 
 export class SlotExceptionEntity {
@@ -30,6 +35,11 @@ export class SlotExceptionEntity {
     status!: AvailabilityExceptionStatus;
     createdAt!: Date;
     updatedAt!: Date;
+    offering?: {
+        id: string;
+        title: string | null;
+        subcategory: { id: string; name: string };
+    };
 }
 
 export class SlotEntity {

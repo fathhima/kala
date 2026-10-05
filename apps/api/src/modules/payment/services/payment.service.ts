@@ -196,10 +196,7 @@ export class PaymentService implements IPaymentService {
         }
 
         if (!payment.gatewayId) {
-            this._logger.warn(
-                `Auto-refund skipped: payment ${payment.id} has no gatewayId`,
-                PaymentService.name,
-            );
+            this._logger.warn(`Auto-refund skipped: payment ${payment.id} has no gatewayId`,PaymentService.name,);
             await this._paymentRepository.markRefundPending(payment.id);
             return;
         }

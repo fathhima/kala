@@ -57,7 +57,6 @@ export class BookingController {
 
     @Get('instructor/bookings')
     @Roles(UserRole.INSTRUCTOR)
-    @ApiTags('Instructor Bookings')
     @ApiOperation({ summary: 'List bookings for the current instructor' })
     @ApiOkResponse({ type: PaginatedBookingsResponseDto })
     async listInstructor(@UserId() userId: string, @Query() query: BookingQueryDto) {
@@ -68,7 +67,6 @@ export class BookingController {
 
     @Post('instructor/bookings/:bookingId/complete')
     @Roles(UserRole.INSTRUCTOR)
-    @ApiTags('Instructor Bookings')
     @ApiOperation({ summary: 'Mark a confirmed session as completed after it ends' })
     @ApiOkResponse({ type: BookingResponseDto })
     async complete(@UserId() userId: string, @Param('bookingId') bookingId: string) {
@@ -79,7 +77,6 @@ export class BookingController {
 
     @Get('admin/bookings')
     @Roles(UserRole.ADMIN)
-    @ApiTags('Admin Bookings')
     @ApiOperation({ summary: 'List all bookings' })
     @ApiOkResponse({ type: PaginatedBookingsResponseDto })
     async listAdmin(@Query() query: BookingQueryDto) {

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createSlotException,
   createSlotRule,
+  deleteSlotException,
   deleteSlotRule,
   getInstructorAvailability,
   getPublicAvailability,
@@ -55,6 +56,14 @@ export const useCreateSlotExceptionMutation = () => {
   const invalidate = useInvalidateAvailability()
   return useMutation({
     mutationFn: createSlotException,
+    onSuccess: invalidate,
+  })
+}
+
+export const useDeleteSlotExceptionMutation = () => {
+  const invalidate = useInvalidateAvailability()
+  return useMutation({
+    mutationFn: deleteSlotException,
     onSuccess: invalidate,
   })
 }

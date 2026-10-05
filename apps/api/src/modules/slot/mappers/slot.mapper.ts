@@ -2,14 +2,24 @@ import { AvailabilityException, AvailabilityRule, AvailabilitySlot, InstructorOf
 import { InstructorSlotAvailabilityEntity, SlotEntity, SlotExceptionEntity, SlotRuleEntity } from '../entities/slot.entity';
 import { AvailabilityExceptionStatus, AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
 
+type OfferingRelation = (Pick<InstructorOffering, 'id' | 'title'> & {
+    subcategory: Pick<Subcategory, 'id' | 'name'>;
+}) | null;
+
+type RuleWithOffering = AvailabilityRule & {
+    offering?: OfferingRelation;
+};
+
+type ExceptionWithOffering = AvailabilityException & {
+    offering?: OfferingRelation;
+};
+
 type SlotWithOffering = AvailabilitySlot & {
-    offering?: Pick<InstructorOffering, 'id' | 'title'> & {
-        subcategory: Pick<Subcategory, 'id' | 'name'>;
-    };
+    offering?: OfferingRelation;
 };
 
 export class SlotMapper {
-    static toRuleEntity(rule: AvailabilityRule): SlotRuleEntity {
+    static toRuleEntity(rule: RuleWithOffering): SlotRuleEntity {
         return {
             id: rule.id,
             profileId: rule.profileId,
@@ -25,10 +35,20 @@ export class SlotMapper {
             status: rule.status as AvailabilityRuleStatus,
             createdAt: rule.createdAt,
             updatedAt: rule.updatedAt,
+            offering: rule.offering
+                ? {
+                    id: rule.offering.id,
+                    title: rule.offering.title,
+                    subcategory: {
+                        id: rule.offering.subcategory.id,
+                        name: rule.offering.subcategory.name,
+                    },
+                }
+                : undefined,
         };
     }
 
-    static toExceptionEntity(exception: AvailabilityException): SlotExceptionEntity {
+    static toExceptionEntity(exception: ExceptionWithOffering): SlotExceptionEntity {
         return {
             id: exception.id,
             profileId: exception.profileId,
@@ -42,6 +62,16 @@ export class SlotMapper {
             status: exception.status as AvailabilityExceptionStatus,
             createdAt: exception.createdAt,
             updatedAt: exception.updatedAt,
+            offering: exception.offering
+                ? {
+                    id: exception.offering.id,
+                    title: exception.offering.title,
+                    subcategory: {
+                        id: exception.offering.subcategory.id,
+                        name: exception.offering.subcategory.name,
+                    },
+                }
+                : undefined,
         };
     }
 
@@ -62,12 +92,22 @@ export class SlotMapper {
             bookedAt: slot.bookedAt,
             createdAt: slot.createdAt,
             updatedAt: slot.updatedAt,
+            offering: slot.offering
+                ? {
+                    id: slot.offering.id,
+                    title: slot.offering.title,
+                    subcategory: {
+                        id: slot.offering.subcategory.id,
+                        name: slot.offering.subcategory.name,
+                    },
+                }
+                : undefined,
         };
     }
 
     static toInstructorAvailabilityEntity(input: {
-        rules: AvailabilityRule[];
-        exceptions: AvailabilityException[];
+        rules: RuleWithOffering[];
+        exceptions: ExceptionWithOffering[];
         slots: SlotWithOffering[];
     }): InstructorSlotAvailabilityEntity {
         return {

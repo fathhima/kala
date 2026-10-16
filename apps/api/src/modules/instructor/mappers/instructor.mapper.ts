@@ -1,6 +1,7 @@
 import { InstructorApplication, InstructorOffering, InstructorProfile, OfferingMedia } from '@prisma/client';
 import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
 import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, } from '../enums/instructor.enum';
+import { PublicInstructorProfile } from '../types/public-instructor.type';
 
 type OfferingWithRelations = InstructorOffering & {
     subcategory: {
@@ -20,6 +21,32 @@ type ApplicationWithRelations = InstructorApplication & {
 type ProfileWithRelations = InstructorProfile & {
     offerings: OfferingWithRelations[];
     applications?: ApplicationWithRelations[];
+};
+type PublicProfileInput = {
+    id: string;
+    bio: string | null;
+    portfolioUrl: string | null;
+    location: string | null;
+    user: { name: string; imageUrl: string | null };
+    offerings: Array<{
+        id: string;
+        title: string | null;
+        description: string | null;
+        hourlyRate: { toString(): string } | string;
+        currency: string;
+        experienceYears: number | null;
+        subcategory: {
+            id: string;
+            name: string;
+            slug: string;
+            category: { id: string; name: string; slug: string };
+        };
+        media: Array<{
+            id: string;
+            type: string;
+            storageKey: string;
+        }>;
+    }>;
 };
 
 export class InstructorMapper {
@@ -110,6 +137,40 @@ export class InstructorMapper {
             updatedAt: profile.updatedAt,
             offerings: profile.offerings.map(InstructorMapper.toOfferingEntity),
             latestApplication: profile.applications?.[0] ? InstructorMapper.toApplicationEntity(profile.applications[0]) : null,
+        };
+    }
+
+    static toPublicInstructorProfile(profile: PublicProfileInput): PublicInstructorProfile {
+        return {
+            id: profile.id,
+            name: profile.user.name,
+            imageUrl: profile.user.imageUrl,
+            bio: profile.bio,
+            portfolioUrl: profile.portfolioUrl,
+            location: profile.location,
+            offerings: profile.offerings.map((offering) => ({
+                id: offering.id,
+                title: offering.title,
+                description: offering.description,
+                hourlyRate: offering.hourlyRate.toString(),
+                currency: offering.currency,
+                experienceYears: offering.experienceYears,
+                subcategory: {
+                    id: offering.subcategory.id,
+                    name: offering.subcategory.name,
+                    slug: offering.subcategory.slug,
+                    category: {
+                        id: offering.subcategory.category.id,
+                        name: offering.subcategory.category.name,
+                        slug: offering.subcategory.category.slug,
+                    },
+                },
+                media: offering.media.map((media) => ({
+                    id: media.id,
+                    type: media.type as MediaType,
+                    storageKey: media.storageKey,
+                })),
+            })),
         };
     }
 }

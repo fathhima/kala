@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
+import { InstructorOfferingEntity, } from '../entities/instructor-profile.entity';
 import { isEditableOfferingStatus, isSubmittableOfferingStatus } from '../types/offering-status.type';
 import { IInstructorService } from './interfaces/instructor.service.interface';
 import { type IInstructorRepository, INSTRUCTOR_REPOSITORY } from '../repositories/interfaces/instructor.interface';
@@ -8,12 +8,28 @@ import { PublicInstructorProfile, PublicInstructorResponse } from '../types/publ
 import { OFFERING_MEDIA_MIME_TYPES } from '../constants/media-mime-types';
 import { InstructorApplicationStatus, MediaType } from '../enums/instructor.enum';
 import { STORAGE_SERVICE, type IStorageService } from '@/shared/storage/repositories/interfaces/storage.interface';
-import { ConfirmOfferingMediaUploadInput, CreateOfferingInput, PublicInstructorQueryInput, RequestOfferingMediaUploadInput, UpdateInstructorProfileInput, UpdateOfferingInput } from '../types/instructor.type';
-import { IPaginatedResult } from '@/shared/types/paginated-result';
-import { PresignedUpload } from '@/shared/storage/types/presigned-upload.type';
 import { type ILoggerService, LOGGER_SERVICE } from '@/shared/logger/repositories/interfaces/logger.interface';
 import { CATEGORY_SERVICE, type ICategoryService } from '@/modules/category/services/interfaces/category.service.interface';
 import { type IInstructorQuery, INSTRUCTOR_QUERY } from '../repositories/interfaces/instructor-query.interface';
+import {
+    InstructorApplicationResponseDto,
+    InstructorOfferingResponseDto,
+    InstructorProfileResponseDto,
+    OfferingMediaResponseDto,
+    PresignedDownloadResponseDto,
+    PresignedUploadResponseDto,
+} from '../dto/response/instructor-response.dto';
+import {
+    PublicInstructorListResponseDto,
+    PublicInstructorResponseDto,
+} from '../dto/response/public-catelog-response.dto';
+import { MessageResponseDto } from '@/shared/dto/response/message-response.dto';
+import { PublicInstructorQueryDto } from '../dto/request/public-instructor-query.dto';
+import { UpdateInstructorProfileDto } from '../dto/request/update-instructor-profile.dto';
+import { CreateOfferingDto } from '../dto/request/create-offering.dto';
+import { UpdateOfferingDto } from '../dto/request/update-offering.dto';
+import { RequestOfferingMediaUploadDto } from '../dto/request/request-offering-media-upload.dto';
+import { ConfirmOfferingMediaUploadDto } from '../dto/request/confirm-offering-media-upload.dto';
 
 @Injectable()
 export class InstructorService implements IInstructorService {
@@ -30,7 +46,7 @@ export class InstructorService implements IInstructorService {
         private readonly _loggerService: ILoggerService,
     ) { }
 
-    async getPublicInstructors(query: PublicInstructorQueryInput): Promise<IPaginatedResult<PublicInstructorResponse>> {
+    async getPublicInstructors(query: PublicInstructorQueryDto): Promise<PublicInstructorListResponseDto> {
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
 
@@ -41,22 +57,24 @@ export class InstructorService implements IInstructorService {
             subcategoryId: query.subcategoryId,
         });
 
-        return {
-            items: await Promise.all(result.profiles.map((profile) => this._toPublicInstructor(profile))),
+        const items = await Promise.all(result.profiles.map((profile) => this._toPublicInstructor(profile)));
+        return PublicInstructorListResponseDto.fromResult('Instructors fetched successfully', {
+            items,
             total: result.total,
             page,
             limit,
-        };
+        });
     }
 
-    async getPublicInstructor(profileId: string): Promise<PublicInstructorResponse> {
+    async getPublicInstructor(profileId: string): Promise<PublicInstructorResponseDto> {
         const profile = await this._instructorRepository.findPublicInstructor(profileId);
 
         if (!profile) {
             throw new NotFoundException('Instructor not found');
         }
 
-        return this._toPublicInstructor(profile);
+        const instructor = await this._toPublicInstructor(profile);
+        return PublicInstructorResponseDto.fromEntity('Instructor fetched successfully', instructor);
     }
 
     private async _toPublicInstructor(profile: PublicInstructorProfile,): Promise<PublicInstructorResponse> {
@@ -104,30 +122,40 @@ export class InstructorService implements IInstructorService {
         };
     }
 
-    async getWorkspace(userId: string): Promise<InstructorProfileEntity | null> {
-        return this._instructorRepository.findWorkspaceByUserId(userId);
+    async getWorkspace(userId: string): Promise<InstructorProfileResponseDto> {
+        const profile = await this._instructorRepository.findWorkspaceByUserId(userId);
+        return InstructorProfileResponseDto.fromEntity('Instructor onboarding fetched successfully', profile);
     }
 
-    async saveProfile(userId: string, input: UpdateInstructorProfileInput): Promise<InstructorProfileEntity> {
+    async saveProfile(userId: string, input: UpdateInstructorProfileDto): Promise<InstructorProfileResponseDto> {
         await this._assertNoPendingApplication(userId);
 
-        return this._instructorRepository.upsertProfile(userId, {
+        const profile = await this._instructorRepository.upsertProfile(userId, {
             bio: input.bio?.trim(),
             location: input.location?.trim(),
             portfolioUrl: input.portfolioUrl?.trim(),
         });
+        return InstructorProfileResponseDto.fromEntity('Instructor profile saved successfully', profile);
     }
 
-    async addOffering(userId: string, input: CreateOfferingInput): Promise<InstructorOfferingEntity> {
+    async addOffering(userId: string, input: CreateOfferingDto): Promise<InstructorOfferingResponseDto> {
         await this._assertNoPendingApplication(userId);
 
         const profile = await this._getOrCreateDraftProfile(userId);
         await this._assertSubcategoryIsSelectable(input.subcategoryId);
 
-        return this._instructorRepository.createOffering(profile.id, input);
+        const offering = await this._instructorRepository.createOffering(profile.id, {
+            subcategoryId: input.subcategoryId,
+            title: input.title,
+            description: input.description,
+            hourlyRate: input.hourlyRate,
+            currency: input.currency,
+            experienceYears: input.experienceYears,
+        });
+        return InstructorOfferingResponseDto.fromEntity('Offering created successfully', offering);
     }
 
-    async cancelApplication(userId: string, applicationId: string,): Promise<void> {
+    async cancelApplication(userId: string, applicationId: string,): Promise<MessageResponseDto> {
         const workspace = await this._instructorRepository.findWorkspaceByUserId(userId);
 
         if (!workspace) {
@@ -143,19 +171,22 @@ export class InstructorService implements IInstructorService {
         if (!cancelled) {
             throw new ConflictException('Application could not be cancelled');
         }
+
+        return MessageResponseDto.success('Instructor application cancelled successfully');
     }
 
-    async updateOffering(userId: string, offeringId: string, input: UpdateOfferingInput): Promise<InstructorOfferingEntity> {
+    async updateOffering(userId: string, offeringId: string, input: UpdateOfferingDto): Promise<InstructorOfferingResponseDto> {
         const offering = await this._getOwnedEditableOffering(userId, offeringId);
 
         if (input.subcategoryId) {
             await this._assertSubcategoryIsSelectable(input.subcategoryId);
         }
 
-        return this._instructorRepository.updateOffering(offering.id, input);
+        const updated = await this._instructorRepository.updateOffering(offering.id, input);
+        return InstructorOfferingResponseDto.fromEntity('Offering updated successfully', updated);
     }
 
-    async removeOffering(userId: string, offeringId: string): Promise<void> {
+    async removeOffering(userId: string, offeringId: string): Promise<MessageResponseDto> {
         const offering = await this._getOwnedEditableOffering(userId, offeringId);
 
         for (const media of offering.media) {
@@ -169,9 +200,10 @@ export class InstructorService implements IInstructorService {
         }
 
         await this._instructorRepository.deleteOffering(offering.id);
+        return MessageResponseDto.success('Offering removed successfully');
     }
 
-    async createMediaUploadUrl(userId: string, offeringId: string, input: RequestOfferingMediaUploadInput): Promise<PresignedUpload> {
+    async createMediaUploadUrl(userId: string, offeringId: string, input: RequestOfferingMediaUploadDto): Promise<PresignedUploadResponseDto> {
         await this._getOwnedPortfolioOffering(userId, offeringId);
 
         this._assertMediaTypeMatchesMimeType(input.type, input.mimeType);
@@ -187,15 +219,17 @@ export class InstructorService implements IInstructorService {
         const extension = this._extensionForMimeType(input.mimeType);
         const storageKey = `instructor-offerings/${offeringId}/${input.type.toLowerCase()}/${randomUUID()}.${extension}`;
 
-        return this._storageService.createUploadUrl({
+        const upload = await this._storageService.createUploadUrl({
             key: storageKey,
             contentType: input.mimeType,
             expiresInSeconds: 300,
         });
+
+        return PresignedUploadResponseDto.create(upload);
     }
 
-    async confirmMediaUpload(userId: string, offeringId: string, input: ConfirmOfferingMediaUploadInput): Promise<OfferingMediaEntity> {
-        await this._getOwnedPortfolioOffering(userId, offeringId)
+    async confirmMediaUpload(userId: string, offeringId: string, input: ConfirmOfferingMediaUploadDto): Promise<OfferingMediaResponseDto> {
+        await this._getOwnedPortfolioOffering(userId, offeringId);
 
         const expectedPrefix = `instructor-offerings/${offeringId}/${input.type.toLowerCase()}/`;
 
@@ -233,7 +267,7 @@ export class InstructorService implements IInstructorService {
             throw new BadRequestException(`An offering can have at most ${maximum} ${input.type.toLowerCase()} files`,);
         }
 
-        return this._instructorRepository.createMedia({
+        const media = await this._instructorRepository.createMedia({
             offeringId,
             type: input.type,
             storageKey: input.storageKey,
@@ -241,9 +275,11 @@ export class InstructorService implements IInstructorService {
             sizeBytes: object.sizeBytes,
             sortOrder: input.sortOrder,
         });
+
+        return OfferingMediaResponseDto.fromEntity('Offering media attached successfully', media);
     }
 
-    async removeMedia(userId: string, offeringId: string, mediaId: string,): Promise<void> {
+    async removeMedia(userId: string, offeringId: string, mediaId: string,): Promise<MessageResponseDto> {
         const offering = await this._getOwnedPortfolioOffering(userId, offeringId);
         const media = offering.media.find((item) => item.id === mediaId);
 
@@ -253,9 +289,10 @@ export class InstructorService implements IInstructorService {
 
         await this._instructorRepository.deleteMedia(media.id);
         await this._storageService.deleteObject(media.storageKey).catch(() => undefined);
+        return MessageResponseDto.success('Offering media removed successfully');
     }
 
-    async getMediaViewUrl(userId: string, offeringId: string, mediaId: string,) {
+    async getMediaViewUrl(userId: string, offeringId: string, mediaId: string,): Promise<PresignedDownloadResponseDto> {
         const offering = await this._getOwnedOffering(userId, offeringId);
         const media = offering.media.find((item) => item.id === mediaId);
 
@@ -263,13 +300,15 @@ export class InstructorService implements IInstructorService {
             throw new NotFoundException('Offering media not found');
         }
 
-        return this._storageService.createDownloadUrl({
+        const download = await this._storageService.createDownloadUrl({
             key: media.storageKey,
             expiresInSeconds: 900,
         });
+
+        return PresignedDownloadResponseDto.create(download);
     }
 
-    async submitApplication(userId: string): Promise<InstructorApplicationEntity> {
+    async submitApplication(userId: string): Promise<InstructorApplicationResponseDto> {
         const workspace = await this._instructorRepository.findWorkspaceByUserId(userId);
 
         if (!workspace) {
@@ -289,7 +328,8 @@ export class InstructorService implements IInstructorService {
             throw new ConflictException('An application is already pending review');
         }
 
-        return this._instructorRepository.submitApplication(workspace.id, offeringIds);
+        const application = await this._instructorRepository.submitApplication(workspace.id, offeringIds);
+        return InstructorApplicationResponseDto.fromEntity('Instructor application submitted successfully', application);
     }
 
     async findApprovedProfileByUserId(userId: string) {
@@ -343,15 +383,15 @@ export class InstructorService implements IInstructorService {
     }
 
     private async _getOwnedPortfolioOffering(userId: string, offeringId: string,): Promise<InstructorOfferingEntity> {
-        await this._assertNoPendingApplication(userId)
+        await this._assertNoPendingApplication(userId);
 
-        const offering = await this._getOwnedOffering(userId, offeringId)
+        const offering = await this._getOwnedOffering(userId, offeringId);
 
         if (offering.status !== 'APPROVED' && !isEditableOfferingStatus(offering.status)) {
-            throw new ConflictException('Portfolio media can only be changed for approved or editable offerings',)
+            throw new ConflictException('Portfolio media can only be changed for approved or editable offerings',);
         }
 
-        return offering
+        return offering;
     }
 
     private async _assertSubcategoryIsSelectable(subcategoryId: string) {

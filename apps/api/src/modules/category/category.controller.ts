@@ -17,8 +17,6 @@ export class CategoryController {
     @ApiOperation({ summary: 'Get selectable categories and subcategories' })
     @ApiOkResponse({ type: CategoryListResponseDto })
     async findSelectable(): Promise<CategoryListResponseDto> {
-        const categories = await this._categoryService.findSelectable();
-
-        return CategoryListResponseDto.fromEntities('Selectable categories fetched successfully', categories,);
+        return this._categoryService.findSelectable();
     }
 }

@@ -129,7 +129,7 @@ export class PrismaInstructorRepository
         ]);
 
         return {
-            profiles: profiles.map(this._toPublicInstructorProfile),
+            profiles: profiles.map(InstructorMapper.toPublicInstructorProfile),
             total,
         };
     }
@@ -148,41 +148,7 @@ export class PrismaInstructorRepository
             include: publicProfileInclude,
         });
 
-        return profile ? this._toPublicInstructorProfile(profile) : null;
-    }
-
-    private _toPublicInstructorProfile(profile: PrismaPublicInstructorProfile,): PublicInstructorProfile {
-        return {
-            id: profile.id,
-            name: profile.user.name,
-            imageUrl: profile.user.imageUrl,
-            bio: profile.bio,
-            portfolioUrl: profile.portfolioUrl,
-            location: profile.location,
-            offerings: profile.offerings.map((offering) => ({
-                id: offering.id,
-                title: offering.title,
-                description: offering.description,
-                hourlyRate: offering.hourlyRate.toString(),
-                currency: offering.currency,
-                experienceYears: offering.experienceYears,
-                subcategory: {
-                    id: offering.subcategory.id,
-                    name: offering.subcategory.name,
-                    slug: offering.subcategory.slug,
-                    category: {
-                        id: offering.subcategory.category.id,
-                        name: offering.subcategory.category.name,
-                        slug: offering.subcategory.category.slug,
-                    },
-                },
-                media: offering.media.map((media) => ({
-                    id: media.id,
-                    type: media.type as MediaType,
-                    storageKey: media.storageKey,
-                })),
-            })),
-        };
+        return profile ? InstructorMapper.toPublicInstructorProfile(profile) : null;
     }
 
     async findWorkspaceByUserId(userId: string,): Promise<InstructorProfileEntity | null> {

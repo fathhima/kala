@@ -12,6 +12,8 @@ import { BookingStatus } from '../enums/booking.enum';
 import { BookingConflictError, BookingNotFoundError, BookingValidationError, SlotNotFoundError } from '../errors/booking.errors';
 import { PAYMENT_SERVICE, type IPaymentService } from '@/modules/payment/services/interfaces/payment.service.interface';
 import { calculateRefundEligibility } from '../utils/refund-policy';
+import { BookingQueryDto, CancelBookingDto, CreateBookingDto } from '../dto/request/booking.request.dto';
+import { BookingForPaymentDto, BookingResponseDto, PaginatedBookingsResponseDto } from '../dto/response/booking-response.dto';
 
 @Injectable()
 export class BookingService implements IBookingService, OnModuleInit, OnModuleDestroy {
@@ -40,27 +42,29 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         if (this._holdExpiryTimer) clearInterval(this._holdExpiryTimer);
     }
 
-    async hold(studentId: string, slotId: string, idempotencyKey?: string): Promise<BookingEntity> {
+    async hold(studentId: string, dto: CreateBookingDto, idempotencyKey?: string): Promise<BookingResponseDto> {
         const ttl = this._configService.getOrThrow<number>('BOOKING_HOLD_TTL_SECONDS');
 
         try {
-            return await this._bookingRepository.holdSlot({ studentId, slotId, idempotencyKey }, ttl);
+            const entity = await this._bookingRepository.holdSlot({ studentId, slotId: dto.slotId, idempotencyKey }, ttl);
+            return BookingResponseDto.fromEntity('Slot held successfully. Complete payment to confirm.', entity);
         } catch (error) {
             this._translateDomainError(error);
         }
     }
 
-    async getById(userId: string, roles: UserRole[], bookingId: string): Promise<BookingEntity> {
+    async getById(userId: string, roles: UserRole | UserRole[], bookingId: string): Promise<BookingResponseDto> {
         const booking = await this._bookingRepository.findById(bookingId);
+        const roleList = Array.isArray(roles) ? roles : [roles];
 
-        if (!booking || !this._canView(booking, userId, roles)) {
+        if (!booking || !this._canView(booking, userId, roleList)) {
             throw new NotFoundException('Booking not found');
         }
 
-        return booking;
+        return BookingResponseDto.fromEntity('Booking fetched successfully', booking);
     }
 
-    async getBookingForPayment(bookingId: string, studentId: string): Promise<BookingEntity> {
+    async getBookingForPayment(bookingId: string, studentId: string): Promise<BookingForPaymentDto> {
         const booking = await this._bookingRepository.findById(bookingId);
 
         if (!booking || booking.studentId !== studentId) {
@@ -75,33 +79,37 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
             throw new BadRequestException('Booking hold has expired. Please create a new booking.');
         }
 
-        return booking;
+        return BookingForPaymentDto.fromEntity(booking);
     }
 
-    listStudent(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity> {
-        return this._bookingRepository.findStudentBookings(studentId, query);
+    async listStudent(studentId: string, query: BookingQueryDto): Promise<PaginatedBookingsResponseDto> {
+        const result = await this._bookingRepository.findStudentBookings(studentId, this._toListQuery(query));
+        return PaginatedBookingsResponseDto.fromEntity('Bookings fetched successfully', result);
     }
 
-    async listInstructor(userId: string, query: BookingListQuery): Promise<PaginatedBookingEntity> {
+    async listInstructor(userId: string, query: BookingQueryDto): Promise<PaginatedBookingsResponseDto> {
         const profileId = await this._bookingRepository.findApprovedProfileIdByUserId(userId);
 
         if (!profileId) {
             throw new NotFoundException('Approved instructor profile not found');
         }
 
-        return this._bookingRepository.findInstructorBookings(profileId, query);
+        const result = await this._bookingRepository.findInstructorBookings(profileId, this._toListQuery(query));
+        return PaginatedBookingsResponseDto.fromEntity('Instructor bookings fetched successfully', result);
     }
 
-    listAdmin(query: BookingListQuery): Promise<PaginatedBookingEntity> {
-        return this._bookingRepository.findAdminBookings(query);
+    async listAdmin(query: BookingQueryDto): Promise<PaginatedBookingsResponseDto> {
+        const result = await this._bookingRepository.findAdminBookings(this._toListQuery(query));
+        return PaginatedBookingsResponseDto.fromEntity('Bookings fetched successfully', result);
     }
 
-    async cancel(userId: string, roles: UserRole[], bookingId: string, reason?: string): Promise<BookingEntity> {
+    async cancel(userId: string, roles: UserRole | UserRole[], bookingId: string, dto?: CancelBookingDto): Promise<BookingResponseDto> {
         const booking = await this._bookingRepository.findById(bookingId);
 
         if (!booking) throw new NotFoundException('Booking not found');
 
-        const isAdmin = roles.includes(UserRole.ADMIN);
+        const roleList = Array.isArray(roles) ? roles : [roles];
+        const isAdmin = roleList.includes(UserRole.ADMIN);
         const isStudent = booking.studentId === userId;
         const isInstructor = booking.instructor.userId === userId;
 
@@ -113,6 +121,7 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         // Capture the status before cancellation to determine refund eligibility
         const wasPaid = booking.status === BookingStatus.CONFIRMED;
 
+        const reason = dto?.reason;
         let cancelled: BookingEntity;
         try {
             cancelled = await this._bookingRepository.cancelBooking({ bookingId, actorId: userId, reason });
@@ -129,17 +138,18 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
             );
         }
 
-        return cancelled;
+        return BookingResponseDto.fromEntity('Booking cancelled successfully', cancelled);
     }
 
-    async complete(instructorUserId: string, bookingId: string): Promise<BookingEntity> {
+    async complete(instructorUserId: string, bookingId: string): Promise<BookingResponseDto> {
         const booking = await this._bookingRepository.findById(bookingId);
 
         if (!booking || booking.instructor.userId !== instructorUserId)
             throw new NotFoundException('Booking not found');
 
         try {
-            return await this._bookingRepository.completeBooking({ bookingId });
+            const entity = await this._bookingRepository.completeBooking({ bookingId });
+            return BookingResponseDto.fromEntity('Session marked as completed', entity);
         } catch (error) {
             this._translateDomainError(error);
         }
@@ -151,6 +161,16 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
     }
 
     // ─── Private helpers ────────────────────────────────────────────
+
+    private _toListQuery(query: BookingQueryDto): BookingListQuery {
+        return {
+            status: query.status,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+            page: query.page ?? 1,
+            limit: query.limit ?? 20,
+        };
+    }
 
     /**
      * Determines refund % and delegates to PaymentService.

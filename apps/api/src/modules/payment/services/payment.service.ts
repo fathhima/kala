@@ -3,7 +3,9 @@ import { IPaymentService } from './interfaces/payment.service.interface';
 import { PAYMENT_REPOSITORY, type IPaymentRepository, } from '../repositories/interfaces/payment.repository.interface';
 import { PAYMENT_GATEWAY_SERVICE, type IPaymentGatewayService, } from '@/shared/payment-gateway/repositories/interfaces/payment-gateway.interface';
 import { BOOKING_SERVICE, type IBookingService, } from '@/modules/booking/services/interfaces/booking.service.interface';
-import { CheckoutEntity, PaginatedPaymentEntity, PaymentEntity } from '../entities/payment.entity';
+import { CheckoutResponseDto, PaymentResponseDto, PaginatedPaymentsResponseDto } from '../dto/response/payment.response.dto';
+import { CreateCheckoutDto, PaymentQueryDto, RefundPaymentDto } from '../dto/request/payment.request.dto';
+import { PaymentMapper } from '../mappers/payment.mapper';
 import { PaymentListQuery } from '../types/payment.type';
 import { PaymentStatus } from '../enums/payment.enum';
 import { UserRole } from '@/shared/enums/role.enum';
@@ -25,7 +27,7 @@ export class PaymentService implements IPaymentService {
         private readonly _configService: ConfigService,
     ) { }
 
-    async createCheckout(studentId: string, bookingId: string): Promise<CheckoutEntity> {
+    async createCheckout(studentId: string, bookingId: string): Promise<CheckoutResponseDto> {
         const booking = await this._bookingService.getBookingForPayment(bookingId, studentId);
 
         // Check for existing payment
@@ -40,12 +42,13 @@ export class PaymentService implements IPaymentService {
                 existingPayment.status === PaymentStatus.PENDING ||
                 existingPayment.status === PaymentStatus.PROCESSING
             ) {
-                const entity = new CheckoutEntity();
-                entity.paymentId = existingPayment.id;
-                entity.checkoutUrl = '';
-                entity.sessionId = existingPayment.gatewaySessionId ?? '';
-                entity.gatewayKeyId = this._configService.getOrThrow<string>('RAZORPAY_KEY_ID');
-                return entity;
+                const entity = PaymentMapper.toCheckoutEntity({
+                    paymentId: existingPayment.id,
+                    checkoutUrl: '',
+                    sessionId: existingPayment.gatewaySessionId ?? '',
+                    gatewayKeyId: this._configService.getOrThrow<string>('RAZORPAY_KEY_ID'),
+                });
+                return CheckoutResponseDto.fromEntity('Checkout session created successfully', entity);
             }
         }
 
@@ -68,12 +71,13 @@ export class PaymentService implements IPaymentService {
                 checkoutResult.sessionId,
             );
 
-            const entity = new CheckoutEntity();
-            entity.paymentId = payment.id;
-            entity.checkoutUrl = checkoutResult.checkoutUrl;
-            entity.sessionId = checkoutResult.sessionId;
-            entity.gatewayKeyId = checkoutResult.gatewayKeyId ?? '';
-            return entity;
+            const entity = PaymentMapper.toCheckoutEntity({
+                paymentId: payment.id,
+                checkoutUrl: checkoutResult.checkoutUrl,
+                sessionId: checkoutResult.sessionId,
+                gatewayKeyId: checkoutResult.gatewayKeyId ?? '',
+            });
+            return CheckoutResponseDto.fromEntity('Checkout session created successfully', entity);
         } catch (error) {
             this._translateDomainError(error);
         }
@@ -130,21 +134,21 @@ export class PaymentService implements IPaymentService {
         }
     }
 
-    async getPayment(paymentId: string, studentId: string): Promise<PaymentEntity> {
+    async getPayment(paymentId: string, studentId: string): Promise<PaymentResponseDto> {
         const payment = await this._paymentRepository.findById(paymentId);
 
         if (!payment || payment.studentId !== studentId) {
             throw new NotFoundException('Payment not found');
         }
 
-        return payment;
+        return PaymentResponseDto.fromEntity('Payment fetched successfully', payment);
     }
 
     async getPaymentByBooking(
         bookingId: string,
         userId: string,
         roles?: UserRole[],
-    ): Promise<PaymentEntity> {
+    ): Promise<PaymentResponseDto> {
         if (roles && roles.length > 0) {
             await this._bookingService.getById(userId, roles, bookingId);
         }
@@ -161,28 +165,30 @@ export class PaymentService implements IPaymentService {
             }
         }
 
-        return payment;
+        return PaymentResponseDto.fromEntity('Payment fetched successfully', payment);
     }
 
-    async listStudentPayments(studentId: string, query: PaymentListQuery,): Promise<PaginatedPaymentEntity> {
-        return this._paymentRepository.findStudentPayments(studentId, query);
+    async listStudentPayments(studentId: string, query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto> {
+        const result = await this._paymentRepository.findStudentPayments(studentId, this._toListQuery(query));
+        return PaginatedPaymentsResponseDto.fromEntity('Payments fetched successfully', result);
     }
 
-    async listAdminPayments(query: PaymentListQuery): Promise<PaginatedPaymentEntity> {
-        return this._paymentRepository.findAdminPayments(query);
+    async listAdminPayments(query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto> {
+        const result = await this._paymentRepository.findAdminPayments(this._toListQuery(query));
+        return PaginatedPaymentsResponseDto.fromEntity('Payments fetched successfully', result);
     }
 
-    async getAdminPayment(paymentId: string): Promise<PaymentEntity> {
+    async getAdminPayment(paymentId: string): Promise<PaymentResponseDto> {
         const payment = await this._paymentRepository.findById(paymentId);
 
         if (!payment) {
             throw new NotFoundException('Payment not found');
         }
 
-        return payment;
+        return PaymentResponseDto.fromEntity('Payment fetched successfully', payment);
     }
 
-    async refundPayment(bookingId: string, actorId: string, reason?: string,): Promise<PaymentEntity> {
+    async refundPayment(bookingId: string, actorId: string, reason?: string,): Promise<PaymentResponseDto> {
         const payment = await this._paymentRepository.findByBookingId(bookingId);
 
         if (!payment) {
@@ -204,7 +210,8 @@ export class PaymentService implements IPaymentService {
                 reason,
             });
 
-            return await this._paymentRepository.refundPayment(payment.id, refundResult.refundId, refundResult.amount,);
+            const refunded = await this._paymentRepository.refundPayment(payment.id, refundResult.refundId, refundResult.amount,);
+            return PaymentResponseDto.fromEntity('Payment refunded successfully', refunded);
         } catch (error) {
             this._translateDomainError(error);
         }
@@ -272,7 +279,7 @@ export class PaymentService implements IPaymentService {
         }
     }
 
-    async confirmDevPayment(studentId: string, bookingId: string): Promise<PaymentEntity> {
+    async confirmDevPayment(studentId: string, bookingId: string): Promise<PaymentResponseDto> {
         if (this._configService.get('NODE_ENV') !== 'development') {
             throw new BadRequestException('Development payment simulation is only available in development mode');
         }
@@ -292,10 +299,10 @@ export class PaymentService implements IPaymentService {
             PaymentService.name,
         );
 
-        return confirmed;
+        return PaymentResponseDto.fromEntity('Payment confirmed in development mode', confirmed);
     }
 
-    async recordPaymentFailure(studentId: string, bookingId: string, reason?: string): Promise<PaymentEntity> {
+    async recordPaymentFailure(studentId: string, bookingId: string, reason?: string): Promise<PaymentResponseDto> {
         const payment = await this._paymentRepository.findByBookingId(bookingId);
 
         if (!payment || payment.studentId !== studentId) {
@@ -303,7 +310,7 @@ export class PaymentService implements IPaymentService {
         }
 
         if (payment.status === PaymentStatus.SUCCEEDED) {
-            return payment;
+            return PaymentResponseDto.fromEntity('Payment marked as failed', payment);
         }
 
         const failed = await this._paymentRepository.failPayment(
@@ -312,7 +319,7 @@ export class PaymentService implements IPaymentService {
             reason ?? 'Payment failed or was declined',
         );
 
-        return failed ?? payment;
+        return PaymentResponseDto.fromEntity('Payment marked as failed', failed ?? payment);
     }
 
     private async _handleCheckoutCompleted(gatewaySessionId: string, gatewayPaymentIntentId: string,): Promise<void> {
@@ -368,6 +375,16 @@ export class PaymentService implements IPaymentService {
         }
 
         this._logger.error(`Refund failed via webhook for payment ${payment.id}: ${failureReason}. Status reverted to SUCCEEDED for admin action.`, '', PaymentService.name,);
+    }
+
+    private _toListQuery(query: PaymentQueryDto): PaymentListQuery {
+        return {
+            status: query.status,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+            page: query.page ?? 1,
+            limit: query.limit ?? 20,
+        };
     }
 
     private _translateDomainError(error: unknown): never {

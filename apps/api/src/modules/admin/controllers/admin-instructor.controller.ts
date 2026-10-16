@@ -23,14 +23,12 @@ export class AdminInstructorController {
     @ApiUnauthorizedResponse({ description: 'Access token is missing or invalid', })
     @ApiForbiddenResponse({ description: 'Only admins can access instructor applications', })
     async findAll(@Query() query: InstructorApplicationQueryDto,): Promise<PaginatedInstructorApplicationsResponseDto> {
-        const result = await this._adminInstructorService.getApplicationsForAdmin({
+        return this._adminInstructorService.getApplicationsForAdmin({
             page: query.page ?? 1,
             limit: query.limit ?? 10,
             status: query.status,
             search: query.search,
         });
-
-        return PaginatedInstructorApplicationsResponseDto.fromResult('Instructor applications fetched successfully', result,);
     }
 
     @Get(':applicationId/offerings/:offeringId/media/:mediaId/view-url')
@@ -38,9 +36,7 @@ export class AdminInstructorController {
     @ApiOkResponse({ type: PresignedDownloadResponseDto })
     async getOfferingMediaViewUrl(@Param('applicationId') applicationId: string, @Param('offeringId') offeringId: string, @Param('mediaId') mediaId: string,
     ): Promise<PresignedDownloadResponseDto> {
-        const view = await this._adminInstructorService.getOfferingMediaViewUrl(applicationId, offeringId, mediaId,);
-
-        return PresignedDownloadResponseDto.create(view);
+        return this._adminInstructorService.getOfferingMediaViewUrl(applicationId, offeringId, mediaId,);
     }
 
     @Get(':applicationId')
@@ -48,9 +44,7 @@ export class AdminInstructorController {
     @ApiOkResponse({ type: InstructorApplicationResponseDto, })
     @ApiNotFoundResponse({ description: 'Instructor application not found', })
     async findOne(@Param('applicationId') applicationId: string,): Promise<InstructorApplicationResponseDto> {
-        const application = await this._adminInstructorService.getApplicationForAdmin(applicationId);
-
-        return InstructorApplicationResponseDto.fromEntity('Instructor application fetched successfully', application,);
+        return this._adminInstructorService.getApplicationForAdmin(applicationId);
     }
 
     @Patch(':applicationId/offerings/:offeringId/review')
@@ -59,14 +53,12 @@ export class AdminInstructorController {
     @ApiNotFoundResponse({ description: 'Application or offering not found', })
     async reviewOffering(@Param('applicationId') applicationId: string, @Param('offeringId') offeringId: string, @UserId()
     adminUserId: string, @Body() dto: ReviewOfferingDto,): Promise<InstructorApplicationResponseDto> {
-        const application = await this._adminInstructorService.reviewOffering(
+        return this._adminInstructorService.reviewOffering(
             applicationId,
             offeringId,
             adminUserId,
             dto.decision,
             dto.reviewNote,
         );
-
-        return InstructorApplicationResponseDto.fromEntity('Offering review saved successfully', application,);
     }
 }

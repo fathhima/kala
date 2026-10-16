@@ -21,51 +21,24 @@ export class SlotController {
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'Get instructor availability rules and exceptions' })
     @ApiOkResponse({ type: InstructorSlotAvailabilityResponseDto })
-    async listInstructorAvailability(@UserId() userId: string, @Query() query: SlotAvailabilityQueryDto) {
-        const availability = await this._slotService.getInstructorAvailability(userId, {
-            offeringId: query.offeringId,
-            from: query.from ? new Date(query.from) : undefined,
-            to: query.to ? new Date(query.to) : undefined,
-        });
-
-        return InstructorSlotAvailabilityResponseDto.fromEntity('Instructor availability fetched successfully', availability);
+    async listInstructorAvailability(@UserId() userId: string, @Query() query: SlotAvailabilityQueryDto): Promise<InstructorSlotAvailabilityResponseDto> {
+        return this._slotService.getInstructorAvailability(userId, query);
     }
 
     @Post('instructor/availability/rules')
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'Create a new availability rule' })
     @ApiCreatedResponse({ type: SlotRuleResponseDto })
-    async createRule(@UserId() userId: string, @Body() dto: CreateSlotRuleDto) {
-        const rule = await this._slotService.createRule(userId, {
-            offeringId: dto.offeringId,
-            title: dto.title,
-            weekday: dto.weekday,
-            startMinute: dto.startMinute,
-            endMinute: dto.endMinute,
-            timezone: dto.timezone,
-            slotDurationMinutes: dto.slotDurationMinutes,
-            effectiveFrom: new Date(dto.effectiveFrom),
-            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
-        });
-
-        return SlotRuleResponseDto.fromEntity('Availability rule created successfully', rule);
+    async createRule(@UserId() userId: string, @Body() dto: CreateSlotRuleDto): Promise<SlotRuleResponseDto> {
+        return this._slotService.createRule(userId, dto);
     }
 
     @Patch('instructor/availability/rules/:ruleId')
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'Update an existing availability rule' })
     @ApiOkResponse({ type: SlotRuleResponseDto })
-    async updateRule(@UserId() userId: string, @Param('ruleId') ruleId: string, @Body() dto: UpdateSlotRuleDto) {
-        const rule = await this._slotService.updateRule(userId, ruleId, {
-            title: dto.title,
-            startMinute: dto.startMinute,
-            endMinute: dto.endMinute,
-            slotDurationMinutes: dto.slotDurationMinutes,
-            effectiveUntil: dto.effectiveUntil ? new Date(dto.effectiveUntil) : null,
-            status: dto.status,
-        });
-
-        return SlotRuleResponseDto.fromEntity('Availability rule updated successfully', rule);
+    async updateRule(@UserId() userId: string, @Param('ruleId') ruleId: string, @Body() dto: UpdateSlotRuleDto): Promise<SlotRuleResponseDto> {
+        return this._slotService.updateRule(userId, ruleId, dto);
     }
 
     @Delete('instructor/availability/rules/:ruleId')
@@ -73,28 +46,16 @@ export class SlotController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Delete an availability rule' })
     @ApiOkResponse({ type: MessageResponseDto })
-    async deleteRule(@UserId() userId: string, @Param('ruleId') ruleId: string) {
-        await this._slotService.deleteRule(userId, ruleId);
-
-        return MessageResponseDto.success('Availability rule deleted successfully');
+    async deleteRule(@UserId() userId: string, @Param('ruleId') ruleId: string): Promise<MessageResponseDto> {
+        return this._slotService.deleteRule(userId, ruleId);
     }
 
     @Post('instructor/availability/exceptions')
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'Create an availability exception' })
     @ApiCreatedResponse({ type: SlotExceptionResponseDto })
-    async createException(@UserId() userId: string, @Body() dto: CreateSlotExceptionDto) {
-        const exception = await this._slotService.createException(userId, {
-            type: dto.type,
-            offeringId: dto.offeringId,
-            title: dto.title,
-            startTime: dto.startTime,
-            endTime: dto.endTime,
-            timezone: dto.timezone,
-            slotDurationMinutes: dto.slotDurationMinutes,
-        });
-
-        return SlotExceptionResponseDto.fromEntity('Availability exception created successfully', exception);
+    async createException(@UserId() userId: string, @Body() dto: CreateSlotExceptionDto): Promise<SlotExceptionResponseDto> {
+        return this._slotService.createException(userId, dto);
     }
 
     @Delete('instructor/availability/exceptions/:exceptionId')
@@ -102,23 +63,15 @@ export class SlotController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Delete an availability exception' })
     @ApiOkResponse({ type: MessageResponseDto })
-    async deleteException(@UserId() userId: string, @Param('exceptionId') exceptionId: string) {
-        await this._slotService.deleteException(userId, exceptionId);
-
-        return MessageResponseDto.success('Availability exception deleted successfully');
+    async deleteException(@UserId() userId: string, @Param('exceptionId') exceptionId: string): Promise<MessageResponseDto> {
+        return this._slotService.deleteException(userId, exceptionId);
     }
 
     @Public()
     @Get('public/instructors/:profileId/availability')
     @ApiOperation({ summary: 'Get public slot availability for an instructor' })
     @ApiOkResponse({ type: PublicSlotListResponseDto })
-    async getPublicAvailability(@Param('profileId') profileId: string, @Query() query: SlotAvailabilityQueryDto) {
-        const slots = await this._slotService.getPublicAvailability(profileId, {
-            offeringId: query.offeringId,
-            from: query.from ? new Date(query.from) : undefined,
-            to: query.to ? new Date(query.to) : undefined,
-        });
-
-        return PublicSlotListResponseDto.fromEntities('Public availability fetched successfully', slots);
+    async getPublicAvailability(@Param('profileId') profileId: string, @Query() query: SlotAvailabilityQueryDto): Promise<PublicSlotListResponseDto> {
+        return this._slotService.getPublicAvailability(profileId, query);
     }
 }

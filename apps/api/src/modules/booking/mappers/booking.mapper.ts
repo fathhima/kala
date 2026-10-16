@@ -44,6 +44,7 @@ export class BookingMapper {
         entity.cancelledAt = record.cancelledAt;
         entity.cancelledBy = record.cancelledBy;
         entity.cancelReason = record.cancelReason;
+        entity.idempotencyKey = record.idempotencyKey ?? null;
         entity.createdAt = record.createdAt;
         entity.updatedAt = record.updatedAt;
         entity.slot = {

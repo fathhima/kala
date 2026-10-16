@@ -26,7 +26,7 @@ export class AdminUserController {
     @ApiUnauthorizedResponse({ description: "Access token is missing or invalid", })
     @ApiForbiddenResponse({ description: "Only admins can access this resource", })
     async getAdminUsers(@Query() query: UserQueryDto,): Promise<PaginatedAdminUsersResponseDto> {
-        const result = await this._adminUserService.getUsers({
+        return this._adminUserService.getUsers({
             page: query.page ?? 1,
             limit: query.limit ?? 10,
             search: query.search,
@@ -38,11 +38,6 @@ export class AdminUserController {
                         ? false
                         : undefined,
         });
-
-        return PaginatedAdminUsersResponseDto.fromResult({
-            message: "Users fetched successfully",
-            result,
-        });
     }
 
     @Get("users/:id")
@@ -52,12 +47,7 @@ export class AdminUserController {
     @ApiForbiddenResponse({ description: "Only admins can access this resource", })
     @ApiNotFoundResponse({ description: "User not found" })
     async getAdminUserById(@Param("id") id: string,): Promise<AdminUserResponseDto> {
-        const user = await this._adminUserService.getUserById(id);
-
-        return AdminUserResponseDto.fromResult({
-            message: "User fetched successfully",
-            user,
-        });
+        return this._adminUserService.getUserById(id);
     }
 
     @Patch("users/:id/status")
@@ -71,17 +61,10 @@ export class AdminUserController {
     async updateAdminUserStatus(@Param("id") id: string, @Body() dto: UpdateUserStatusDto, @UserId() adminUserId: string,)
         : Promise<AdminUserStatusResponseDto> {
 
-        const user = await this._adminUserService.updateUserStatus(
+        return this._adminUserService.updateUserStatus(
             id,
             { isActive: dto.isActive },
             adminUserId,
         );
-        
-        return AdminUserStatusResponseDto.fromResult({
-            message: user.isActive
-                ? "User unblocked successfully"
-                : "User blocked successfully",
-            user,
-        });
     }
 }

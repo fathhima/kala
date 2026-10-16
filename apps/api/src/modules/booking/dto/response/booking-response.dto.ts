@@ -181,6 +181,27 @@ export class BookingResponseDto {
     }
 }
 
+/** Lightweight projection used only by PaymentService — never crosses the HTTP boundary. */
+export class BookingForPaymentDto {
+    id!: string;
+    studentId!: string;
+    amount!: number;
+    currency!: string;
+    student!: { email: string };
+    offering!: { subcategory: { name: string } };
+
+    static fromEntity(entity: BookingEntity): BookingForPaymentDto {
+        const dto = new BookingForPaymentDto();
+        dto.id = entity.id;
+        dto.studentId = entity.studentId;
+        dto.amount = entity.amount;
+        dto.currency = entity.currency;
+        dto.student = { email: entity.student.email };
+        dto.offering = { subcategory: { name: entity.offering.subcategory.name } };
+        return dto;
+    }
+}
+
 export class BookingPaginationMetaDto {
     @ApiProperty()
     page!: number;

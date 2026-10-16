@@ -55,6 +55,7 @@ export class SlotEntity {
     status!: SlotStatus;
     heldUntil!: Date | null;
     heldByUserId!: string | null;
+    heldByBookingId!: string | null;
     bookedAt!: Date | null;
     createdAt!: Date;
     updatedAt!: Date;

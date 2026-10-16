@@ -1,9 +1,8 @@
-import { CategoryEntity } from '../../entities/category.entity';
+import { CategoryListResponseDto } from '../../dto/response/category-response.dto';
 
 export const CATEGORY_SERVICE = Symbol('CATEGORY_SERVICE');
 
 export interface ICategoryService {
-    findSelectable(): Promise<CategoryEntity[]>;
-
+    findSelectable(): Promise<CategoryListResponseDto>;
     isSelectableSubcategory(subcategoryId: string): Promise<boolean>;
 }

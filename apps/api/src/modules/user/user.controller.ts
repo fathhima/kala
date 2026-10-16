@@ -16,26 +16,16 @@ export class UserController {
     @ApiOperation({ summary: 'Get the current user profile' })
     @ApiOkResponse({ type: MeResponseDto })
     async getMe(@UserId() userId: string): Promise<MeResponseDto> {
-        const user = await this._userService.getMyProfile(userId);
-
-        return MeResponseDto.fromResult({
-            message: 'User fetched successfully',
-            user,
-        });
+        return this._userService.getMyProfile(userId);
     }
 
     @Patch('me')
     @ApiOperation({ summary: 'Update the current user profile' })
     @ApiOkResponse({ type: MeResponseDto })
-    async updateMe(@UserId() userId: string, @Body() dto: UpdateUserProfileDto,): Promise<MeResponseDto> {
-        const user = await this._userService.updateMyProfile(userId, {
+    async updateMe(@UserId() userId: string, @Body() dto: UpdateUserProfileDto): Promise<MeResponseDto> {
+        return this._userService.updateMyProfile(userId, {
             name: dto.name,
-            imageUrl: dto.imageUrl
-        })
-
-        return MeResponseDto.fromResult({
-            message: 'Profile updated successfully',
-            user
-        })
+            imageUrl: dto.imageUrl,
+        });
     }
 }

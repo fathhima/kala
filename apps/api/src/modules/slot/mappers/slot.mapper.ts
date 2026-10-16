@@ -89,6 +89,7 @@ export class SlotMapper {
             status: slot.status as SlotStatus,
             heldUntil: slot.heldUntil,
             heldByUserId: slot.heldByUserId,
+            heldByBookingId: slot.heldByBookingId ?? null,
             bookedAt: slot.bookedAt,
             createdAt: slot.createdAt,
             updatedAt: slot.updatedAt,

@@ -30,14 +30,12 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Get paginated categories and subcategories for admin management' })
     @ApiOkResponse({ type: PaginatedCategoryResponseDto })
     async findAll(@Query() query: CategoryQueryDto): Promise<PaginatedCategoryResponseDto> {
-        const result = await this._categoryService.findManyForAdmin({
+        return this._categoryService.findManyForAdmin({
             page: query.page ?? 1,
             limit: query.limit ?? 10,
             search: query.search,
             isActive: query.isActive === 'true' ? true : query.isActive === 'false' ? false : undefined,
         });
-
-        return PaginatedCategoryResponseDto.fromResult('Categories fetched successfully', result,)
     }
 
     @Post()
@@ -45,13 +43,12 @@ export class AdminCategoryController {
     @ApiCreatedResponse({ type: CategoryResponseDto })
     @ApiConflictResponse({ description: 'A category with this slug already exists', })
     async createCategory(@Body() dto: CreateCategoryDto,): Promise<CategoryResponseDto> {
-        const category = await this._categoryService.createCategory({
+        return this._categoryService.createCategory({
             name: dto.name,
             slug: dto.slug ?? dto.name,
             description: dto.description,
             sortOrder: dto.sortOrder ?? 0,
         });
-        return CategoryResponseDto.fromEntity('Category created successfully', category,);
     }
 
     @Patch(':categoryId')
@@ -62,15 +59,13 @@ export class AdminCategoryController {
         description: 'A category with this slug already exists',
     })
     async updateCategory(@Param('categoryId') categoryId: string, @Body() dto: UpdateCategoryDto,): Promise<CategoryResponseDto> {
-        const category = await this._categoryService.updateCategory(categoryId, {
+        return this._categoryService.updateCategory(categoryId, {
             name: dto.name,
             slug: dto.slug,
             description: dto.description,
             isActive: dto.isActive,
             sortOrder: dto.sortOrder,
         });
-
-        return CategoryResponseDto.fromEntity('Category updated successfully', category,);
     }
 
     @Get(':categoryId/subcategories')
@@ -78,9 +73,7 @@ export class AdminCategoryController {
     @ApiOkResponse({ type: SubcategoryListResponseDto })
     @ApiNotFoundResponse({ description: 'Category not found' })
     async findSubcategories(@Param('categoryId') categoryId: string,): Promise<SubcategoryListResponseDto> {
-        const subcategories = await this._categoryService.findSubcategories(categoryId);
-
-        return SubcategoryListResponseDto.fromEntities('Subcategories fetched successfully', subcategories,);
+        return this._categoryService.findSubcategories(categoryId);
     }
 
     @Post(':categoryId/subcategories')
@@ -89,14 +82,12 @@ export class AdminCategoryController {
     @ApiNotFoundResponse({ description: 'Category not found' })
     @ApiConflictResponse({ description: 'A subcategory with this slug already exists in this category', })
     async createSubcategory(@Param('categoryId') categoryId: string, @Body() dto: CreateSubcategoryDto,): Promise<SubcategoryResponseDto> {
-        const subcategory = await this._categoryService.createSubcategory(categoryId, {
+        return this._categoryService.createSubcategory(categoryId, {
             name: dto.name,
             slug: dto.slug ?? dto.name,
             description: dto.description,
             sortOrder: dto.sortOrder ?? 0,
         });
-
-        return SubcategoryResponseDto.fromEntity('Subcategory created successfully', subcategory,);
     }
 
     @Patch(':categoryId/subcategories/:subcategoryId')
@@ -105,15 +96,13 @@ export class AdminCategoryController {
     @ApiNotFoundResponse({ description: 'Category or subcategory not found', })
     @ApiConflictResponse({ description: 'A subcategory with this slug already exists in this category', })
     async updateSubcategory(@Param('categoryId') categoryId: string, @Param('subcategoryId') subcategoryId: string, @Body() dto: UpdateSubcategoryDto,): Promise<SubcategoryResponseDto> {
-        const subcategory = await this._categoryService.updateSubcategory(categoryId, subcategoryId, {
+        return this._categoryService.updateSubcategory(categoryId, subcategoryId, {
             name: dto.name,
             slug: dto.slug,
             description: dto.description,
             isActive: dto.isActive,
             sortOrder: dto.sortOrder,
         });
-
-        return SubcategoryResponseDto.fromEntity('Subcategory updated successfully', subcategory,);
     }
 
     @Post(':categoryId/image/upload-url')
@@ -121,15 +110,9 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Create a temporary S3 upload URL for a category image', })
     @ApiOkResponse({ type: CategoryImageUploadResponseDto })
     async createCategoryImageUploadUrl(@Param('categoryId') categoryId: string, @Body() dto: RequestCategoryImageUploadDto,): Promise<CategoryImageUploadResponseDto> {
-        const upload = await this._categoryService.createCategoryImageUploadUrl(categoryId, {
+        return this._categoryService.createCategoryImageUploadUrl(categoryId, {
             mimeType: dto.mimeType,
             sizeBytes: dto.sizeBytes,
-        });
-
-        return CategoryImageUploadResponseDto.create({
-            storageKey: upload.key,
-            uploadUrl: upload.uploadUrl,
-            expiresInSeconds: upload.expiresInSeconds,
         });
     }
 
@@ -137,33 +120,23 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Confirm and attach an uploaded category image', })
     @ApiOkResponse({ type: CategoryResponseDto })
     async confirmCategoryImageUpload(@Param('categoryId') categoryId: string, @Body() dto: ConfirmCategoryImageUploadDto,): Promise<CategoryResponseDto> {
-        const category = await this._categoryService.confirmCategoryImageUpload(categoryId, {
+        return this._categoryService.confirmCategoryImageUpload(categoryId, {
             storageKey: dto.storageKey,
         });
-
-        return CategoryResponseDto.fromEntity('Category image updated successfully', category,);
     }
 
     @Get(':categoryId/image/view-url')
     @ApiOperation({ summary: 'Create a temporary private S3 view URL for a category image', })
     @ApiOkResponse({ type: CategoryImageViewResponseDto })
     async getCategoryImageViewUrl(@Param('categoryId') categoryId: string,): Promise<CategoryImageViewResponseDto> {
-        const viewUrl = await this._categoryService.getCategoryImageViewUrl(categoryId);
-
-        return CategoryImageViewResponseDto.create({
-            storageKey: viewUrl.key,
-            viewUrl: viewUrl.viewUrl,
-            expiresInSeconds: viewUrl.expiresInSeconds,
-        });
+        return this._categoryService.getCategoryImageViewUrl(categoryId);
     }
 
     @Delete(':categoryId/image')
     @ApiOperation({ summary: 'Remove the image from a category and S3', })
     @ApiOkResponse({ type: CategoryResponseDto })
     async removeCategoryImage(@Param('categoryId') categoryId: string,): Promise<CategoryResponseDto> {
-        const category = await this._categoryService.removeCategoryImage(categoryId);
-
-        return CategoryResponseDto.fromEntity('Category image removed successfully', category,);
+        return this._categoryService.removeCategoryImage(categoryId);
     }
 
     @Post(':categoryId/subcategories/:subcategoryId/image/upload-url')
@@ -171,15 +144,9 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Create a temporary S3 upload URL for a subcategory image', })
     @ApiOkResponse({ type: SubcategoryImageUploadResponseDto })
     async createSubcategoryImageUploadUrl(@Param('categoryId') categoryId: string, @Param('subcategoryId') subcategoryId: string, @Body() dto: RequestCategoryImageUploadDto,): Promise<SubcategoryImageUploadResponseDto> {
-        const upload = await this._categoryService.createSubcategoryImageUploadUrl(categoryId, subcategoryId, {
+        return this._categoryService.createSubcategoryImageUploadUrl(categoryId, subcategoryId, {
             mimeType: dto.mimeType,
             sizeBytes: dto.sizeBytes
-        });
-
-        return SubcategoryImageUploadResponseDto.create({
-            storageKey: upload.key,
-            uploadUrl: upload.uploadUrl,
-            expiresInSeconds: upload.expiresInSeconds,
         });
     }
 
@@ -187,32 +154,22 @@ export class AdminCategoryController {
     @ApiOperation({ summary: 'Confirm and attach an uploaded subcategory image', })
     @ApiOkResponse({ type: SubcategoryResponseDto })
     async confirmSubcategoryImageUpload(@Param('categoryId') categoryId: string, @Param('subcategoryId') subcategoryId: string, @Body() dto: ConfirmCategoryImageUploadDto,): Promise<SubcategoryResponseDto> {
-        const subcategory = await this._categoryService.confirmSubcategoryImageUpload(categoryId, subcategoryId, {
+        return this._categoryService.confirmSubcategoryImageUpload(categoryId, subcategoryId, {
             storageKey: dto.storageKey
         });
-
-        return SubcategoryResponseDto.fromEntity('Subcategory image updated successfully', subcategory,);
     }
 
     @Get(':categoryId/subcategories/:subcategoryId/image/view-url')
     @ApiOperation({ summary: 'Create a temporary private S3 view URL for a subcategory image', })
     @ApiOkResponse({ type: SubcategoryImageViewResponseDto })
     async getSubcategoryImageViewUrl(@Param('categoryId') categoryId: string, @Param('subcategoryId') subcategoryId: string,): Promise<SubcategoryImageViewResponseDto> {
-        const view = await this._categoryService.getSubcategoryImageViewUrl(categoryId, subcategoryId,);
-
-        return SubcategoryImageViewResponseDto.create({
-            storageKey: view.key,
-            viewUrl: view.viewUrl,
-            expiresInSeconds: view.expiresInSeconds,
-        });
+        return this._categoryService.getSubcategoryImageViewUrl(categoryId, subcategoryId,);
     }
 
     @Delete(':categoryId/subcategories/:subcategoryId/image')
     @ApiOperation({ summary: 'Remove a subcategory image from the record and S3', })
     @ApiOkResponse({ type: SubcategoryResponseDto })
     async removeSubcategoryImage(@Param('categoryId') categoryId: string, @Param('subcategoryId') subcategoryId: string,): Promise<SubcategoryResponseDto> {
-        const subcategory = await this._categoryService.removeSubcategoryImage(categoryId, subcategoryId,);
-
-        return SubcategoryResponseDto.fromEntity('Subcategory image removed successfully', subcategory,);
+        return this._categoryService.removeSubcategoryImage(categoryId, subcategoryId,);
     }
 }

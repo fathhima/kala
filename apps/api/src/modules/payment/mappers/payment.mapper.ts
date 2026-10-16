@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { PaymentEntity, PaginatedPaymentEntity } from '../entities/payment.entity';
+import { PaymentEntity, PaginatedPaymentEntity, CheckoutEntity } from '../entities/payment.entity';
 import { PaymentStatus, PaymentGateway } from '../enums/payment.enum';
 
 export const paymentInclude = {} satisfies Prisma.PaymentInclude;
@@ -35,6 +35,20 @@ export class PaymentMapper {
         entity.total = total;
         entity.page = page;
         entity.limit = limit;
+        return entity;
+    }
+
+    static toCheckoutEntity(data: {
+        paymentId: string;
+        checkoutUrl: string;
+        sessionId: string;
+        gatewayKeyId: string;
+    }): CheckoutEntity {
+        const entity = new CheckoutEntity();
+        entity.paymentId = data.paymentId;
+        entity.checkoutUrl = data.checkoutUrl;
+        entity.sessionId = data.sessionId;
+        entity.gatewayKeyId = data.gatewayKeyId;
         return entity;
     }
 }

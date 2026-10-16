@@ -48,6 +48,7 @@ export class BookingEntity {
     cancelledAt!: Date | null;
     cancelledBy!: string | null;
     cancelReason!: string | null;
+    idempotencyKey!: string | null;
     createdAt!: Date;
     updatedAt!: Date;
     slot!: BookingSlotEntity;

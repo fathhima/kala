@@ -1,13 +1,16 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { type ISlotRepository, SLOT_REPOSITORY } from '../repositories/interfaces/slot.interface';
 import { ISlotService } from './interfaces/slot.service.interface';
 import { SlotRuleEntity } from '../entities/slot.entity';
 import { AvailabilityExceptionType, AvailabilityRuleStatus, SlotStatus } from '../enums/slot.enum';
-import { CreateSlotExceptionCommand, CreateSlotInput, CreateSlotRuleInput, UpdateSlotRuleInput } from '../types/slot.type';
+import { CreateSlotInput } from '../types/slot.type';
 import { SlotAvailabilityQueryInput } from '../types/slot-availability-query.type';
 import { ConfigService } from '@nestjs/config';
 import { type IInstructorService, INSTRUCTOR_SERVICE } from '@/modules/instructor/services/interfaces/instructor.service.interface';
 import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/enums/instructor.enum';
+import { InstructorSlotAvailabilityResponseDto, PublicSlotListResponseDto, SlotExceptionResponseDto, SlotRuleResponseDto } from '../dto/response/slot-response.dto';
+import { CreateSlotExceptionDto, CreateSlotRuleDto, SlotAvailabilityQueryDto, UpdateSlotRuleDto } from '../dto/request/slot.request.dto';
+import { MessageResponseDto } from '@/shared/dto/response/message-response.dto';
 
 @Injectable()
 export class SlotService implements ISlotService {
@@ -19,137 +22,95 @@ export class SlotService implements ISlotService {
         private readonly _configService: ConfigService
     ) { }
 
-    async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryInput) {
+    async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryDto): Promise<InstructorSlotAvailabilityResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
-
         if (!profile) {
             throw new NotFoundException('Approved instructor profile not found');
         }
-
-        const range = this._rangeFromQuery(query);
-
-        return this._slotRepository.findInstructorAvailability({
+        const range = this._rangeFromQuery({
+            offeringId: query.offeringId,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+        });
+        const availability = await this._slotRepository.findInstructorAvailability({
             profileId: profile.id,
             offeringId: query.offeringId,
             from: range.from,
             to: range.to,
         });
+        return InstructorSlotAvailabilityResponseDto.fromEntity('Instructor availability fetched successfully', availability);
     }
 
-    async createRule(userId: string, input: Omit<CreateSlotRuleInput, 'profileId'>) {
+    async createRule(userId: string, dto: CreateSlotRuleDto): Promise<SlotRuleResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
-
         if (!profile) {
             throw new NotFoundException('Approved instructor profile not found');
         }
-
-        await this._instructorService.findApprovedOfferingForProfile(profile.id, input.offeringId);
-
-        this._assertValidMinutes(input.startMinute, input.endMinute, input.slotDurationMinutes);
-
-        const existingRules = await this._slotRepository.findRulesByWeekday(profile.id, input.weekday);
-        this._validateRuleOverlap(
-            existingRules,
-            null,
-            input.weekday,
-            input.startMinute,
-            input.endMinute,
-            new Date(input.effectiveFrom),
-            input.effectiveUntil ? new Date(input.effectiveUntil) : null,
-        );
-
+        await this._instructorService.findApprovedOfferingForProfile(profile.id, dto.offeringId);
+        this._assertValidMinutes(dto.startMinute, dto.endMinute, dto.slotDurationMinutes);
+        const existingRules = await this._slotRepository.findRulesByWeekday(profile.id, dto.weekday);
+        const effectiveFrom = new Date(dto.effectiveFrom);
+        const effectiveUntil = dto.effectiveUntil ? new Date(dto.effectiveUntil) : null;
+        this._validateRuleOverlap(existingRules, null, dto.weekday, dto.startMinute, dto.endMinute, effectiveFrom, effectiveUntil);
         const rule = await this._slotRepository.createRule({
             profileId: profile.id,
-            offeringId: input.offeringId,
-            title: input.title?.trim() || null,
-            weekday: input.weekday,
-            startMinute: input.startMinute,
-            endMinute: input.endMinute,
-            timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
-            slotDurationMinutes: input.slotDurationMinutes,
-            effectiveFrom: new Date(input.effectiveFrom),
-            effectiveUntil: input.effectiveUntil ? new Date(input.effectiveUntil) : null,
+            offeringId: dto.offeringId,
+            title: dto.title?.trim() || null,
+            weekday: dto.weekday,
+            startMinute: dto.startMinute,
+            endMinute: dto.endMinute,
+            timezone: dto.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+            slotDurationMinutes: dto.slotDurationMinutes,
+            effectiveFrom,
+            effectiveUntil,
         });
-
         try {
             await this._materializeRuleSlots(rule);
         } catch (error) {
             await this._slotRepository.deleteRule(rule.id);
             throw error;
         }
-
-        return rule;
+        return SlotRuleResponseDto.fromEntity('Availability rule created successfully', rule);
     }
 
-    async updateRule(userId: string, ruleId: string, input: UpdateSlotRuleInput & { title?: string | null; effectiveUntil?: Date | null }) {
+    async updateRule(userId: string, ruleId: string, dto: UpdateSlotRuleDto): Promise<SlotRuleResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
-
         if (!profile) {
             throw new NotFoundException('Approved instructor profile not found');
         }
-
         const existing = await this._slotRepository.findOwnedRule(profile.id, ruleId);
-
         if (!existing) {
             throw new NotFoundException('Availability rule not found');
         }
-
-        const startMinute = input.startMinute ?? existing.startMinute;
-        const endMinute = input.endMinute ?? existing.endMinute;
-        const duration = input.slotDurationMinutes ?? existing.slotDurationMinutes;
-        const targetStatus = input.status ?? existing.status;
-
+        const startMinute = dto.startMinute ?? existing.startMinute;
+        const endMinute = dto.endMinute ?? existing.endMinute;
+        const duration = dto.slotDurationMinutes ?? existing.slotDurationMinutes;
+        const targetStatus = dto.status ?? existing.status;
         this._assertValidMinutes(startMinute, endMinute, duration);
-
         const effFrom = new Date(existing.effectiveFrom);
-        const effUntil = input.effectiveUntil !== undefined
-            ? (input.effectiveUntil ? new Date(input.effectiveUntil) : null)
-            : existing.effectiveUntil;
-
+        const effectiveUntil = dto.effectiveUntil !== undefined ? (dto.effectiveUntil ? new Date(dto.effectiveUntil) : null) : existing.effectiveUntil;
         if (targetStatus === AvailabilityRuleStatus.ACTIVE) {
             const existingRules = await this._slotRepository.findRulesByWeekday(profile.id, existing.weekday);
-            this._validateRuleOverlap(
-                existingRules,
-                ruleId,
-                existing.weekday,
-                startMinute,
-                endMinute,
-                effFrom,
-                effUntil,
-            );
+            this._validateRuleOverlap(existingRules, ruleId, existing.weekday, startMinute, endMinute, effFrom, effectiveUntil);
         }
-
-        const timeOrDurationChanged =
-            startMinute !== existing.startMinute ||
-            endMinute !== existing.endMinute ||
-            duration !== existing.slotDurationMinutes;
-
-        const isDeactivating =
-            existing.status === AvailabilityRuleStatus.ACTIVE &&
-            targetStatus === AvailabilityRuleStatus.INACTIVE;
-
-        const isActivating =
-            existing.status === AvailabilityRuleStatus.INACTIVE &&
-            targetStatus === AvailabilityRuleStatus.ACTIVE;
-
+        const timeOrDurationChanged = startMinute !== existing.startMinute || endMinute !== existing.endMinute || duration !== existing.slotDurationMinutes;
+        const isDeactivating = existing.status === AvailabilityRuleStatus.ACTIVE && targetStatus === AvailabilityRuleStatus.INACTIVE;
+        const isActivating = existing.status === AvailabilityRuleStatus.INACTIVE && targetStatus === AvailabilityRuleStatus.ACTIVE;
         if (timeOrDurationChanged || isDeactivating) {
             await this._slotRepository.deleteUnbookedFutureSlotsByRule(ruleId);
         }
-
         const updated = await this._slotRepository.updateRule(ruleId, {
-            title: input.title === undefined ? undefined : (input.title?.trim() || null),
+            title: dto.title === undefined ? undefined : (dto.title?.trim() || null),
             startMinute,
             endMinute,
             slotDurationMinutes: duration,
-            effectiveUntil: input.effectiveUntil === undefined ? undefined : (input.effectiveUntil ? new Date(input.effectiveUntil) : null),
+            effectiveUntil: dto.effectiveUntil === undefined ? undefined : (dto.effectiveUntil ? new Date(dto.effectiveUntil) : null),
             status: targetStatus,
         });
-
         if (targetStatus === AvailabilityRuleStatus.ACTIVE && (timeOrDurationChanged || isActivating)) {
             await this._materializeRuleSlots(updated);
         }
-
-        return updated;
+        return SlotRuleResponseDto.fromEntity('Availability rule updated successfully', updated);
     }
 
     async disableRule(userId: string, ruleId: string): Promise<void> {
@@ -158,7 +119,7 @@ export class SlotService implements ISlotService {
         });
     }
 
-    async deleteRule(userId: string, ruleId: string): Promise<void> {
+    async deleteRule(userId: string, ruleId: string): Promise<MessageResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
 
         if (!profile) {
@@ -173,9 +134,11 @@ export class SlotService implements ISlotService {
 
         await this._slotRepository.deleteUnbookedFutureSlotsByRule(ruleId);
         await this._slotRepository.deleteRule(ruleId);
+
+        return MessageResponseDto.success('Availability rule deleted successfully');
     }
 
-    async deleteException(userId: string, exceptionId: string): Promise<void> {
+    async deleteException(userId: string, exceptionId: string): Promise<MessageResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
 
         if (!profile) {
@@ -200,17 +163,19 @@ export class SlotService implements ISlotService {
                 await this._materializeRuleSlots(rule);
             }
         }
+
+        return MessageResponseDto.success('Availability exception deleted successfully');
     }
 
-    async createException(userId: string, input: CreateSlotExceptionCommand) {
+    async createException(userId: string, dto: CreateSlotExceptionDto): Promise<SlotExceptionResponseDto> {
         const profile = await this._instructorService.findApprovedProfileByUserId(userId);
 
         if (!profile) {
             throw new NotFoundException('Approved instructor profile not found');
         }
 
-        const startTime = new Date(input.startTime);
-        const endTime = new Date(input.endTime);
+        const startTime = new Date(dto.startTime);
+        const endTime = new Date(dto.endTime);
 
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
             throw new BadRequestException('Please provide valid start and end dates');
@@ -220,14 +185,14 @@ export class SlotService implements ISlotService {
             throw new BadRequestException('End time must be after start time');
         }
 
-        if (input.type === AvailabilityExceptionType.EXTRA) {
+        if (dto.type === AvailabilityExceptionType.EXTRA) {
             if (startTime <= new Date()) {
                 throw new BadRequestException('Start time must be in the future');
             }
-            if (!input.offeringId) {
+            if (!dto.offeringId) {
                 throw new BadRequestException('Extra availability requires an offering');
             }
-            if (!input.slotDurationMinutes) {
+            if (!dto.slotDurationMinutes) {
                 throw new BadRequestException('Extra availability requires slot duration');
             }
 
@@ -270,14 +235,14 @@ export class SlotService implements ISlotService {
             }
         }
 
-        if (input.type === AvailabilityExceptionType.BLOCK) {
+        if (dto.type === AvailabilityExceptionType.BLOCK) {
             if (endTime <= new Date()) {
                 throw new BadRequestException('Block end time must be in the future');
             }
 
             const existingBlock = await this._slotRepository.findOverlappingBlockException({
                 profileId: profile.id,
-                offeringId: input.offeringId,
+                offeringId: dto.offeringId,
                 startTime,
                 endTime,
             });
@@ -289,50 +254,54 @@ export class SlotService implements ISlotService {
             }
         }
 
-        if (input.offeringId) {
-            await this._instructorService.findApprovedOfferingForProfile(profile.id, input.offeringId);
+        if (dto.offeringId) {
+            await this._instructorService.findApprovedOfferingForProfile(profile.id, dto.offeringId);
         }
 
         const exception = await this._slotRepository.createException({
             profileId: profile.id,
-            offeringId: input.offeringId ?? null,
-            type: input.type,
-            title: input.title?.trim() || null,
+            offeringId: dto.offeringId ?? null,
+            type: dto.type,
+            title: dto.title?.trim() || null,
             startTime,
             endTime,
-            timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
-            slotDurationMinutes: input.slotDurationMinutes ?? null,
+            timezone: dto.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+            slotDurationMinutes: dto.slotDurationMinutes ?? null,
         });
 
-        if (input.type === AvailabilityExceptionType.BLOCK) {
+        if (dto.type === AvailabilityExceptionType.BLOCK) {
             await this._slotRepository.cancelAvailableSlotsInRange({
                 profileId: profile.id,
-                offeringId: input.offeringId,
+                offeringId: dto.offeringId,
                 startTime,
                 endTime,
             });
         }
 
-        if (input.type === AvailabilityExceptionType.EXTRA) {
+        if (dto.type === AvailabilityExceptionType.EXTRA) {
             const slots = this._splitRangeIntoSlots({
                 profileId: profile.id,
-                offeringId: input.offeringId!,
+                offeringId: dto.offeringId!,
                 exceptionId: exception.id,
-                title: input.title,
+                title: dto.title,
                 startTime,
                 endTime,
-                timezone: input.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
-                durationMinutes: input.slotDurationMinutes!,
+                timezone: dto.timezone?.trim() || this._configService.getOrThrow<string>('SLOT_DEFAULT_TIMEZONE'),
+                durationMinutes: dto.slotDurationMinutes!,
             });
 
             await this._slotRepository.createSlots(slots);
         }
 
-        return exception;
+        return SlotExceptionResponseDto.fromEntity('Availability exception created successfully', exception);
     }
 
-    async getPublicAvailability(profileId: string, query: SlotAvailabilityQueryInput) {
-        const range = this._rangeFromQuery(query);
+    async getPublicAvailability(profileId: string, query: SlotAvailabilityQueryDto): Promise<PublicSlotListResponseDto> {
+        const range = this._rangeFromQuery({
+            offeringId: query.offeringId,
+            from: query.from ? new Date(query.from) : undefined,
+            to: query.to ? new Date(query.to) : undefined,
+        });
         const slots = await this._slotRepository.findPublicSlots({
             profileId,
             offeringId: query.offeringId,
@@ -345,7 +314,7 @@ export class SlotService implements ISlotService {
         );
         const byId = new Map(snapshots.map((o) => [o.id, o]));
 
-        return slots.filter((s) => {
+        const filtered = slots.filter((s) => {
             const o = byId.get(s.offeringId);
             return o?.profileStatus === InstructorProfileStatus.APPROVED
                 && o.status === OfferingStatus.APPROVED;
@@ -357,6 +326,8 @@ export class SlotService implements ISlotService {
                     offering: { id: o.id, title: o.title, subcategory: o.subcategory },
                 };
             });
+
+        return PublicSlotListResponseDto.fromEntities('Public availability fetched successfully', filtered);
     }
 
     private _assertValidMinutes(startMinute: number, endMinute: number, duration: number) {

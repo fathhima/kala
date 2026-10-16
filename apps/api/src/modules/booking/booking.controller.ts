@@ -6,7 +6,6 @@ import { UserRole } from '@/shared/enums/role.enum';
 import { BOOKING_SERVICE, type IBookingService } from './services/interfaces/booking.service.interface';
 import { BookingQueryDto, CancelBookingDto, CreateBookingDto } from './dto/request/booking.request.dto';
 import { BookingResponseDto, PaginatedBookingsResponseDto } from './dto/response/booking-response.dto';
-import { BookingListQuery } from './types/booking.type';
 import { UserRoles } from '@/shared/decorators/user-role.decorator';
 
 @ApiTags('Bookings')
@@ -21,81 +20,77 @@ export class BookingController {
     @Roles(UserRole.STUDENT)
     @ApiOperation({ summary: 'Hold a slot for 10 minutes pending payment' })
     @ApiCreatedResponse({ type: BookingResponseDto })
-    async hold(@UserId() userId: string, @Body() dto: CreateBookingDto, @Headers('idempotency-key') idempotencyKey?: string,) {
-        const booking = await this._bookingService.hold(userId, dto.slotId, idempotencyKey);
-
-        return BookingResponseDto.fromEntity('Slot held successfully. Complete payment to confirm.', booking);
+    async hold(
+        @UserId() userId: string,
+        @Body() dto: CreateBookingDto,
+        @Headers('idempotency-key') idempotencyKey?: string,
+    ): Promise<BookingResponseDto> {
+        return this._bookingService.hold(userId, dto, idempotencyKey);
     }
 
     @Get('bookings')
     @Roles(UserRole.STUDENT)
     @ApiOperation({ summary: 'List current student bookings' })
     @ApiOkResponse({ type: PaginatedBookingsResponseDto })
-    async listStudent(@UserId() userId: string, @Query() query: BookingQueryDto) {
-        const bookings = await this._bookingService.listStudent(userId, this._toListQuery(query));
-
-        return PaginatedBookingsResponseDto.fromEntity('Bookings fetched successfully', bookings);
+    async listStudent(
+        @UserId() userId: string,
+        @Query() query: BookingQueryDto,
+    ): Promise<PaginatedBookingsResponseDto> {
+        return this._bookingService.listStudent(userId, query);
     }
 
     @Get('bookings/:bookingId')
     @ApiOperation({ summary: 'Get a booking by id (student, instructor, or admin)' })
     @ApiOkResponse({ type: BookingResponseDto })
-    async getById(@UserId() userId: string, @UserRoles() roles: UserRole | UserRole[], @Param('bookingId') bookingId: string,) {
-        const booking = await this._bookingService.getById(userId, this._asRoleList(roles), bookingId);
-
-        return BookingResponseDto.fromEntity('Booking fetched successfully', booking);
+    async getById(
+        @UserId() userId: string,
+        @UserRoles() roles: UserRole | UserRole[],
+        @Param('bookingId') bookingId: string,
+    ): Promise<BookingResponseDto> {
+        return this._bookingService.getById(userId, roles, bookingId);
     }
 
     @Post('bookings/:bookingId/cancel')
     @ApiOperation({ summary: 'Cancel a pending hold or confirmed session and release the slot' })
     @ApiOkResponse({ type: BookingResponseDto })
-    async cancel(@UserId() userId: string, @UserRoles() roles: UserRole | UserRole[], @Param('bookingId') bookingId: string, @Body() dto: CancelBookingDto,) {
-        const booking = await this._bookingService.cancel(userId, this._asRoleList(roles), bookingId, dto.reason,);
-
-        return BookingResponseDto.fromEntity('Booking cancelled successfully', booking);
+    async cancel(
+        @UserId() userId: string,
+        @UserRoles() roles: UserRole | UserRole[],
+        @Param('bookingId') bookingId: string,
+        @Body() dto: CancelBookingDto,
+    ): Promise<BookingResponseDto> {
+        return this._bookingService.cancel(userId, roles, bookingId, dto);
     }
 
     @Get('instructor/bookings')
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'List bookings for the current instructor' })
     @ApiOkResponse({ type: PaginatedBookingsResponseDto })
-    async listInstructor(@UserId() userId: string, @Query() query: BookingQueryDto) {
-        const bookings = await this._bookingService.listInstructor(userId, this._toListQuery(query));
-
-        return PaginatedBookingsResponseDto.fromEntity('Instructor bookings fetched successfully', bookings);
+    async listInstructor(
+        @UserId() userId: string,
+        @Query() query: BookingQueryDto,
+    ): Promise<PaginatedBookingsResponseDto> {
+        return this._bookingService.listInstructor(userId, query);
     }
 
     @Post('instructor/bookings/:bookingId/complete')
     @Roles(UserRole.INSTRUCTOR)
     @ApiOperation({ summary: 'Mark a confirmed session as completed after it ends' })
     @ApiOkResponse({ type: BookingResponseDto })
-    async complete(@UserId() userId: string, @Param('bookingId') bookingId: string) {
-        const booking = await this._bookingService.complete(userId, bookingId);
-
-        return BookingResponseDto.fromEntity('Session marked as completed', booking);
+    async complete(
+        @UserId() userId: string,
+        @Param('bookingId') bookingId: string,
+    ): Promise<BookingResponseDto> {
+        return this._bookingService.complete(userId, bookingId);
     }
 
     @Get('admin/bookings')
     @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'List all bookings' })
     @ApiOkResponse({ type: PaginatedBookingsResponseDto })
-    async listAdmin(@Query() query: BookingQueryDto) {
-        const bookings = await this._bookingService.listAdmin(this._toListQuery(query));
-
-        return PaginatedBookingsResponseDto.fromEntity('Bookings fetched successfully', bookings);
-    }
-
-    private _toListQuery(query: BookingQueryDto): BookingListQuery {
-        return {
-            status: query.status,
-            from: query.from ? new Date(query.from) : undefined,
-            to: query.to ? new Date(query.to) : undefined,
-            page: query.page ?? 1,
-            limit: query.limit ?? 20,
-        };
-    }
-
-    private _asRoleList(roles: UserRole | UserRole[]): UserRole[] {
-        return Array.isArray(roles) ? roles : [roles];
+    async listAdmin(
+        @Query() query: BookingQueryDto,
+    ): Promise<PaginatedBookingsResponseDto> {
+        return this._bookingService.listAdmin(query);
     }
 }

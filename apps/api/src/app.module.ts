@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
 import { JwtModule } from './shared/jwt/jwt.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
@@ -26,6 +27,7 @@ import { PaymentModule } from './modules/payment/payment.module';
         limit: 60,
       },
     ]),
+    EventEmitterModule.forRoot(),
     JwtModule,
     ConfigModule,
     LoggerModule,

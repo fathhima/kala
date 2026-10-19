@@ -1,7 +1,8 @@
 import {
-    BadRequestException, ConflictException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit, forwardRef,
+    BadRequestException, ConflictException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IBookingService } from './interfaces/booking.service.interface';
 import { BOOKING_REPOSITORY, type IBookingRepository } from '../repositories/interfaces/booking.interface';
 import { BookingEntity, PaginatedBookingEntity } from '../entities/booking.entity';
@@ -10,7 +11,7 @@ import { UserRole } from '@/shared/enums/role.enum';
 import { type ILoggerService, LOGGER_SERVICE } from '@/shared/logger/repositories/interfaces/logger.interface';
 import { BookingStatus } from '../enums/booking.enum';
 import { BookingConflictError, BookingNotFoundError, BookingValidationError, SlotNotFoundError } from '../errors/booking.errors';
-import { PAYMENT_SERVICE, type IPaymentService } from '@/modules/payment/services/interfaces/payment.service.interface';
+import { BookingCancelledEvent } from '../events/booking-cancelled.event';
 import { calculateRefundEligibility } from '../utils/refund-policy';
 import { BookingQueryDto, CancelBookingDto, CreateBookingDto } from '../dto/request/booking.request.dto';
 import { BookingForPaymentDto, BookingResponseDto, PaginatedBookingsResponseDto } from '../dto/response/booking-response.dto';
@@ -25,8 +26,7 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         private readonly _configService: ConfigService,
         @Inject(LOGGER_SERVICE)
         private readonly _logger: ILoggerService,
-        @Inject(forwardRef(() => PAYMENT_SERVICE))
-        private readonly _paymentService: IPaymentService,
+        private readonly _eventEmitter: EventEmitter2,
     ) { }
 
     onModuleInit() {
@@ -131,7 +131,7 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
 
         // ─── Auto-refund for cancellations of paid bookings ───
         if (wasPaid) {
-            await this._processRefundAfterCancel(
+            this._processRefundAfterCancel(
                 cancelled,
                 isInstructor || isAdmin,
                 reason ?? (isAdmin ? 'Cancelled by administrator — full refund' : undefined),
@@ -173,21 +173,23 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
     }
 
     /**
-     * Determines refund % and delegates to PaymentService.
-     * Best-effort: never throws — errors are logged internally
-     * by processAutoRefund.
+     * Determines refund % and emits booking.cancelled event.
+     * Payment module listens to this event to issue refunds asynchronously.
      */
-    private async _processRefundAfterCancel(
+    private _processRefundAfterCancel(
         booking: BookingEntity,
         isFullRefundActor: boolean,
         reason?: string,
-    ): Promise<void> {
+    ): void {
         // Instructor or Admin cancels → always 100% (not the student's fault)
         if (isFullRefundActor) {
-            await this._paymentService.processAutoRefund(
-                booking.id,
-                100,
-                reason ?? 'Cancelled by platform/instructor — full refund',
+            this._eventEmitter.emit(
+                'booking.cancelled',
+                new BookingCancelledEvent(
+                    booking.id,
+                    100,
+                    reason ?? 'Cancelled by platform/instructor — full refund',
+                ),
             );
             return;
         }
@@ -203,10 +205,13 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
             return;
         }
 
-        await this._paymentService.processAutoRefund(
-            booking.id,
-            eligibility.refundPercentage,
-            reason ?? eligibility.reason,
+        this._eventEmitter.emit(
+            'booking.cancelled',
+            new BookingCancelledEvent(
+                booking.id,
+                eligibility.refundPercentage,
+                reason ?? eligibility.reason,
+            ),
         );
     }
 

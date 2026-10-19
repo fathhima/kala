@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './services/payment.service';
 import { PAYMENT_SERVICE } from './services/interfaces/payment.service.interface';
@@ -7,15 +7,17 @@ import { PAYMENT_REPOSITORY } from './repositories/interfaces/payment.repository
 import { PrismaModule } from '@/shared/prisma/prisma.module';
 import { BookingModule } from '@/modules/booking/booking.module';
 import { PaymentGatewayModule } from '@/shared/payment-gateway/payment-gateway.module';
+import { BookingCancelledListener } from './listeners/booking-cancelled.listener';
 
 @Module({
-    imports: [PrismaModule, forwardRef(() => BookingModule), PaymentGatewayModule],
+    imports: [PrismaModule, BookingModule, PaymentGatewayModule],
     controllers: [PaymentController],
     providers: [
         {
             provide: PAYMENT_SERVICE,
             useClass: PaymentService,
         },
+        BookingCancelledListener,
         PrismaPaymentRepository,
         {
             provide: PAYMENT_REPOSITORY,

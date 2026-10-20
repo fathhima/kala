@@ -12,12 +12,13 @@ Name | Type | Description | Notes
 **currency** | **string** |  | [default to undefined]
 **status** | **string** |  | [default to undefined]
 **gateway** | **string** |  | [default to undefined]
-**gatewayId** | **object** |  | [optional] [default to undefined]
-**refundId** | **object** |  | [optional] [default to undefined]
-**refundAmount** | **object** |  | [optional] [default to undefined]
-**failureReason** | **object** |  | [optional] [default to undefined]
-**paidAt** | **object** |  | [optional] [default to undefined]
-**refundedAt** | **object** |  | [optional] [default to undefined]
+**gatewayId** | **string** |  | [optional] [default to undefined]
+**gatewaySessionId** | **string** |  | [optional] [default to undefined]
+**refundId** | **string** |  | [optional] [default to undefined]
+**refundAmount** | **number** |  | [optional] [default to undefined]
+**failureReason** | **string** |  | [optional] [default to undefined]
+**paidAt** | **string** |  | [optional] [default to undefined]
+**refundedAt** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [default to undefined]
 **updatedAt** | **string** |  | [default to undefined]
 
@@ -35,6 +36,7 @@ const instance: PaymentDto = {
     status,
     gateway,
     gatewayId,
+    gatewaySessionId,
     refundId,
     refundAmount,
     failureReason,

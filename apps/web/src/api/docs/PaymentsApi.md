@@ -4,13 +4,67 @@ All URIs are relative to *http://localhost:4000*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**paymentControllerConfirmDevPayment**](#paymentcontrollerconfirmdevpayment) | **POST** /api/payments/dev-confirm | Simulate successful payment confirmation in development|
 |[**paymentControllerCreateCheckout**](#paymentcontrollercreatecheckout) | **POST** /api/payments/checkout | Create a Razorpay checkout session for a booking|
+|[**paymentControllerGetAdminPayment**](#paymentcontrollergetadminpayment) | **GET** /api/admin/payments/{paymentId} | Get payment by ID (admin)|
 |[**paymentControllerGetPayment**](#paymentcontrollergetpayment) | **GET** /api/payments/{paymentId} | Get a payment by ID|
 |[**paymentControllerGetPaymentByBooking**](#paymentcontrollergetpaymentbybooking) | **GET** /api/payments/booking/{bookingId} | Get payment for a booking|
 |[**paymentControllerHandleWebhook**](#paymentcontrollerhandlewebhook) | **POST** /api/payments/webhook | Razorpay webhook endpoint|
 |[**paymentControllerListAdminPayments**](#paymentcontrollerlistadminpayments) | **GET** /api/admin/payments | List all payments (admin)|
 |[**paymentControllerListStudentPayments**](#paymentcontrollerliststudentpayments) | **GET** /api/payments | List student payments|
+|[**paymentControllerRecordFailure**](#paymentcontrollerrecordfailure) | **POST** /api/payments/fail | Record client-side payment failure for a booking|
 |[**paymentControllerRefundPayment**](#paymentcontrollerrefundpayment) | **POST** /api/payments/booking/{bookingId}/refund | Refund a payment (admin only)|
+
+# **paymentControllerConfirmDevPayment**
+> PaymentResponseDto paymentControllerConfirmDevPayment(createCheckoutDto)
+
+
+### Example
+
+```typescript
+import {
+    PaymentsApi,
+    Configuration,
+    CreateCheckoutDto
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PaymentsApi(configuration);
+
+let createCheckoutDto: CreateCheckoutDto; //
+
+const { status, data } = await apiInstance.paymentControllerConfirmDevPayment(
+    createCheckoutDto
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **createCheckoutDto** | **CreateCheckoutDto**|  | |
+
+
+### Return type
+
+**PaymentResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **paymentControllerCreateCheckout**
 > CheckoutResponseDto paymentControllerCreateCheckout(createCheckoutDto)
@@ -60,6 +114,56 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**201** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **paymentControllerGetAdminPayment**
+> PaymentResponseDto paymentControllerGetAdminPayment()
+
+
+### Example
+
+```typescript
+import {
+    PaymentsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PaymentsApi(configuration);
+
+let paymentId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.paymentControllerGetAdminPayment(
+    paymentId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **paymentId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**PaymentResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -319,6 +423,49 @@ const { status, data } = await apiInstance.paymentControllerListStudentPayments(
 ### Return type
 
 **PaginatedPaymentsResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **paymentControllerRecordFailure**
+> PaymentResponseDto paymentControllerRecordFailure()
+
+
+### Example
+
+```typescript
+import {
+    PaymentsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PaymentsApi(configuration);
+
+const { status, data } = await apiInstance.paymentControllerRecordFailure();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**PaymentResponseDto**
 
 ### Authorization
 

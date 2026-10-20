@@ -203,6 +203,22 @@ export class PrismaBookingRepository
             },
           });
 
+          await tx.outboxEvent.create({
+            data: {
+              eventType: 'BOOKING_HELD',
+              aggregateType: 'BOOKING',
+              aggregateId: created.id,
+              payload: {
+                bookingId: created.id,
+                slotId: slot.id,
+                studentId: input.studentId,
+                profileId: slot.profileId,
+                offeringId: slot.offeringId,
+                holdExpiresAt: holdExpiresAt.toISOString(),
+              },
+            },
+          });
+
           return BookingMapper.toEntity(created);
         },
         {
@@ -344,6 +360,21 @@ export class PrismaBookingRepository
             heldByUserId: null,
             heldByBookingId: null,
             bookedAt: null,
+          },
+        });
+
+        await tx.outboxEvent.create({
+          data: {
+            eventType: 'BOOKING_CANCELLED',
+            aggregateType: 'BOOKING',
+            aggregateId: updated.id,
+            payload: {
+              bookingId: updated.id,
+              slotId: record.slotId,
+              profileId: record.profileId,
+              actorId: input.actorId,
+              reason: input.reason ?? null,
+            },
           },
         });
 

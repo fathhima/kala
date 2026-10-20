@@ -131,7 +131,7 @@ export class PrismaPaymentRepository
 
           const booking = await tx.booking.findUnique({
             where: { id: payment.bookingId },
-            select: { id: true, slotId: true, status: true },
+            select: { id: true, slotId: true, status: true, profileId: true },
           });
 
           if (!booking) {
@@ -152,6 +152,20 @@ export class PrismaPaymentRepository
                 heldUntil: null,
                 heldByUserId: null,
                 heldByBookingId: null,
+              },
+            });
+
+            await tx.outboxEvent.create({
+              data: {
+                eventType: 'BOOKING_CONFIRMED',
+                aggregateType: 'BOOKING',
+                aggregateId: booking.id,
+                payload: {
+                  bookingId: booking.id,
+                  slotId: booking.slotId,
+                  profileId: booking.profileId,
+                  paymentId: updatedPayment.id,
+                },
               },
             });
           }

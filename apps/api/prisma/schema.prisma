@@ -92,6 +92,13 @@ enum PaymentGateway {
   RAZORPAY
 }
 
+enum OutboxStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -381,3 +388,21 @@ model Payment {
   @@index([gatewaySessionId])
   @@map("payments")
 }
+
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  retryCount    Int          @default(0)
+  errorMessage  String?
+  createdAt     DateTime     @default(now())
+  processedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+

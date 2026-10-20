@@ -11,6 +11,8 @@ import { InstructorProfileStatus, OfferingStatus } from '@/modules/instructor/en
 import { InstructorSlotAvailabilityResponseDto, PublicSlotListResponseDto, SlotExceptionResponseDto, SlotRuleResponseDto } from '../dto/response/slot-response.dto';
 import { CreateSlotExceptionDto, CreateSlotRuleDto, SlotAvailabilityQueryDto, UpdateSlotRuleDto } from '../dto/request/slot.request.dto';
 import { MessageResponseDto } from '@/shared/dto/response/message-response.dto';
+import { REDIS_SERVICE, type IRedisService } from '@/shared/redis/repositories/interfaces/key-value-store.interface';
+import { LOGGER_SERVICE, type ILoggerService } from '@/shared/logger/repositories/interfaces/logger.interface';
 
 @Injectable()
 export class SlotService implements ISlotService {
@@ -19,7 +21,11 @@ export class SlotService implements ISlotService {
         private readonly _slotRepository: ISlotRepository,
         @Inject(INSTRUCTOR_SERVICE)
         private readonly _instructorService: IInstructorService,
-        private readonly _configService: ConfigService
+        private readonly _configService: ConfigService,
+        @Inject(REDIS_SERVICE)
+        private readonly _redisService: IRedisService,
+        @Inject(LOGGER_SERVICE)
+        private readonly _logger: ILoggerService,
     ) { }
 
     async getInstructorAvailability(userId: string, query: SlotAvailabilityQueryDto): Promise<InstructorSlotAvailabilityResponseDto> {
@@ -70,6 +76,7 @@ export class SlotService implements ISlotService {
             await this._slotRepository.deleteRule(rule.id);
             throw error;
         }
+        await this.invalidateAvailabilityCache(profile.id);
         return SlotRuleResponseDto.fromEntity('Availability rule created successfully', rule);
     }
 
@@ -110,6 +117,7 @@ export class SlotService implements ISlotService {
         if (targetStatus === AvailabilityRuleStatus.ACTIVE && (timeOrDurationChanged || isActivating)) {
             await this._materializeRuleSlots(updated);
         }
+        await this.invalidateAvailabilityCache(profile.id);
         return SlotRuleResponseDto.fromEntity('Availability rule updated successfully', updated);
     }
 
@@ -134,6 +142,7 @@ export class SlotService implements ISlotService {
 
         await this._slotRepository.deleteUnbookedFutureSlotsByRule(ruleId);
         await this._slotRepository.deleteRule(ruleId);
+        await this.invalidateAvailabilityCache(profile.id);
 
         return MessageResponseDto.success('Availability rule deleted successfully');
     }
@@ -164,6 +173,7 @@ export class SlotService implements ISlotService {
             }
         }
 
+        await this.invalidateAvailabilityCache(profile.id);
         return MessageResponseDto.success('Availability exception deleted successfully');
     }
 
@@ -293,6 +303,7 @@ export class SlotService implements ISlotService {
             await this._slotRepository.createSlots(slots);
         }
 
+        await this.invalidateAvailabilityCache(profile.id);
         return SlotExceptionResponseDto.fromEntity('Availability exception created successfully', exception);
     }
 
@@ -302,6 +313,24 @@ export class SlotService implements ISlotService {
             from: query.from ? new Date(query.from) : undefined,
             to: query.to ? new Date(query.to) : undefined,
         });
+
+        const cacheKey = `availability:${profileId}:${query.offeringId ?? 'all'}:${range.from.toISOString()}:${range.to.toISOString()}`;
+        const indexKey = `availability:index:${profileId}`;
+
+        try {
+            const cached = await this._redisService.get(cacheKey);
+            if (cached) {
+                this._logger.log(`Cache HIT for public availability: ${cacheKey}`, SlotService.name);
+                return JSON.parse(cached) as PublicSlotListResponseDto;
+            }
+            this._logger.log(`Cache MISS for public availability: ${cacheKey}`, SlotService.name);
+        } catch (err) {
+            this._logger.warn(
+                `Redis cache read failed for ${cacheKey}: ${err instanceof Error ? err.message : String(err)}`,
+                SlotService.name,
+            );
+        }
+
         const slots = await this._slotRepository.findPublicSlots({
             profileId,
             offeringId: query.offeringId,
@@ -327,7 +356,40 @@ export class SlotService implements ISlotService {
                 };
             });
 
-        return PublicSlotListResponseDto.fromEntities('Public availability fetched successfully', filtered);
+        const response = PublicSlotListResponseDto.fromEntities('Public availability fetched successfully', filtered);
+
+        try {
+            await this._redisService.set(cacheKey, JSON.stringify(response), 600);
+            await this._redisService.sadd(indexKey, cacheKey, 600);
+        } catch (err) {
+            this._logger.warn(
+                `Redis cache write failed for ${cacheKey}: ${err instanceof Error ? err.message : String(err)}`,
+                SlotService.name,
+            );
+        }
+
+        return response;
+    }
+
+    async invalidateAvailabilityCache(profileId: string): Promise<void> {
+        try {
+            const indexKey = `availability:index:${profileId}`;
+            const cachedKeys = await this._redisService.smembers(indexKey);
+            if (cachedKeys && cachedKeys.length > 0) {
+                await this._redisService.del(...cachedKeys, indexKey);
+                this._logger.log(
+                    `Invalidated ${cachedKeys.length} availability cache entries for instructor profile: ${profileId}`,
+                    SlotService.name,
+                );
+            } else {
+                await this._redisService.del(indexKey);
+            }
+        } catch (err) {
+            this._logger.warn(
+                `Failed to invalidate availability cache for instructor profile ${profileId}: ${err instanceof Error ? err.message : String(err)}`,
+                SlotService.name,
+            );
+        }
     }
 
     private _assertValidMinutes(startMinute: number, endMinute: number, duration: number) {

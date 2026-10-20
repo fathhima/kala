@@ -21,6 +21,7 @@ import { BookingModule } from './modules/booking/booking.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { QueueModule } from './shared/queue/queue.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { OutboxModule } from './shared/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     LoggerModule,
     RedisModule,
     QueueModule,
+    OutboxModule,
     MailerModule,
     NotificationModule,
     AuthModule,

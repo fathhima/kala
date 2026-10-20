@@ -13,4 +13,6 @@ export interface ISlotService {
   createException(userId: string, dto: CreateSlotExceptionDto): Promise<SlotExceptionResponseDto>;
   deleteException(userId: string, exceptionId: string): Promise<MessageResponseDto>;
   getPublicAvailability(profileId: string, query: SlotAvailabilityQueryDto): Promise<PublicSlotListResponseDto>;
+  invalidateAvailabilityCache(profileId: string): Promise<void>;
 }
+

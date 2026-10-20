@@ -12,6 +12,8 @@ import { UserRole } from '@/shared/enums/role.enum';
 import { type ILoggerService, LOGGER_SERVICE, } from '@/shared/logger/repositories/interfaces/logger.interface';
 import { PaymentGatewayError, PaymentNotFoundError, PaymentValidationError, PaymentConflictError, } from '../errors/payment.errors';
 import { ConfigService } from '@nestjs/config/dist/config.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BookingConfirmedEvent } from '@/modules/notification/events/booking-confirmed.event';
 
 @Injectable()
 export class PaymentService implements IPaymentService {
@@ -25,6 +27,7 @@ export class PaymentService implements IPaymentService {
         @Inject(LOGGER_SERVICE)
         private readonly _logger: ILoggerService,
         private readonly _configService: ConfigService,
+        private readonly _eventEmitter: EventEmitter2,
     ) { }
 
     async createCheckout(studentId: string, bookingId: string): Promise<CheckoutResponseDto> {
@@ -294,6 +297,11 @@ export class PaymentService implements IPaymentService {
             gatewayPaymentIntentId: `pay_dev_${Date.now()}`,
         });
 
+        this._eventEmitter.emit(
+            'booking.confirmed',
+            new BookingConfirmedEvent(confirmed.bookingId),
+        );
+
         this._logger.log(
             `Dev payment simulated & confirmed for booking=${bookingId} payment=${payment.id}`,
             PaymentService.name,
@@ -324,10 +332,15 @@ export class PaymentService implements IPaymentService {
 
     private async _handleCheckoutCompleted(gatewaySessionId: string, gatewayPaymentIntentId: string,): Promise<void> {
         try {
-            await this._paymentRepository.confirmPayment({
+            const confirmed = await this._paymentRepository.confirmPayment({
                 gatewaySessionId,
                 gatewayPaymentIntentId,
             });
+
+            this._eventEmitter.emit(
+                'booking.confirmed',
+                new BookingConfirmedEvent(confirmed.bookingId),
+            );
 
             this._logger.log(`Payment confirmed for session: ${gatewaySessionId}`, PaymentService.name,);
         } catch (error) {

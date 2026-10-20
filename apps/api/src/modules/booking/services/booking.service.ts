@@ -1,5 +1,5 @@
 import {
-    BadRequestException, ConflictException, Inject, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit,
+    BadRequestException, ConflictException, Inject, Injectable, NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -17,9 +17,7 @@ import { BookingQueryDto, CancelBookingDto, CreateBookingDto } from '../dto/requ
 import { BookingForPaymentDto, BookingResponseDto, PaginatedBookingsResponseDto } from '../dto/response/booking-response.dto';
 
 @Injectable()
-export class BookingService implements IBookingService, OnModuleInit, OnModuleDestroy {
-    private _holdExpiryTimer?: NodeJS.Timeout;
-
+export class BookingService implements IBookingService {
     constructor(
         @Inject(BOOKING_REPOSITORY)
         private readonly _bookingRepository: IBookingRepository,
@@ -29,18 +27,6 @@ export class BookingService implements IBookingService, OnModuleInit, OnModuleDe
         private readonly _eventEmitter: EventEmitter2,
     ) { }
 
-    onModuleInit() {
-        this._holdExpiryTimer = setInterval(() => {
-            this.expireHolds().catch((error: unknown) => {
-                this._logger.error('Failed to expire booking holds', error instanceof Error ? error.stack : String(error),
-                    BookingService.name,);
-            });
-        }, 15_000);
-    }
-
-    onModuleDestroy() {
-        if (this._holdExpiryTimer) clearInterval(this._holdExpiryTimer);
-    }
 
     async hold(studentId: string, dto: CreateBookingDto, idempotencyKey?: string): Promise<BookingResponseDto> {
         const ttl = this._configService.getOrThrow<number>('BOOKING_HOLD_TTL_SECONDS');

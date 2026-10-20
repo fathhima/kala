@@ -1,44 +1,65 @@
-import { PrismaService } from "@/shared/prisma/prisma.service";
-import { IUserRepository } from "./interfaces/user.interface";
-import { UserMapper } from "../mappers/user.mapper";
-import { CreateUserInput } from "../types/create-user-input.type";
-import { Injectable } from "@nestjs/common";
-import { UserEntity } from "../entities/user.entity";
-import { AdminUserListParams } from "../types/admin-user-list-params.type";
-import { IPaginatedResult } from "@/shared/types";
-import { IAdminUserRepository } from "@/modules/user/repositories/interfaces/admin-user.interface";
-import { UserRole } from "@/shared/enums/role.enum";
-import { Prisma } from "@prisma/client";
-import { UniqueConstraintError } from "@/shared/errors/unique-constraint.error";
+import { PrismaService } from '@/shared/prisma/prisma.service';
+import { IUserRepository } from './interfaces/user.interface';
+import { UserMapper } from '../mappers/user.mapper';
+import { CreateUserInput } from '../types/create-user-input.type';
+import { Injectable } from '@nestjs/common';
+import { AuthUserEntity, UserEntity } from '../entities/user.entity';
+import { AdminUserListParams } from '../types/admin-user-list-params.type';
+import { IPaginatedResult } from '@/shared/types';
+import { IAdminUserRepository } from '@/modules/user/repositories/interfaces/admin-user.interface';
+import { UserRole } from '@/shared/enums/role.enum';
+import { Prisma } from '@prisma/client';
+import { BasePrismaRepository, TransactionClient } from '@/shared/prisma/base';
 
 @Injectable()
-export class PrismaUserRepository implements IUserRepository, IAdminUserRepository {
-  constructor(private readonly _prisma: PrismaService) { }
-
-  async findByEmail(email: string) {
-    const user = await this._prisma.user.findUnique({
-      where: { email }
-    })
-    return user ? UserMapper.toEntity(user) : null
+export class PrismaUserRepository
+  extends BasePrismaRepository
+  implements IUserRepository, IAdminUserRepository
+{
+  constructor(prisma: PrismaService) {
+    super(prisma);
   }
 
-  async findById(id: string) {
-    const user = await this._prisma.user.findUnique({
-      where: { id }
-    })
-    return user ? UserMapper.toEntity(user) : null
+  async findByEmail(
+    email: string,
+    tx?: TransactionClient,
+  ): Promise<UserEntity | null> {
+    const user = await this.getClient(tx).user.findUnique({
+      where: { email },
+    });
+    return user ? UserMapper.toEntity(user) : null;
   }
 
-  async findAuthByEmail(email: string) {
-    const user = await this._prisma.user.findUnique({
-      where: { email }
-    })
-    return user ? UserMapper.toAuthEntity(user) : null
+  async findById(
+    id: string,
+    tx?: TransactionClient,
+  ): Promise<UserEntity | null> {
+    const user = await this.getClient(tx).user.findUnique({
+      where: { id },
+    });
+    return user ? UserMapper.toEntity(user) : null;
   }
 
-  async create(data: CreateUserInput) {
+  async exists(id: string, tx?: TransactionClient): Promise<boolean> {
+    return this.checkExists(this.getClient(tx).user, { id });
+  }
+
+  async findAuthByEmail(
+    email: string,
+    tx?: TransactionClient,
+  ): Promise<AuthUserEntity | null> {
+    const user = await this.getClient(tx).user.findUnique({
+      where: { email },
+    });
+    return user ? UserMapper.toAuthEntity(user) : null;
+  }
+
+  async create(
+    data: CreateUserInput,
+    tx?: TransactionClient,
+  ): Promise<UserEntity> {
     try {
-      const user = await this._prisma.user.create({
+      const user = await this.getClient(tx).user.create({
         data: {
           name: data.name,
           email: data.email,
@@ -47,46 +68,50 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
           roles: data.roles ?? [UserRole.STUDENT],
           imageUrl: data.imageUrl ?? null,
           isVerified: data.isVerified ?? false,
-          isActive: data.isActive ?? true
-        }
-      })
+          isActive: data.isActive ?? true,
+        },
+      });
 
-      return UserMapper.toEntity(user)
+      return UserMapper.toEntity(user);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new UniqueConstraintError((error.meta?.target as string[] | undefined) ?? ['email'],);
-      }
-      throw error;
+      this.handlePrismaError(error);
     }
   }
 
-  async updateProfile(userId: string, data: { name?: string; imageUrl?: string | null }): Promise<UserEntity> {
-    const user = await this._prisma.user.update({
+  async updateProfile(
+    userId: string,
+    data: { name?: string; imageUrl?: string | null },
+    tx?: TransactionClient,
+  ): Promise<UserEntity> {
+    const user = await this.getClient(tx).user.update({
       where: { id: userId },
       data,
-    })
+    });
 
-    return UserMapper.toEntity(user)
+    return UserMapper.toEntity(user);
   }
 
-  async updatePassword(userId: string, hashedPassword: string) {
-    await this._prisma.user.update({
-      where: {
-        id: userId
-      },
-      data: {
-        password: hashedPassword
-      }
-    })
+  async updatePassword(
+    userId: string,
+    hashedPassword: string,
+    tx?: TransactionClient,
+  ): Promise<void> {
+    await this.getClient(tx).user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
   }
 
-  async updateGoogleAccount(userId: string,
+  async updateGoogleAccount(
+    userId: string,
     data: {
       googleId: string;
       imageUrl?: string | null;
       isVerified?: boolean;
-    }) {
-    const user = await this._prisma.user.update({
+    },
+    tx?: TransactionClient,
+  ): Promise<UserEntity> {
+    const user = await this.getClient(tx).user.update({
       where: { id: userId },
       data: {
         googleId: data.googleId,
@@ -98,59 +123,43 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
     return UserMapper.toEntity(user);
   }
 
-  async findManyForAdmin(params: AdminUserListParams): Promise<IPaginatedResult<UserEntity>> {
+  async findManyForAdmin(
+    params: AdminUserListParams,
+    tx?: TransactionClient,
+  ): Promise<IPaginatedResult<UserEntity>> {
     const where: Prisma.UserWhereInput = {};
-    const skip = (params.page - 1) * params.limit;
 
     if (params.search) {
       where.OR = [
-        {
-          name: {
-            contains: params.search,
-            mode: 'insensitive',
-          },
-        },
-        {
-          email: {
-            contains: params.search,
-            mode: 'insensitive',
-          },
-        },
+        { name: { contains: params.search, mode: 'insensitive' } },
+        { email: { contains: params.search, mode: 'insensitive' } },
       ];
     }
 
     if (params.role) {
-      where.roles = {
-        has: params.role,
-      };
+      where.roles = { has: params.role };
     }
 
     if (typeof params.isActive === 'boolean') {
       where.isActive = params.isActive;
     }
 
-    const [users, total] = await this._prisma.$transaction([
-      this._prisma.user.findMany({
-        where,
-        skip,
-        take: params.limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-      this._prisma.user.count({ where }),
-    ]);
-
-    return {
-      items: users.map((user) => UserMapper.toEntity(user)),
-      total,
-      page: params.page,
-      limit: params.limit,
-    };
+    return this.paginate({
+      delegate: this.getClient(tx).user,
+      where,
+      orderBy: { createdAt: 'desc' },
+      pagination: { page: params.page, limit: params.limit },
+      mapper: UserMapper.toEntity,
+      tx,
+    });
   }
 
-  async updateStatus(userId: string, isActive: boolean): Promise<UserEntity> {
-    const user = await this._prisma.user.update({
+  async updateStatus(
+    userId: string,
+    isActive: boolean,
+    tx?: TransactionClient,
+  ): Promise<UserEntity> {
+    const user = await this.getClient(tx).user.update({
       where: { id: userId },
       data: { isActive },
     });
@@ -158,20 +167,27 @@ export class PrismaUserRepository implements IUserRepository, IAdminUserReposito
     return UserMapper.toEntity(user);
   }
 
-  async findAuthById(id: string) {
-    const user = await this._prisma.user.findUnique({ where: { id } });
+  async findAuthById(
+    id: string,
+    tx?: TransactionClient,
+  ): Promise<AuthUserEntity | null> {
+    const user = await this.getClient(tx).user.findUnique({ where: { id } });
 
     return user ? UserMapper.toAuthEntity(user) : null;
   }
 
-  async assignRole(userId: string, role: UserRole) {
-    const user = await this._prisma.user.findUnique({ where: { id: userId } });
+  async assignRole(
+    userId: string,
+    role: UserRole,
+    tx?: TransactionClient,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    const user = await client.user.findUnique({ where: { id: userId } });
 
     if (!user) return;
-
     if (user.roles.includes(role)) return;
 
-    await this._prisma.user.update({
+    await client.user.update({
       where: { id: userId },
       data: { roles: { set: [...user.roles, role] } },
     });

@@ -1,24 +1,65 @@
-import { BookingEntity, PaginatedBookingEntity } from '../../entities/booking.entity';
-import { BookingListQuery, CancelBookingInput, CompleteBookingInput, ConfirmBookingInput, CreateBookingInput } from '../../types/booking.type';
+import {
+  BookingEntity,
+  PaginatedBookingEntity,
+} from '../../entities/booking.entity';
+import {
+  BookingListQuery,
+  CancelBookingInput,
+  CompleteBookingInput,
+  ConfirmBookingInput,
+  CreateBookingInput,
+} from '../../types/booking.type';
+import { IBaseRepository, TransactionClient } from '@/shared/prisma/base';
 
 export const BOOKING_REPOSITORY = Symbol('BOOKING_REPOSITORY');
 
-export interface IBookingRepository {
-    holdSlot(input: CreateBookingInput, holdTtlSeconds: number): Promise<BookingEntity>;
+export interface IBookingRepository extends IBaseRepository<BookingEntity> {
+  holdSlot(
+    input: CreateBookingInput,
+    holdTtlSeconds: number,
+    tx?: TransactionClient,
+  ): Promise<BookingEntity>;
 
-    findById(id: string): Promise<BookingEntity | null>;
+  findById(id: string, tx?: TransactionClient): Promise<BookingEntity | null>;
 
-    findStudentBookings(studentId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
+  exists(id: string, tx?: TransactionClient): Promise<boolean>;
 
-    findInstructorBookings(profileId: string, query: BookingListQuery): Promise<PaginatedBookingEntity>;
+  findStudentBookings(
+    studentId: string,
+    query: BookingListQuery,
+    tx?: TransactionClient,
+  ): Promise<PaginatedBookingEntity>;
 
-    findAdminBookings(query: BookingListQuery): Promise<PaginatedBookingEntity>;
+  findInstructorBookings(
+    profileId: string,
+    query: BookingListQuery,
+    tx?: TransactionClient,
+  ): Promise<PaginatedBookingEntity>;
 
-    findApprovedProfileIdByUserId(userId: string): Promise<string | null>;
+  findAdminBookings(
+    query: BookingListQuery,
+    tx?: TransactionClient,
+  ): Promise<PaginatedBookingEntity>;
 
-    cancelBooking(input: CancelBookingInput): Promise<BookingEntity>;
+  findManyForAdmin(
+    query: BookingListQuery,
+    tx?: TransactionClient,
+  ): Promise<PaginatedBookingEntity>;
 
-    completeBooking(input: CompleteBookingInput): Promise<BookingEntity>;
-    
-    expireHolds(): Promise<number>;
+  findApprovedProfileIdByUserId(
+    userId: string,
+    tx?: TransactionClient,
+  ): Promise<string | null>;
+
+  cancelBooking(
+    input: CancelBookingInput,
+    tx?: TransactionClient,
+  ): Promise<BookingEntity>;
+
+  completeBooking(
+    input: CompleteBookingInput,
+    tx?: TransactionClient,
+  ): Promise<BookingEntity>;
+
+  expireHolds(tx?: TransactionClient): Promise<number>;
 }

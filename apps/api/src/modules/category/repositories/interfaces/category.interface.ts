@@ -1,38 +1,97 @@
-import { IPaginatedResult } from "@/shared/types/paginated-result";
-import { CategoryEntity } from "../../entities/category.entity";
-import { CategoryListParams } from "../../types/category-list-params.type";
-import { CreateCategoryInput } from "../../types/create-category-input.type";
-import { UpdateCategoryInput } from "../../types/update-category-input.type";
-import { SubcategoryEntity } from "../../entities/subcategory.entity";
-import { CreateSubcategoryInput } from "../../types/create-subcategory-input.type";
-import { UpdateSubcategoryInput } from "../../types/update-subcategory-input.type";
+import { IPaginatedResult } from '@/shared/types/paginated-result';
+import { CategoryEntity } from '../../entities/category.entity';
+import { CategoryListParams } from '../../types/category-list-params.type';
+import { CreateCategoryInput } from '../../types/create-category-input.type';
+import { UpdateCategoryInput } from '../../types/update-category-input.type';
+import { SubcategoryEntity } from '../../entities/subcategory.entity';
+import { CreateSubcategoryInput } from '../../types/create-subcategory-input.type';
+import { UpdateSubcategoryInput } from '../../types/update-subcategory-input.type';
+import {
+  ICrudRepository,
+  IAdminListRepository,
+  TransactionClient,
+} from '@/shared/prisma/base';
 
 export const CATEGORY_REPOSITORY = Symbol('CATEGORY_REPOSITORY');
 
-export interface ICategoryRepository {
-    findSelectable(): Promise<CategoryEntity[]>;
+export interface ICategoryRepository
+  extends
+    ICrudRepository<CategoryEntity, CreateCategoryInput, UpdateCategoryInput>,
+    IAdminListRepository<CategoryEntity, CategoryListParams> {
+  findSelectable(tx?: TransactionClient): Promise<CategoryEntity[]>;
 
-    findManyForAdmin(params: CategoryListParams): Promise<IPaginatedResult<CategoryEntity>>;
+  findManyForAdmin(
+    params: CategoryListParams,
+    tx?: TransactionClient,
+  ): Promise<IPaginatedResult<CategoryEntity>>;
 
-    findById(categoryId: string): Promise<CategoryEntity | null>;
+  findAll(tx?: TransactionClient): Promise<CategoryEntity[]>;
 
-    findBySlug(slug: string): Promise<CategoryEntity | null>;
+  findById(
+    categoryId: string,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity | null>;
 
-    createCategory(input: CreateCategoryInput): Promise<CategoryEntity>;
+  exists(categoryId: string, tx?: TransactionClient): Promise<boolean>;
 
-    updateCategory(categoryId: string, input: UpdateCategoryInput): Promise<CategoryEntity>;
+  findBySlug(
+    slug: string,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity | null>;
 
-    findSubcategories(categoryId: string): Promise<SubcategoryEntity[]>;
+  create(
+    input: CreateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity>;
 
-    findSubcategoryByGlobalId(subcategoryId: string,): Promise<SubcategoryEntity | null>
+  createCategory(
+    input: CreateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity>;
 
-    findSubcategoryById(categoryId: string, subcategoryId: string): Promise<SubcategoryEntity | null>;
+  update(
+    categoryId: string,
+    input: UpdateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity>;
 
-    findSubcategoryBySlug(categoryId: string, slug: string): Promise<SubcategoryEntity | null>;
+  updateCategory(
+    categoryId: string,
+    input: UpdateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity>;
 
-    createSubcategory(categoryId: string, input: CreateSubcategoryInput): Promise<SubcategoryEntity>;
+  findSubcategories(
+    categoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity[]>;
 
-    updateSubcategory(subcategoryId: string, input: UpdateSubcategoryInput): Promise<SubcategoryEntity>;
+  findSubcategoryByGlobalId(
+    subcategoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null>;
 
+  findSubcategoryById(
+    categoryId: string,
+    subcategoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null>;
 
+  findSubcategoryBySlug(
+    categoryId: string,
+    slug: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null>;
+
+  createSubcategory(
+    categoryId: string,
+    input: CreateSubcategoryInput,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity>;
+
+  updateSubcategory(
+    subcategoryId: string,
+    input: UpdateSubcategoryInput,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity>;
 }

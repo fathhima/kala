@@ -1,592 +1,662 @@
-import { BadRequestException, Injectable, } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
+import { BasePrismaRepository, TransactionClient } from '@/shared/prisma/base';
 import { IPaginatedResult } from '@/shared/types';
 import { InstructorMapper } from '../mappers/instructor.mapper';
-import { InstructorApplicationEntity, InstructorOfferingEntity, InstructorProfileEntity, OfferingMediaEntity, } from '../entities/instructor-profile.entity';
+import {
+  InstructorApplicationEntity,
+  InstructorOfferingEntity,
+  InstructorProfileEntity,
+  OfferingMediaEntity,
+} from '../entities/instructor-profile.entity';
 import { IInstructorRepository } from './interfaces/instructor.interface';
 import { ReviewableOfferingStatus } from '../types/offering-status.type';
-import { IAdminInstructorRepository } from './interfaces/admin-instructor.interface';
+import {
+  IAdminInstructorRepository,
+  AdminApplicationListParams,
+} from './interfaces/admin-instructor.interface';
 import { PublicInstructorProfile } from '../types/public-instructor.type';
-import { InstructorApplicationStatus, InstructorProfileStatus, MediaType, OfferingStatus, } from '../enums/instructor.enum';
+import {
+  InstructorApplicationStatus,
+  InstructorProfileStatus,
+  MediaType,
+  OfferingStatus,
+} from '../enums/instructor.enum';
 import { Prisma } from '@prisma/client';
-import { CreateOfferingInput, CreateOfferingMediaInput, PublicInstructorQueryInput, UpdateInstructorProfileInput, UpdateOfferingInput, } from '../types/instructor.type';
+import {
+  CreateOfferingInput,
+  CreateOfferingMediaInput,
+  PublicInstructorQueryInput,
+  UpdateInstructorProfileInput,
+  UpdateOfferingInput,
+} from '../types/instructor.type';
 import { IInstructorQuery } from './interfaces/instructor-query.interface';
 import { OfferingSnapshot } from '../types/offering-snapshot.type';
 
 const offeringInclude = {
-    media: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
-    subcategory: {
-        include: {
-            category: true,
-        },
+  media: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
+  subcategory: {
+    include: {
+      category: true,
     },
+  },
 } satisfies Prisma.InstructorOfferingInclude;
 
 const applicationInclude = {
-    offerings: {
-        include: offeringInclude,
-        orderBy: { createdAt: 'asc' },
-    },
-    profile: {
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    imageUrl: true,
-                    roles: true,
-                },
-            },
+  offerings: {
+    include: offeringInclude,
+    orderBy: { createdAt: 'asc' },
+  },
+  profile: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          imageUrl: true,
+          roles: true,
         },
+      },
     },
+  },
 } satisfies Prisma.InstructorApplicationInclude;
 
 const publicProfileInclude = {
-    user: {
-        select: {
-            name: true,
-            imageUrl: true,
-        },
+  user: {
+    select: {
+      name: true,
+      imageUrl: true,
     },
-    offerings: {
-        where: {
-            status: OfferingStatus.APPROVED,
-        },
+  },
+  offerings: {
+    where: {
+      status: OfferingStatus.APPROVED,
+    },
+    include: {
+      subcategory: {
         include: {
-            subcategory: {
-                include: {
-                    category: true,
-                },
-            },
-            media: {
-                orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-            },
+          category: true,
         },
-        orderBy: {
-            createdAt: 'asc',
-        },
+      },
+      media: {
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
     },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  },
 } satisfies Prisma.InstructorProfileInclude;
 
 type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{
-    include: typeof publicProfileInclude;
+  include: typeof publicProfileInclude;
 }>;
 
 @Injectable()
 export class PrismaInstructorRepository
-    implements IInstructorRepository, IAdminInstructorRepository, IInstructorQuery {
-    constructor(private readonly _prisma: PrismaService) { }
+  extends BasePrismaRepository
+  implements IInstructorRepository, IAdminInstructorRepository, IInstructorQuery
+{
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
-    async findPublicInstructors(input: PublicInstructorQueryInput,): Promise<{ profiles: PublicInstructorProfile[]; total: number }> {
-        const skip = (input.page - 1) * input.limit;
+  async findPublicInstructors(
+    input: PublicInstructorQueryInput,
+  ): Promise<{ profiles: PublicInstructorProfile[]; total: number }> {
+    const skip = (input.page - 1) * input.limit;
 
-        const where: Prisma.InstructorProfileWhereInput = {
-            status: InstructorProfileStatus.APPROVED,
-            offerings: {
+    const where: Prisma.InstructorProfileWhereInput = {
+      status: InstructorProfileStatus.APPROVED,
+      offerings: {
+        some: {
+          status: OfferingStatus.APPROVED,
+          ...(input.subcategoryId
+            ? { subcategoryId: input.subcategoryId }
+            : {}),
+        },
+      },
+    };
+
+    const search = input.search?.trim();
+
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            { user: { name: { contains: search, mode: 'insensitive' } } },
+            { bio: { contains: search, mode: 'insensitive' } },
+            {
+              offerings: {
                 some: {
-                    status: OfferingStatus.APPROVED,
-                    ...(input.subcategoryId
-                        ? { subcategoryId: input.subcategoryId }
-                        : {}),
+                  status: OfferingStatus.APPROVED,
+                  OR: [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } },
+                  ],
                 },
+              },
             },
-        };
-
-        const search = input.search?.trim();
-
-        if (search) {
-            where.AND = [
-                {
-                    OR: [
-                        { user: { name: { contains: search, mode: 'insensitive' } } },
-                        { bio: { contains: search, mode: 'insensitive' } },
-                        {
-                            offerings: {
-                                some: {
-                                    status: OfferingStatus.APPROVED,
-                                    OR: [
-                                        { title: { contains: search, mode: 'insensitive' } },
-                                        { description: { contains: search, mode: 'insensitive' } },
-                                    ],
-                                },
-                            },
-                        },
-                    ],
-                },
-            ];
-        }
-
-        const [profiles, total] = await this._prisma.$transaction([
-            this._prisma.instructorProfile.findMany({
-                where,
-                skip,
-                take: input.limit,
-                include: publicProfileInclude,
-                orderBy: { updatedAt: 'desc' },
-            }),
-            this._prisma.instructorProfile.count({ where }),
-        ]);
-
-        return {
-            profiles: profiles.map(InstructorMapper.toPublicInstructorProfile),
-            total,
-        };
+          ],
+        },
+      ];
     }
 
-    async findPublicInstructor(profileId: string,): Promise<PublicInstructorProfile | null> {
-        const profile = await this._prisma.instructorProfile.findFirst({
+    const [profiles, total] = await this.prisma.$transaction([
+      this.prisma.instructorProfile.findMany({
+        where,
+        skip,
+        take: input.limit,
+        include: publicProfileInclude,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.instructorProfile.count({ where }),
+    ]);
+
+    return {
+      profiles: profiles.map(InstructorMapper.toPublicInstructorProfile),
+      total,
+    };
+  }
+
+  async findPublicInstructor(
+    profileId: string,
+  ): Promise<PublicInstructorProfile | null> {
+    const profile = await this.prisma.instructorProfile.findFirst({
+      where: {
+        id: profileId,
+        status: InstructorProfileStatus.APPROVED,
+        offerings: {
+          some: {
+            status: OfferingStatus.APPROVED,
+          },
+        },
+      },
+      include: publicProfileInclude,
+    });
+
+    return profile ? InstructorMapper.toPublicInstructorProfile(profile) : null;
+  }
+
+  async findWorkspaceByUserId(
+    userId: string,
+  ): Promise<InstructorProfileEntity | null> {
+    const profile = await this.prisma.instructorProfile.findUnique({
+      where: { userId },
+      include: {
+        offerings: {
+          include: offeringInclude,
+          orderBy: { createdAt: 'desc' },
+        },
+        applications: {
+          include: applicationInclude,
+          orderBy: { submittedAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    return profile ? InstructorMapper.toProfileEntity(profile) : null;
+  }
+
+  async upsertProfile(
+    userId: string,
+    input: UpdateInstructorProfileInput,
+  ): Promise<InstructorProfileEntity> {
+    const profile = await this.prisma.instructorProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        bio: input.bio,
+        location: input.location,
+        portfolioUrl: input.portfolioUrl,
+      },
+      update: input,
+      include: {
+        offerings: {
+          include: offeringInclude,
+          orderBy: { createdAt: 'desc' },
+        },
+        applications: {
+          include: applicationInclude,
+          orderBy: { submittedAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    return InstructorMapper.toProfileEntity(profile);
+  }
+
+  async createOffering(
+    profileId: string,
+    input: CreateOfferingInput,
+  ): Promise<InstructorOfferingEntity> {
+    const offering = await this.prisma.instructorOffering.create({
+      data: {
+        ...input,
+        profileId,
+        currency: input.currency?.toUpperCase() ?? 'INR',
+      },
+      include: offeringInclude,
+    });
+
+    return InstructorMapper.toOfferingEntity(offering);
+  }
+
+  async updateOffering(
+    offeringId: string,
+    input: UpdateOfferingInput,
+  ): Promise<InstructorOfferingEntity> {
+    const offering = await this.prisma.instructorOffering.update({
+      where: { id: offeringId },
+      data: {
+        ...input,
+        currency: input.currency?.toUpperCase(),
+      },
+      include: offeringInclude,
+    });
+
+    return InstructorMapper.toOfferingEntity(offering);
+  }
+
+  async deleteOffering(offeringId: string): Promise<void> {
+    await this.prisma.instructorOffering.delete({ where: { id: offeringId } });
+  }
+
+  async findOfferingById(
+    offeringId: string,
+  ): Promise<InstructorOfferingEntity | null> {
+    const offering = await this.prisma.instructorOffering.findUnique({
+      where: { id: offeringId },
+      include: offeringInclude,
+    });
+
+    return offering ? InstructorMapper.toOfferingEntity(offering) : null;
+  }
+
+  async countMedia(offeringId: string, type: MediaType): Promise<number> {
+    return this.prisma.offeringMedia.count({
+      where: { offeringId, type },
+    });
+  }
+
+  async createMedia(
+    input: CreateOfferingMediaInput,
+  ): Promise<OfferingMediaEntity> {
+    const media = await this.prisma.offeringMedia.create({
+      data: {
+        ...input,
+        url: input.storageKey,
+      },
+    });
+
+    return InstructorMapper.toMediaEntity(media);
+  }
+
+  async findMediaById(mediaId: string): Promise<OfferingMediaEntity | null> {
+    const media = await this.prisma.offeringMedia.findUnique({
+      where: { id: mediaId },
+    });
+
+    return media ? InstructorMapper.toMediaEntity(media) : null;
+  }
+
+  async deleteMedia(mediaId: string): Promise<void> {
+    await this.prisma.offeringMedia.delete({ where: { id: mediaId } });
+  }
+
+  async submitApplication(
+    profileId: string,
+    offeringIds: string[],
+  ): Promise<InstructorApplicationEntity> {
+    return this.prisma.$transaction(async (tx) => {
+      const offerings = await tx.instructorOffering.findMany({
+        where: { id: { in: offeringIds }, profileId },
+      });
+
+      if (offerings.length !== offeringIds.length) {
+        throw new BadRequestException('One or more offerings were not found');
+      }
+
+      const reusableApplicationIds = [
+        ...new Set(
+          offerings
+            .map((offering) => offering.applicationId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ];
+
+      const reusable = reusableApplicationIds.length
+        ? await tx.instructorApplication.findFirst({
             where: {
-                id: profileId,
-                status: InstructorProfileStatus.APPROVED,
-                offerings: {
-                    some: {
-                        status: OfferingStatus.APPROVED,
-                    },
-                },
+              id: { in: reusableApplicationIds },
+              profileId,
+              status: {
+                in: [
+                  InstructorApplicationStatus.CHANGES_REQUESTED,
+                  InstructorApplicationStatus.REJECTED,
+                ],
+              },
             },
-            include: publicProfileInclude,
-        });
+            orderBy: { submittedAt: 'desc' },
+          })
+        : null;
 
-        return profile ? InstructorMapper.toPublicInstructorProfile(profile) : null;
-    }
+      const application = reusable
+        ? await tx.instructorApplication.update({
+            where: { id: reusable.id },
+            data: {
+              status: InstructorApplicationStatus.PENDING,
+              submittedAt: new Date(),
+              reviewedAt: null,
+              reviewedBy: null,
+            },
+          })
+        : await tx.instructorApplication.create({
+            data: {
+              profileId,
+              status: InstructorApplicationStatus.PENDING,
+              submittedAt: new Date(),
+            },
+          });
 
-    async findWorkspaceByUserId(userId: string,): Promise<InstructorProfileEntity | null> {
-        const profile = await this._prisma.instructorProfile.findUnique({
-            where: { userId },
+      await tx.instructorOffering.updateMany({
+        where: { id: { in: offeringIds }, profileId },
+        data: {
+          applicationId: application.id,
+          status: OfferingStatus.PENDING,
+        },
+      });
+
+      const hydrated = await tx.instructorApplication.findUniqueOrThrow({
+        where: { id: application.id },
+        include: {
+          offerings: {
             include: {
-                offerings: {
-                    include: offeringInclude,
-                    orderBy: { createdAt: 'desc' },
-                },
-                applications: {
-                    include: applicationInclude,
-                    orderBy: { submittedAt: 'desc' },
-                    take: 1,
-                },
+              subcategory: { include: { category: true } },
+              media: true,
             },
-        });
+          },
+          profile: { include: { user: true } },
+        },
+      });
 
-        return profile ? InstructorMapper.toProfileEntity(profile) : null;
+      return InstructorMapper.toApplicationEntity(hydrated);
+    });
+  }
+
+  async cancelPendingApplication(
+    profileId: string,
+    applicationId: string,
+  ): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const application = await tx.instructorApplication.findFirst({
+        where: {
+          id: applicationId,
+          profileId,
+          status: InstructorApplicationStatus.PENDING,
+        },
+        select: { id: true },
+      });
+
+      if (!application) {
+        return false;
+      }
+
+      await tx.instructorOffering.updateMany({
+        where: {
+          profileId,
+          applicationId,
+          status: OfferingStatus.PENDING,
+        },
+        data: {
+          applicationId: null,
+          status: OfferingStatus.DRAFT,
+          reviewNote: null,
+          reviewedAt: null,
+          reviewedBy: null,
+        },
+      });
+
+      await tx.instructorApplication.update({
+        where: { id: applicationId },
+        data: {
+          status: InstructorApplicationStatus.CANCELLED,
+          reviewedAt: new Date(),
+          reviewedBy: null,
+          reviewNote: null,
+        },
+      });
+
+      const approvedOfferingCount = await tx.instructorOffering.count({
+        where: {
+          profileId,
+          status: OfferingStatus.APPROVED,
+        },
+      });
+
+      await tx.instructorProfile.update({
+        where: { id: profileId },
+        data: {
+          status:
+            approvedOfferingCount > 0
+              ? InstructorProfileStatus.APPROVED
+              : InstructorProfileStatus.DRAFT,
+        },
+      });
+
+      return true;
+    });
+  }
+
+  async findApplicationsForAdmin(
+    input: AdminApplicationListParams,
+    tx?: TransactionClient,
+  ): Promise<IPaginatedResult<InstructorApplicationEntity>> {
+    const where: Prisma.InstructorApplicationWhereInput = {
+      status: input.status,
+    };
+
+    if (input.search?.trim()) {
+      where.profile = {
+        user: {
+          OR: [
+            { name: { contains: input.search.trim(), mode: 'insensitive' } },
+            { email: { contains: input.search.trim(), mode: 'insensitive' } },
+          ],
+        },
+      };
     }
 
-    async upsertProfile(userId: string, input: UpdateInstructorProfileInput,): Promise<InstructorProfileEntity> {
-        const profile = await this._prisma.instructorProfile.upsert({
-            where: { userId },
-            create: {
-                userId,
-                bio: input.bio,
-                location: input.location,
-                portfolioUrl: input.portfolioUrl,
-            },
-            update: input,
+    return this.paginate({
+      delegate: this.getClient(tx).instructorApplication,
+      where,
+      include: applicationInclude,
+      orderBy: { submittedAt: 'asc' },
+      pagination: { page: input.page, limit: input.limit },
+      mapper: InstructorMapper.toApplicationEntity,
+      tx,
+    });
+  }
+
+  async findManyForAdmin(
+    params: AdminApplicationListParams,
+    tx?: TransactionClient,
+  ): Promise<IPaginatedResult<InstructorApplicationEntity>> {
+    return this.findApplicationsForAdmin(params, tx);
+  }
+
+  async findApplicationForAdmin(
+    applicationId: string,
+    tx?: TransactionClient,
+  ): Promise<InstructorApplicationEntity | null> {
+    const application = await this.getClient(
+      tx,
+    ).instructorApplication.findUnique({
+      where: { id: applicationId },
+      include: applicationInclude,
+    });
+
+    return application
+      ? InstructorMapper.toApplicationEntity(application)
+      : null;
+  }
+
+  async findApplicationById(
+    applicationId: string,
+    tx?: TransactionClient,
+  ): Promise<InstructorApplicationEntity | null> {
+    return this.findApplicationForAdmin(applicationId, tx);
+  }
+
+  async reviewOffering(
+    applicationId: string,
+    offeringId: string,
+    adminUserId: string,
+    decision: ReviewableOfferingStatus,
+    reviewNote?: string,
+  ): Promise<InstructorApplicationEntity | null> {
+    return this.prisma.$transaction(async (tx) => {
+      const offering = await tx.instructorOffering.findFirst({
+        where: {
+          id: offeringId,
+          applicationId,
+          status: OfferingStatus.PENDING,
+        },
+        include: {
+          application: {
             include: {
-                offerings: {
-                    include: offeringInclude,
-                    orderBy: { createdAt: 'desc' },
-                },
-                applications: {
-                    include: applicationInclude,
-                    orderBy: { submittedAt: 'desc' },
-                    take: 1,
-                },
-            },
-        });
-
-        return InstructorMapper.toProfileEntity(profile);
-    }
-
-    async createOffering(profileId: string, input: CreateOfferingInput,): Promise<InstructorOfferingEntity> {
-        const offering = await this._prisma.instructorOffering.create({
-            data: {
-                ...input,
-                profileId,
-                currency: input.currency?.toUpperCase() ?? 'INR',
-            },
-            include: offeringInclude,
-        });
-
-        return InstructorMapper.toOfferingEntity(offering);
-    }
-
-    async updateOffering(offeringId: string, input: UpdateOfferingInput,): Promise<InstructorOfferingEntity> {
-        const offering = await this._prisma.instructorOffering.update({
-            where: { id: offeringId },
-            data: {
-                ...input,
-                currency: input.currency?.toUpperCase(),
-            },
-            include: offeringInclude,
-        });
-
-        return InstructorMapper.toOfferingEntity(offering);
-    }
-
-    async deleteOffering(offeringId: string): Promise<void> {
-        await this._prisma.instructorOffering.delete({ where: { id: offeringId } });
-    }
-
-    async findOfferingById(offeringId: string,): Promise<InstructorOfferingEntity | null> {
-        const offering = await this._prisma.instructorOffering.findUnique({
-            where: { id: offeringId },
-            include: offeringInclude,
-        });
-
-        return offering ? InstructorMapper.toOfferingEntity(offering) : null;
-    }
-
-    async countMedia(offeringId: string, type: MediaType): Promise<number> {
-        return this._prisma.offeringMedia.count({
-            where: { offeringId, type },
-        });
-    }
-
-    async createMedia(input: CreateOfferingMediaInput,): Promise<OfferingMediaEntity> {
-        const media = await this._prisma.offeringMedia.create({
-            data: {
-                ...input,
-                url: input.storageKey,
-            },
-        });
-
-        return InstructorMapper.toMediaEntity(media);
-    }
-
-    async findMediaById(mediaId: string): Promise<OfferingMediaEntity | null> {
-        const media = await this._prisma.offeringMedia.findUnique({
-            where: { id: mediaId },
-        });
-
-        return media ? InstructorMapper.toMediaEntity(media) : null;
-    }
-
-    async deleteMedia(mediaId: string): Promise<void> {
-        await this._prisma.offeringMedia.delete({ where: { id: mediaId } });
-    }
-
-    async submitApplication(profileId: string, offeringIds: string[],): Promise<InstructorApplicationEntity> {
-        return this._prisma.$transaction(async (tx) => {
-            const offerings = await tx.instructorOffering.findMany({
-                where: { id: { in: offeringIds }, profileId },
-            });
-
-            if (offerings.length !== offeringIds.length) {
-                throw new BadRequestException('One or more offerings were not found');
-            }
-
-            const reusableApplicationIds = [
-                ...new Set(
-                    offerings
-                        .map((offering) => offering.applicationId)
-                        .filter((id): id is string => Boolean(id)),
-                ),
-            ];
-
-            const reusable = reusableApplicationIds.length
-                ? await tx.instructorApplication.findFirst({
-                    where: {
-                        id: { in: reusableApplicationIds },
-                        profileId,
-                        status: {
-                            in: [
-                                InstructorApplicationStatus.CHANGES_REQUESTED,
-                                InstructorApplicationStatus.REJECTED,
-                            ],
-                        },
-                    },
-                    orderBy: { submittedAt: 'desc' },
-                })
-                : null;
-
-            const application = reusable
-                ? await tx.instructorApplication.update({
-                    where: { id: reusable.id },
-                    data: {
-                        status: InstructorApplicationStatus.PENDING,
-                        submittedAt: new Date(),
-                        reviewedAt: null,
-                        reviewedBy: null,
-                    },
-                })
-                : await tx.instructorApplication.create({
-                    data: {
-                        profileId,
-                        status: InstructorApplicationStatus.PENDING,
-                        submittedAt: new Date(),
-                    },
-                });
-
-            await tx.instructorOffering.updateMany({
-                where: { id: { in: offeringIds }, profileId },
-                data: {
-                    applicationId: application.id,
-                    status: OfferingStatus.PENDING,
-                },
-            });
-
-            const hydrated = await tx.instructorApplication.findUniqueOrThrow({
-                where: { id: application.id },
+              profile: {
                 include: {
-                    offerings: {
-                        include: {
-                            subcategory: { include: { category: true } },
-                            media: true,
-                        },
-                    },
-                    profile: { include: { user: true } },
+                  user: { select: { id: true, roles: true } },
                 },
-            });
-
-            return InstructorMapper.toApplicationEntity(hydrated);
-        });
-    }
-
-    async cancelPendingApplication(profileId: string, applicationId: string,): Promise<boolean> {
-        return this._prisma.$transaction(async (tx) => {
-            const application = await tx.instructorApplication.findFirst({
-                where: {
-                    id: applicationId,
-                    profileId,
-                    status: InstructorApplicationStatus.PENDING,
-                },
-                select: { id: true },
-            });
-
-            if (!application) {
-                return false;
-            }
-
-            await tx.instructorOffering.updateMany({
-                where: {
-                    profileId,
-                    applicationId,
-                    status: OfferingStatus.PENDING,
-                },
-                data: {
-                    applicationId: null,
-                    status: OfferingStatus.DRAFT,
-                    reviewNote: null,
-                    reviewedAt: null,
-                    reviewedBy: null,
-                },
-            });
-
-            await tx.instructorApplication.update({
-                where: { id: applicationId },
-                data: {
-                    status: InstructorApplicationStatus.CANCELLED,
-                    reviewedAt: new Date(),
-                    reviewedBy: null,
-                    reviewNote: null,
-                },
-            });
-
-            const approvedOfferingCount = await tx.instructorOffering.count({
-                where: {
-                    profileId,
-                    status: OfferingStatus.APPROVED,
-                },
-            });
-
-            await tx.instructorProfile.update({
-                where: { id: profileId },
-                data: {
-                    status:
-                        approvedOfferingCount > 0
-                            ? InstructorProfileStatus.APPROVED
-                            : InstructorProfileStatus.DRAFT,
-                },
-            });
-
-            return true;
-        });
-    }
-
-    async findApplicationsForAdmin(input: {
-        page: number;
-        limit: number;
-        status?: InstructorApplicationStatus;
-        search?: string;
-    }): Promise<IPaginatedResult<InstructorApplicationEntity>> {
-        const skip = (input.page - 1) * input.limit;
-        const where: Prisma.InstructorApplicationWhereInput = {
-            status: input.status,
-        };
-
-        if (input.search?.trim()) {
-            where.profile = {
-                user: {
-                    OR: [
-                        { name: { contains: input.search.trim(), mode: 'insensitive' } },
-                        { email: { contains: input.search.trim(), mode: 'insensitive' } },
-                    ],
-                },
-            };
-        }
-
-        const [applications, total] = await this._prisma.$transaction([
-            this._prisma.instructorApplication.findMany({
-                where,
-                skip,
-                take: input.limit,
-                include: applicationInclude,
-                orderBy: { submittedAt: 'asc' },
-            }),
-            this._prisma.instructorApplication.count({ where }),
-        ]);
-
-        return {
-            items: applications.map(InstructorMapper.toApplicationEntity),
-            total,
-            page: input.page,
-            limit: input.limit,
-        };
-    }
-
-    async findApplicationForAdmin(applicationId: string,): Promise<InstructorApplicationEntity | null> {
-        const application = await this._prisma.instructorApplication.findUnique({
-            where: { id: applicationId },
-            include: applicationInclude,
-        });
-
-        return application
-            ? InstructorMapper.toApplicationEntity(application)
-            : null;
-    }
-
-    async reviewOffering(applicationId: string, offeringId: string, adminUserId: string, decision: ReviewableOfferingStatus, reviewNote?: string,): Promise<InstructorApplicationEntity | null> {
-        return this._prisma.$transaction(async (tx) => {
-            const offering = await tx.instructorOffering.findFirst({
-                where: {
-                    id: offeringId,
-                    applicationId,
-                    status: OfferingStatus.PENDING,
-                },
-                include: {
-                    application: {
-                        include: {
-                            profile: {
-                                include: {
-                                    user: { select: { id: true, roles: true } },
-                                },
-                            },
-                        },
-                    },
-                },
-            });
-
-            if (!offering?.application) {
-                return null;
-            }
-
-            await tx.instructorOffering.update({
-                where: { id: offeringId },
-                data: {
-                    status: decision,
-                    reviewNote: reviewNote ?? null,
-                    reviewedAt: new Date(),
-                    reviewedBy: adminUserId,
-                },
-            });
-
-            const applicationOfferings = await tx.instructorOffering.findMany({
-                where: { applicationId },
-                select: { status: true },
-            });
-
-            const hasPending = applicationOfferings.some(
-                (item) => item.status === OfferingStatus.PENDING,
-            );
-            const hasChangesRequested = applicationOfferings.some(
-                (item) => item.status === OfferingStatus.CHANGES_REQUESTED,
-            );
-            const hasApproved = applicationOfferings.some(
-                (item) => item.status === OfferingStatus.APPROVED,
-            );
-
-            const applicationStatus = hasPending
-                ? InstructorApplicationStatus.PENDING
-                : hasChangesRequested
-                    ? InstructorApplicationStatus.CHANGES_REQUESTED
-                    : hasApproved
-                        ? InstructorApplicationStatus.APPROVED
-                        : InstructorApplicationStatus.REJECTED;
-
-            await tx.instructorApplication.update({
-                where: { id: applicationId },
-                data: {
-                    status: applicationStatus,
-                    reviewedAt: hasPending ? null : new Date(),
-                    reviewedBy: hasPending ? null : adminUserId,
-                },
-            });
-
-            const approvedOfferingExists = await tx.instructorOffering.count({
-                where: {
-                    profileId: offering.profileId,
-                    status: OfferingStatus.APPROVED,
-                },
-            });
-
-            const profileStatus =
-                approvedOfferingExists > 0
-                    ? InstructorProfileStatus.APPROVED
-                    : applicationStatus === InstructorApplicationStatus.CHANGES_REQUESTED
-                        ? InstructorProfileStatus.CHANGES_REQUESTED
-                        : applicationStatus === InstructorApplicationStatus.REJECTED
-                            ? InstructorProfileStatus.REJECTED
-                            : InstructorProfileStatus.PENDING;
-
-            await tx.instructorProfile.update({
-                where: { id: offering.profileId },
-                data: { status: profileStatus },
-            });
-
-            const result = await tx.instructorApplication.findUnique({
-                where: { id: applicationId },
-                include: applicationInclude,
-            });
-
-            return result ? InstructorMapper.toApplicationEntity(result) : null;
-        });
-    }
-
-    async findApprovedProfileIdByUserId(userId: string,): Promise<{ id: string } | null> {
-        return this._prisma.instructorProfile.findFirst({
-            where: { userId, status: InstructorProfileStatus.APPROVED },
-            select: { id: true },
-        });
-    }
-
-    async findApprovedOfferingId(profileId: string, offeringId: string,): Promise<{ id: string } | null> {
-        return this._prisma.instructorOffering.findFirst({
-            where: { id: offeringId, profileId, status: OfferingStatus.APPROVED },
-            select: { id: true },
-        });
-    }
-
-    async getOfferingSnapshots(offeringIds: string[]): Promise<OfferingSnapshot[]> {
-        if (!offeringIds.length) return [];
-
-        const offerings = await this._prisma.instructorOffering.findMany({
-            where: { id: { in: offeringIds } },
-            select: {
-                id: true,
-                title: true,
-                status: true,
-                profileId: true,
-                profile: { select: { status: true } },
-                subcategory: { select: { id: true, name: true } },
+              },
             },
-        });
+          },
+        },
+      });
 
-        return offerings.map((o) => ({
-            id: o.id,
-            title: o.title,
-            status: o.status as OfferingStatus,
-            profileId: o.profileId,
-            profileStatus: o.profile.status as InstructorProfileStatus,
-            subcategory: { id: o.subcategory.id, name: o.subcategory.name },
-        }));
-    }
+      if (!offering?.application) {
+        return null;
+      }
+
+      await tx.instructorOffering.update({
+        where: { id: offeringId },
+        data: {
+          status: decision,
+          reviewNote: reviewNote ?? null,
+          reviewedAt: new Date(),
+          reviewedBy: adminUserId,
+        },
+      });
+
+      const applicationOfferings = await tx.instructorOffering.findMany({
+        where: { applicationId },
+        select: { status: true },
+      });
+
+      const hasPending = applicationOfferings.some(
+        (item) => item.status === OfferingStatus.PENDING,
+      );
+      const hasChangesRequested = applicationOfferings.some(
+        (item) => item.status === OfferingStatus.CHANGES_REQUESTED,
+      );
+      const hasApproved = applicationOfferings.some(
+        (item) => item.status === OfferingStatus.APPROVED,
+      );
+
+      const applicationStatus = hasPending
+        ? InstructorApplicationStatus.PENDING
+        : hasChangesRequested
+          ? InstructorApplicationStatus.CHANGES_REQUESTED
+          : hasApproved
+            ? InstructorApplicationStatus.APPROVED
+            : InstructorApplicationStatus.REJECTED;
+
+      await tx.instructorApplication.update({
+        where: { id: applicationId },
+        data: {
+          status: applicationStatus,
+          reviewedAt: hasPending ? null : new Date(),
+          reviewedBy: hasPending ? null : adminUserId,
+        },
+      });
+
+      const approvedOfferingExists = await tx.instructorOffering.count({
+        where: {
+          profileId: offering.profileId,
+          status: OfferingStatus.APPROVED,
+        },
+      });
+
+      const profileStatus =
+        approvedOfferingExists > 0
+          ? InstructorProfileStatus.APPROVED
+          : applicationStatus === InstructorApplicationStatus.CHANGES_REQUESTED
+            ? InstructorProfileStatus.CHANGES_REQUESTED
+            : applicationStatus === InstructorApplicationStatus.REJECTED
+              ? InstructorProfileStatus.REJECTED
+              : InstructorProfileStatus.PENDING;
+
+      await tx.instructorProfile.update({
+        where: { id: offering.profileId },
+        data: { status: profileStatus },
+      });
+
+      const result = await tx.instructorApplication.findUnique({
+        where: { id: applicationId },
+        include: applicationInclude,
+      });
+
+      return result ? InstructorMapper.toApplicationEntity(result) : null;
+    });
+  }
+
+  async findApprovedProfileIdByUserId(
+    userId: string,
+  ): Promise<{ id: string } | null> {
+    return this.prisma.instructorProfile.findFirst({
+      where: { userId, status: InstructorProfileStatus.APPROVED },
+      select: { id: true },
+    });
+  }
+
+  async findApprovedOfferingId(
+    profileId: string,
+    offeringId: string,
+  ): Promise<{ id: string } | null> {
+    return this.prisma.instructorOffering.findFirst({
+      where: { id: offeringId, profileId, status: OfferingStatus.APPROVED },
+      select: { id: true },
+    });
+  }
+
+  async getOfferingSnapshots(
+    offeringIds: string[],
+  ): Promise<OfferingSnapshot[]> {
+    if (!offeringIds.length) return [];
+
+    const offerings = await this.prisma.instructorOffering.findMany({
+      where: { id: { in: offeringIds } },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        profileId: true,
+        profile: { select: { status: true } },
+        subcategory: { select: { id: true, name: true } },
+      },
+    });
+
+    return offerings.map((o) => ({
+      id: o.id,
+      title: o.title,
+      status: o.status as OfferingStatus,
+      profileId: o.profileId,
+      profileStatus: o.profile.status as InstructorProfileStatus,
+      subcategory: { id: o.subcategory.id, name: o.subcategory.name },
+    }));
+  }
 }

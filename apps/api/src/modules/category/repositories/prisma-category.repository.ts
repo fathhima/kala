@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/shared/prisma/prisma.service';
+import { BasePrismaRepository, TransactionClient } from '@/shared/prisma/base';
 import { CategoryEntity } from '../entities/category.entity';
 import { SubcategoryEntity } from '../entities/subcategory.entity';
 import { CategoryMapper } from '../mappers/category.mapper';
@@ -13,199 +14,252 @@ import { IPaginatedResult } from '@/shared/types/paginated-result';
 import { ICategoryRepository } from './interfaces/category.interface';
 
 const categoryWithSubcategories = {
-    subcategories: {
-        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    },
+  subcategories: {
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+  },
 } satisfies Prisma.CategoryInclude;
 
 @Injectable()
-export class PrismaCategoryRepository implements ICategoryRepository {
-    constructor(private readonly _prisma: PrismaService) { }
+export class PrismaCategoryRepository
+  extends BasePrismaRepository
+  implements ICategoryRepository
+{
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
-    async findManyForAdmin(params: CategoryListParams,): Promise<IPaginatedResult<CategoryEntity>> {
-        const skip = (params.page - 1) * params.limit;
-        const where: Prisma.CategoryWhereInput = {};
+  async findManyForAdmin(
+    params: CategoryListParams,
+    tx?: TransactionClient,
+  ): Promise<IPaginatedResult<CategoryEntity>> {
+    const where: Prisma.CategoryWhereInput = {};
 
-        if (params.search) {
-            where.OR = [
-                { name: { contains: params.search, mode: 'insensitive' } },
-                { slug: { contains: params.search, mode: 'insensitive' } },
-                { description: { contains: params.search, mode: 'insensitive' } },
-            ];
-        }
-
-        if (typeof params.isActive === 'boolean') {
-            where.isActive = params.isActive;
-        }
-
-        const [categories, total] = await this._prisma.$transaction([
-            this._prisma.category.findMany({
-                where,
-                skip,
-                take: params.limit,
-                include: categoryWithSubcategories,
-                orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-            }),
-            this._prisma.category.count({ where }),
-        ]);
-
-        return {
-            items: categories.map(CategoryMapper.toCategoryEntity),
-            total,
-            page: params.page,
-            limit: params.limit,
-        };
+    if (params.search) {
+      where.OR = [
+        { name: { contains: params.search, mode: 'insensitive' } },
+        { slug: { contains: params.search, mode: 'insensitive' } },
+        { description: { contains: params.search, mode: 'insensitive' } },
+      ];
     }
 
-    async findAll(): Promise<CategoryEntity[]> {
-        const categories = await this._prisma.category.findMany({
-            include: categoryWithSubcategories,
-            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-        });
-
-        return categories.map(CategoryMapper.toCategoryEntity);
+    if (typeof params.isActive === 'boolean') {
+      where.isActive = params.isActive;
     }
 
-    async findSelectable(): Promise<CategoryEntity[]> {
-        const categories = await this._prisma.category.findMany({
-            where: {
-                isActive: true,
-            },
-            include: {
-                subcategories: {
-                    where: {
-                        isActive: true,
-                    },
-                    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-                },
-            },
-            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-        });
+    return this.paginate({
+      delegate: this.getClient(tx).category,
+      where,
+      include: categoryWithSubcategories,
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      pagination: { page: params.page, limit: params.limit },
+      mapper: CategoryMapper.toCategoryEntity,
+      tx,
+    });
+  }
 
-        return categories.map(CategoryMapper.toCategoryEntity);
-    }
+  async findAll(tx?: TransactionClient): Promise<CategoryEntity[]> {
+    const categories = await this.getClient(tx).category.findMany({
+      include: categoryWithSubcategories,
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
 
-    async findById(categoryId: string): Promise<CategoryEntity | null> {
-        const category = await this._prisma.category.findUnique({
-            where: { id: categoryId },
-            include: categoryWithSubcategories,
-        });
+    return categories.map(CategoryMapper.toCategoryEntity);
+  }
 
-        return category ? CategoryMapper.toCategoryEntity(category) : null;
-    }
+  async findSelectable(tx?: TransactionClient): Promise<CategoryEntity[]> {
+    const categories = await this.getClient(tx).category.findMany({
+      where: {
+        isActive: true,
+      },
+      include: {
+        subcategories: {
+          where: {
+            isActive: true,
+          },
+          orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
 
-    async findBySlug(slug: string): Promise<CategoryEntity | null> {
-        const category = await this._prisma.category.findUnique({
-            where: { slug },
-            include: categoryWithSubcategories,
-        });
+    return categories.map(CategoryMapper.toCategoryEntity);
+  }
 
-        return category ? CategoryMapper.toCategoryEntity(category) : null;
-    }
+  async findById(
+    categoryId: string,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity | null> {
+    const category = await this.getClient(tx).category.findUnique({
+      where: { id: categoryId },
+      include: categoryWithSubcategories,
+    });
 
-    async createCategory(input: CreateCategoryInput): Promise<CategoryEntity> {
-        const category = await this._prisma.category.create({
-            data: {
-                name: input.name,
-                slug: input.slug,
-                description: input.description ?? null,
-                sortOrder: input.sortOrder ?? 0,
-            },
-            include: categoryWithSubcategories,
-        });
+    return category ? CategoryMapper.toCategoryEntity(category) : null;
+  }
 
-        return CategoryMapper.toCategoryEntity(category);
-    }
+  async exists(categoryId: string, tx?: TransactionClient): Promise<boolean> {
+    return this.checkExists(this.getClient(tx).category, { id: categoryId });
+  }
 
-    async updateCategory(categoryId: string, input: UpdateCategoryInput,): Promise<CategoryEntity> {
-        const category = await this._prisma.category.update({
-            where: { id: categoryId },
-            data: {
-                name: input.name,
-                slug: input.slug,
-                description: input.description,
-                imageUrl: input.imageUrl,
-                imageStorageKey: input.imageStorageKey,
-                isActive: input.isActive,
-                sortOrder: input.sortOrder,
-            },
-            include: categoryWithSubcategories,
-        });
+  async findBySlug(
+    slug: string,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity | null> {
+    const category = await this.getClient(tx).category.findUnique({
+      where: { slug },
+      include: categoryWithSubcategories,
+    });
 
-        return CategoryMapper.toCategoryEntity(category);
-    }
+    return category ? CategoryMapper.toCategoryEntity(category) : null;
+  }
 
-    async findSubcategories(categoryId: string): Promise<SubcategoryEntity[]> {
-        const subcategories = await this._prisma.subcategory.findMany({
-            where: { categoryId },
-            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-        });
+  async create(
+    input: CreateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity> {
+    const category = await this.getClient(tx).category.create({
+      data: {
+        name: input.name,
+        slug: input.slug,
+        description: input.description ?? null,
+        sortOrder: input.sortOrder ?? 0,
+      },
+      include: categoryWithSubcategories,
+    });
 
-        return subcategories.map(CategoryMapper.toSubcategoryEntity);
-    }
+    return CategoryMapper.toCategoryEntity(category);
+  }
 
-    async findSubcategoryByGlobalId(subcategoryId: string,): Promise<SubcategoryEntity | null> {
-        const subcategory = await this._prisma.subcategory.findUnique({
-            where: {
-                id: subcategoryId,
-            },
-        });
+  async createCategory(
+    input: CreateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity> {
+    return this.create(input, tx);
+  }
 
-        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
-    }
+  async update(
+    categoryId: string,
+    input: UpdateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity> {
+    const category = await this.getClient(tx).category.update({
+      where: { id: categoryId },
+      data: {
+        name: input.name,
+        slug: input.slug,
+        description: input.description,
+        imageUrl: input.imageUrl,
+        imageStorageKey: input.imageStorageKey,
+        isActive: input.isActive,
+        sortOrder: input.sortOrder,
+      },
+      include: categoryWithSubcategories,
+    });
 
-    async findSubcategoryById(categoryId: string, subcategoryId: string,): Promise<SubcategoryEntity | null> {
-        const subcategory = await this._prisma.subcategory.findFirst({
-            where: {
-                id: subcategoryId,
-                categoryId,
-            },
-        });
+    return CategoryMapper.toCategoryEntity(category);
+  }
 
-        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
-    }
+  async updateCategory(
+    categoryId: string,
+    input: UpdateCategoryInput,
+    tx?: TransactionClient,
+  ): Promise<CategoryEntity> {
+    return this.update(categoryId, input, tx);
+  }
 
-    async findSubcategoryBySlug(categoryId: string, slug: string,): Promise<SubcategoryEntity | null> {
-        const subcategory = await this._prisma.subcategory.findUnique({
-            where: {
-                categoryId_slug: {
-                    categoryId,
-                    slug,
-                },
-            },
-        });
+  async findSubcategories(
+    categoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity[]> {
+    const subcategories = await this.getClient(tx).subcategory.findMany({
+      where: { categoryId },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
 
-        return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
-    }
+    return subcategories.map(CategoryMapper.toSubcategoryEntity);
+  }
 
-    async createSubcategory(categoryId: string, input: CreateSubcategoryInput,): Promise<SubcategoryEntity> {
-        const subcategory = await this._prisma.subcategory.create({
-            data: {
-                categoryId,
-                name: input.name,
-                slug: input.slug,
-                description: input.description ?? null,
-                sortOrder: input.sortOrder ?? 0,
-            },
-        });
+  async findSubcategoryByGlobalId(
+    subcategoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null> {
+    const subcategory = await this.getClient(tx).subcategory.findUnique({
+      where: {
+        id: subcategoryId,
+      },
+    });
 
-        return CategoryMapper.toSubcategoryEntity(subcategory);
-    }
+    return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
+  }
 
-    async updateSubcategory(subcategoryId: string, input: UpdateSubcategoryInput,): Promise<SubcategoryEntity> {
-        const subcategory = await this._prisma.subcategory.update({
-            where: { id: subcategoryId },
-            data: {
-                name: input.name,
-                slug: input.slug,
-                description: input.description,
-                imageUrl: input.imageUrl,
-                imageStorageKey: input.imageStorageKey,
-                isActive: input.isActive,
-                sortOrder: input.sortOrder,
-            },
-        });
+  async findSubcategoryById(
+    categoryId: string,
+    subcategoryId: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null> {
+    const subcategory = await this.getClient(tx).subcategory.findFirst({
+      where: {
+        id: subcategoryId,
+        categoryId,
+      },
+    });
 
-        return CategoryMapper.toSubcategoryEntity(subcategory);
-    }
+    return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
+  }
+
+  async findSubcategoryBySlug(
+    categoryId: string,
+    slug: string,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity | null> {
+    const subcategory = await this.getClient(tx).subcategory.findUnique({
+      where: {
+        categoryId_slug: {
+          categoryId,
+          slug,
+        },
+      },
+    });
+
+    return subcategory ? CategoryMapper.toSubcategoryEntity(subcategory) : null;
+  }
+
+  async createSubcategory(
+    categoryId: string,
+    input: CreateSubcategoryInput,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity> {
+    const subcategory = await this.getClient(tx).subcategory.create({
+      data: {
+        categoryId,
+        name: input.name,
+        slug: input.slug,
+        description: input.description ?? null,
+        sortOrder: input.sortOrder ?? 0,
+      },
+    });
+
+    return CategoryMapper.toSubcategoryEntity(subcategory);
+  }
+
+  async updateSubcategory(
+    subcategoryId: string,
+    input: UpdateSubcategoryInput,
+    tx?: TransactionClient,
+  ): Promise<SubcategoryEntity> {
+    const subcategory = await this.getClient(tx).subcategory.update({
+      where: { id: subcategoryId },
+      data: {
+        name: input.name,
+        slug: input.slug,
+        description: input.description,
+        imageUrl: input.imageUrl,
+        imageStorageKey: input.imageStorageKey,
+        isActive: input.isActive,
+        sortOrder: input.sortOrder,
+      },
+    });
+
+    return CategoryMapper.toSubcategoryEntity(subcategory);
+  }
 }

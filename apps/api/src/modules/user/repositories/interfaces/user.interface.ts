@@ -1,32 +1,57 @@
-import { UserRole } from "@/shared/enums/role.enum";
-import { AuthUserEntity, UserEntity } from "../../entities/user.entity";
-import { CreateUserInput } from "../../types/create-user-input.type";
+import { UserRole } from '@/shared/enums/role.enum';
+import { AuthUserEntity, UserEntity } from '../../entities/user.entity';
+import { CreateUserInput } from '../../types/create-user-input.type';
+import { IBaseRepository, TransactionClient } from '@/shared/prisma/base';
 
-export const USER_REPOSITORY = Symbol('USER_REPOSITORY')
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
-export interface IUserRepository {
-  findByEmail(email: string): Promise<UserEntity | null>;
+export interface IUserRepository extends IBaseRepository<UserEntity> {
+  findByEmail(
+    email: string,
+    tx?: TransactionClient,
+  ): Promise<UserEntity | null>;
 
-  findById(id: string): Promise<UserEntity | null>
+  findById(id: string, tx?: TransactionClient): Promise<UserEntity | null>;
 
-  findAuthByEmail(email: string): Promise<AuthUserEntity | null>;
+  exists(id: string, tx?: TransactionClient): Promise<boolean>;
 
-  create(data: CreateUserInput): Promise<UserEntity>;
+  findAuthByEmail(
+    email: string,
+    tx?: TransactionClient,
+  ): Promise<AuthUserEntity | null>;
 
-  updateProfile(userId: string, data: { name?: string; imageUrl?: string | null },): Promise<UserEntity>
+  create(data: CreateUserInput, tx?: TransactionClient): Promise<UserEntity>;
 
-  updatePassword(userId: string, hashedPassword: string): Promise<void>;
+  updateProfile(
+    userId: string,
+    data: { name?: string; imageUrl?: string | null },
+    tx?: TransactionClient,
+  ): Promise<UserEntity>;
 
-  updateGoogleAccount(userId: string,
+  updatePassword(
+    userId: string,
+    hashedPassword: string,
+    tx?: TransactionClient,
+  ): Promise<void>;
+
+  updateGoogleAccount(
+    userId: string,
     data: {
       googleId: string;
       imageUrl?: string | null;
       isVerified?: boolean;
-    }): Promise<UserEntity>;
+    },
+    tx?: TransactionClient,
+  ): Promise<UserEntity>;
 
-  findAuthById(id: string): Promise<AuthUserEntity | null>;
+  findAuthById(
+    id: string,
+    tx?: TransactionClient,
+  ): Promise<AuthUserEntity | null>;
 
-  assignRole(userId: string, role: UserRole): Promise<void>;
-
-
+  assignRole(
+    userId: string,
+    role: UserRole,
+    tx?: TransactionClient,
+  ): Promise<void>;
 }

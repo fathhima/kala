@@ -23,6 +23,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { QueueModule } from './shared/queue/queue.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
+import { VideoCallModule } from './modules/video-call/video-call.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { OutboxModule } from './shared/outbox/outbox.module';
     BookingModule,
     PaymentModule,
     ChatModule,
+    VideoCallModule,
   ],
   providers: [
     {

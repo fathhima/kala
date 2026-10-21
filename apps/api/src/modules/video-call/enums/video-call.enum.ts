@@ -1,0 +1,14 @@
+export enum VideoSessionStatus {
+  UPCOMING = 'UPCOMING',
+  ACTIVE = 'ACTIVE',
+  OVERTIME = 'OVERTIME',
+  COMPLETED = 'COMPLETED',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED',
+  NOT_READY = 'NOT_READY',
+}
+
+export enum PeerRole {
+  STUDENT = 'STUDENT',
+  INSTRUCTOR = 'INSTRUCTOR',
+}

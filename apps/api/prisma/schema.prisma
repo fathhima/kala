@@ -98,6 +98,13 @@ enum OutboxStatus {
   FAILED
 }
 
+enum MessageType {
+  TEXT
+  SYSTEM
+  IMAGE
+  FILE
+}
+
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -117,6 +124,7 @@ model User {
   instructorProfile InstructorProfile?
   bookings          Booking[]
   payments          Payment[]
+  chatMessages      ChatMessage[]
 
   @@map("users")
 }
@@ -354,6 +362,7 @@ model Booking {
   offering InstructorOffering @relation(fields: [offeringId], references: [id], onDelete: Restrict)
   profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
   payments Payment[]
+  chatRoom ChatRoom?
 
   @@index([studentId, status, createdAt])
   @@index([profileId, status, createdAt])
@@ -404,5 +413,36 @@ model OutboxEvent {
   @@index([status, createdAt])
   @@index([aggregateType, aggregateId])
   @@map("outbox_events")
+}
+
+model ChatRoom {
+  id            String        @id @default(cuid())
+  bookingId     String        @unique
+  lastMessageAt DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messages      ChatMessage[]
+
+  @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  roomId    String
+  senderId  String
+  content   String      @db.Text
+  type      MessageType @default(TEXT)
+  isRead    Boolean     @default(false)
+  readAt    DateTime?
+  createdAt DateTime    @default(now())
+
+  room      ChatRoom    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender    User        @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([roomId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("chat_messages")
 }
 

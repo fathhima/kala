@@ -19,6 +19,7 @@ import { SlotModule } from './modules/slot/slot.module';
 import { LoggerModule } from './shared/logger/logger.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { QueueModule } from './shared/queue/queue.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
@@ -58,6 +59,7 @@ import { OutboxModule } from './shared/outbox/outbox.module';
     SlotModule,
     BookingModule,
     PaymentModule,
+    ChatModule,
   ],
   providers: [
     {

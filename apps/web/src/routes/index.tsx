@@ -40,6 +40,7 @@ import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 import { AdminPaymentDetails } from "@/pages/admin/PaymentDetails";
 import { InstructorOfferings } from "@/pages/instructor/Offerings";
 import { AccountSettings } from "@/pages/account/AccountSettings";
+import { VideoCallPage } from "@/pages/session/VideoCallPage";
 
 const StudentApp = () => (
   <ProtectedRoute>
@@ -162,14 +163,14 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  // {
-  //   path: '/session/:id',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <VideoCall />
-  //     </ProtectedRoute>
-  //   ),
-  // },
+  {
+    path: '/session/:id',
+    element: (
+      <ProtectedRoute>
+        <VideoCallPage />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: '/instructor',
     element: <InstructorApp />,

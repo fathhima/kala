@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Check,
   MessageSquare,
+  Video,
 } from 'lucide-react'
 import {
   useBookingQuery,
@@ -378,6 +379,12 @@ export function InstructorSessionDetails() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-stone-400">
                 Instructor Actions
               </h2>
+
+              <Link to={`/session/${booking.id}`} className="block">
+                <Button className="w-full gap-2 font-semibold bg-kala-amber hover:bg-amber-500 text-white shadow-sm">
+                  <Video size={16} /> Join Video Session
+                </Button>
+              </Link>
 
               <Link to={`/instructor/sessions/${booking.id}/chat`} className="block">
                 <Button variant="outline" className="w-full gap-2 border-stone-200 text-stone-800 hover:bg-stone-50">

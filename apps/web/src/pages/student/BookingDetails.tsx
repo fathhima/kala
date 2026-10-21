@@ -409,13 +409,11 @@ export function BookingDetails() {
       {/* ── Actions ── */}
       <div className="flex flex-wrap items-center gap-3 pt-2">
         {isConfirmed && (
-          <Button
-            size="lg"
-            className="gap-2"
-            onClick={() => alert('The video call room opens 5 minutes before scheduled session time.')}
-          >
-            <Video size={17} /> Join Video Session
-          </Button>
+          <Link to={`/session/${booking.id}`}>
+            <Button size="lg" className="gap-2 bg-kala-amber hover:bg-amber-500 text-white font-medium shadow-sm">
+              <Video size={17} /> Join Video Session
+            </Button>
+          </Link>
         )}
 
         {(isConfirmed || booking.status === 'COMPLETED') && (

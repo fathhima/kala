@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Send, Lock, Loader2, Circle } from 'lucide-react';
+import { ArrowLeft, Send, Lock, Loader2, Circle, Video } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store';
 import { useBookingQuery } from '@/features/booking/hooks';
 import { useChatRoom } from '@/features/chat';
@@ -136,6 +136,17 @@ export function InstructorSessionChat() {
               {offeringTitle} · {formatDate(booking.slot.startTime)}
             </p>
           </div>
+
+          {booking.status === 'CONFIRMED' && (
+            <Link
+              to={`/session/${booking.id}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-kala-amber hover:bg-amber-500 text-white text-xs font-semibold shadow-xs transition-colors"
+              title="Join live video room"
+            >
+              <Video size={14} />
+              <span className="hidden sm:inline">Join Call</span>
+            </Link>
+          )}
 
           <span
             className={cn(

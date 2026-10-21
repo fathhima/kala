@@ -63,6 +63,7 @@ export class OutboxDispatcherProcessor extends WorkerHost {
           JOBS.BOOKING_CONFIRMED_NOTIFICATION,
           { bookingId: payload.bookingId },
           {
+            jobId: `booking-confirmed-${payload.bookingId}`,
             attempts: 3,
             backoff: { type: 'exponential', delay: 3000 },
             removeOnComplete: true,
@@ -81,6 +82,7 @@ export class OutboxDispatcherProcessor extends WorkerHost {
             reason: payload.reason,
           },
           {
+            jobId: `booking-cancelled-${payload.bookingId}`,
             attempts: 3,
             backoff: { type: 'exponential', delay: 3000 },
             removeOnComplete: true,

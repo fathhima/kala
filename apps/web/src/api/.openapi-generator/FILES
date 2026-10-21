@@ -53,6 +53,7 @@ docs/CreateSlotRuleDto.md
 docs/CreateSubcategoryDto.md
 docs/ForgotPasswordDto.md
 docs/GoogleSignInRequestDto.md
+docs/IceServerConfigDto.md
 docs/InstructorApi.md
 docs/InstructorApplicantUserDto.md
 docs/InstructorApplicationDto.md
@@ -143,5 +144,8 @@ docs/ValidateResetTokenDataDto.md
 docs/ValidateResetTokenDto.md
 docs/ValidateResetTokenResponseDto.md
 docs/VerifyOtpDto.md
+docs/VideoCallApi.md
+docs/VideoPartnerDto.md
+docs/VideoSessionAccessDto.md
 git_push.sh
 index.ts

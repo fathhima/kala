@@ -400,6 +400,20 @@ export interface GoogleSignInRequestDto {
      */
     'idToken': string;
 }
+export interface IceServerConfigDto {
+    /**
+     * STUN or TURN URLs
+     */
+    'urls': object;
+    /**
+     * Username for TURN authentication (if applicable)
+     */
+    'username'?: string;
+    /**
+     * Credential/Password for TURN authentication (if applicable)
+     */
+    'credential'?: string;
+}
 export interface InstructorApplicantUserDto {
     'id': string;
     'name': string;
@@ -1113,6 +1127,54 @@ export interface VerifyOtpDto {
      */
     'otp': string;
 }
+export interface VideoPartnerDto {
+    'id': string;
+    'name': string;
+    'imageUrl'?: object | null;
+    'role': VideoPartnerDtoRoleEnum;
+}
+
+export const VideoPartnerDtoRoleEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR'
+} as const;
+
+export type VideoPartnerDtoRoleEnum = typeof VideoPartnerDtoRoleEnum[keyof typeof VideoPartnerDtoRoleEnum];
+
+export interface VideoSessionAccessDto {
+    'bookingId': string;
+    'canJoin': boolean;
+    'status': VideoSessionAccessDtoStatusEnum;
+    'reason'?: string;
+    'sessionTitle': string;
+    'slotStartTime': string;
+    'slotEndTime': string;
+    'earlyJoinTime': string;
+    'overtimeEndTime': string;
+    'isOvertime': boolean;
+    'currentUserRole': VideoSessionAccessDtoCurrentUserRoleEnum;
+    'partner': VideoPartnerDto;
+    'iceServers': Array<IceServerConfigDto>;
+}
+
+export const VideoSessionAccessDtoStatusEnum = {
+    Upcoming: 'UPCOMING',
+    Active: 'ACTIVE',
+    Overtime: 'OVERTIME',
+    Completed: 'COMPLETED',
+    Expired: 'EXPIRED',
+    Cancelled: 'CANCELLED',
+    NotReady: 'NOT_READY'
+} as const;
+
+export type VideoSessionAccessDtoStatusEnum = typeof VideoSessionAccessDtoStatusEnum[keyof typeof VideoSessionAccessDtoStatusEnum];
+export const VideoSessionAccessDtoCurrentUserRoleEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR'
+} as const;
+
+export type VideoSessionAccessDtoCurrentUserRoleEnum = typeof VideoSessionAccessDtoCurrentUserRoleEnum[keyof typeof VideoSessionAccessDtoCurrentUserRoleEnum];
+
 
 /**
  * AdminCategoriesApi - axios parameter creator
@@ -7264,6 +7326,168 @@ export class UsersApi extends BaseAPI {
      */
     public userControllerUpdateMe(updateUserProfileDto: UpdateUserProfileDto, options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).userControllerUpdateMe(updateUserProfileDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * VideoCallApi - axios parameter creator
+ */
+export const VideoCallApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get current STUN/TURN ICE server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        videoCallControllerGetIceServers: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/video-call/ice-servers`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Check session eligibility, timing windows, partner details, and ICE config
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        videoCallControllerGetSessionAccess: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('videoCallControllerGetSessionAccess', 'bookingId', bookingId)
+            const localVarPath = `/api/video-call/sessions/{bookingId}/access`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * VideoCallApi - functional programming interface
+ */
+export const VideoCallApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = VideoCallApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get current STUN/TURN ICE server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async videoCallControllerGetIceServers(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<IceServerConfigDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.videoCallControllerGetIceServers(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VideoCallApi.videoCallControllerGetIceServers']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Check session eligibility, timing windows, partner details, and ICE config
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async videoCallControllerGetSessionAccess(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<VideoSessionAccessDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.videoCallControllerGetSessionAccess(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VideoCallApi.videoCallControllerGetSessionAccess']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * VideoCallApi - factory interface
+ */
+export const VideoCallApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = VideoCallApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get current STUN/TURN ICE server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        videoCallControllerGetIceServers(options?: RawAxiosRequestConfig): AxiosPromise<Array<IceServerConfigDto>> {
+            return localVarFp.videoCallControllerGetIceServers(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Check session eligibility, timing windows, partner details, and ICE config
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        videoCallControllerGetSessionAccess(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<VideoSessionAccessDto> {
+            return localVarFp.videoCallControllerGetSessionAccess(bookingId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * VideoCallApi - object-oriented interface
+ */
+export class VideoCallApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get current STUN/TURN ICE server configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public videoCallControllerGetIceServers(options?: RawAxiosRequestConfig) {
+        return VideoCallApiFp(this.configuration).videoCallControllerGetIceServers(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Check session eligibility, timing windows, partner details, and ICE config
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public videoCallControllerGetSessionAccess(bookingId: string, options?: RawAxiosRequestConfig) {
+        return VideoCallApiFp(this.configuration).videoCallControllerGetSessionAccess(bookingId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

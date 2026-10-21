@@ -16,7 +16,7 @@ export class ChatSenderDto {
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   imageUrl!: string | null;
 }
 
@@ -39,7 +39,7 @@ export class ChatMessageDto {
   @ApiProperty()
   isRead!: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   readAt!: string | null;
 
   @ApiProperty()
@@ -48,7 +48,7 @@ export class ChatMessageDto {
   @ApiProperty({ type: ChatSenderDto })
   sender!: ChatSenderDto;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   tempId?: string;
 
   static fromEntity(entity: ChatMessageEntity, tempId?: string): ChatMessageDto {
@@ -76,7 +76,7 @@ export class ChatParticipantDto {
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   imageUrl!: string | null;
 
   @ApiProperty({ enum: ['STUDENT', 'INSTRUCTOR'] })
@@ -90,7 +90,7 @@ export class ChatRoomDto {
   @ApiProperty()
   bookingId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   lastMessageAt!: string | null;
 
   @ApiProperty()
@@ -102,7 +102,7 @@ export class ChatRoomDto {
   @ApiProperty({ description: 'Indicates if current user can post new messages based on booking status and grace window' })
   canWrite!: boolean;
 
-  @ApiPropertyOptional({ description: 'Reason why chat is read-only if canWrite is false' })
+  @ApiPropertyOptional({ type: String, description: 'Reason why chat is read-only if canWrite is false' })
   readOnlyReason?: string;
 
   @ApiProperty()

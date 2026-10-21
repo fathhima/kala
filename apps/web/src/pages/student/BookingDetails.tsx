@@ -12,6 +12,7 @@ import {
   XCircle,
   HelpCircle,
   RotateCcw,
+  MessageSquare,
 } from 'lucide-react'
 import { useBookingQuery, useCancelBookingMutation } from '@/features/booking/hooks'
 import { usePaymentByBookingQuery } from '@/features/payment/hooks'
@@ -415,6 +416,18 @@ export function BookingDetails() {
           >
             <Video size={17} /> Join Video Session
           </Button>
+        )}
+
+        {(isConfirmed || booking.status === 'COMPLETED') && (
+          <Link to={`/dashboard/bookings/${booking.id}/chat`}>
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 border-stone-200 text-stone-800 hover:bg-stone-50"
+            >
+              <MessageSquare size={17} className="text-kala-amber" /> Chat with Instructor
+            </Button>
+          </Link>
         )}
 
         {isPending && (

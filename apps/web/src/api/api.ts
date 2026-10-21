@@ -204,6 +204,83 @@ export interface ChangePasswordDto {
     'currentPassword'?: string;
     'newPassword': string;
 }
+export interface ChatMessageDto {
+    'id': string;
+    'roomId': string;
+    'senderId': string;
+    'content': string;
+    'type': ChatMessageDtoTypeEnum;
+    'isRead': boolean;
+    'readAt'?: string | null;
+    'createdAt': string;
+    'sender': ChatSenderDto;
+    'tempId'?: string | null;
+}
+
+export const ChatMessageDtoTypeEnum = {
+    Text: 'TEXT',
+    System: 'SYSTEM',
+    Image: 'IMAGE',
+    File: 'FILE'
+} as const;
+
+export type ChatMessageDtoTypeEnum = typeof ChatMessageDtoTypeEnum[keyof typeof ChatMessageDtoTypeEnum];
+
+export interface ChatMessageResponseDto {
+    'message': string;
+    'data': ChatMessageDto;
+}
+export interface ChatMessagesPaginationMetaDto {
+    'page': number;
+    'limit': number;
+    'total': number;
+    'totalPages': number;
+}
+export interface ChatParticipantDto {
+    'userId': string;
+    'name': string;
+    'imageUrl'?: string | null;
+    'role': ChatParticipantDtoRoleEnum;
+}
+
+export const ChatParticipantDtoRoleEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR'
+} as const;
+
+export type ChatParticipantDtoRoleEnum = typeof ChatParticipantDtoRoleEnum[keyof typeof ChatParticipantDtoRoleEnum];
+
+export interface ChatRoomDto {
+    'id': string;
+    'bookingId': string;
+    'lastMessageAt'?: string | null;
+    'createdAt': string;
+    'updatedAt': string;
+    /**
+     * Indicates if current user can post new messages based on booking status and grace window
+     */
+    'canWrite': boolean;
+    /**
+     * Reason why chat is read-only if canWrite is false
+     */
+    'readOnlyReason'?: string;
+    'bookingStatus': string;
+    'slotStartTime': string;
+    'slotEndTime': string;
+    'student': ChatParticipantDto;
+    'instructor': ChatParticipantDto;
+    'lastMessage'?: ChatMessageDto | null;
+    'unreadCount': number;
+}
+export interface ChatRoomResponseDto {
+    'message': string;
+    'data': ChatRoomDto;
+}
+export interface ChatSenderDto {
+    'id': string;
+    'name': string;
+    'imageUrl'?: string | null;
+}
 export interface CheckoutResponseDto {
     'message': string;
     'data': object;
@@ -518,6 +595,14 @@ export interface PaginatedCategoryResponseDto {
     'message': string;
     'data': PaginatedCategoryDataDto;
 }
+export interface PaginatedChatMessagesDataDto {
+    'items': Array<ChatMessageDto>;
+    'meta': ChatMessagesPaginationMetaDto;
+}
+export interface PaginatedChatMessagesResponseDto {
+    'message': string;
+    'data': PaginatedChatMessagesDataDto;
+}
 export interface PaginatedInstructorApplicationsDataDto {
     'items': Array<InstructorApplicationDto>;
     'meta': PaginationMetaDto;
@@ -809,6 +894,27 @@ export interface SafeUserDto {
     'isActive': boolean;
     'hasPassword': boolean;
 }
+export interface SendMessageDto {
+    /**
+     * The text content of the message
+     */
+    'content': string;
+    'type'?: SendMessageDtoTypeEnum;
+    /**
+     * Optional client generated tempId for optimistic delivery matching
+     */
+    'tempId'?: string;
+}
+
+export const SendMessageDtoTypeEnum = {
+    Text: 'TEXT',
+    System: 'SYSTEM',
+    Image: 'IMAGE',
+    File: 'FILE'
+} as const;
+
+export type SendMessageDtoTypeEnum = typeof SendMessageDtoTypeEnum[keyof typeof SendMessageDtoTypeEnum];
+
 export interface SlotDto {
     'id': string;
     'profileId': string;
@@ -4336,6 +4442,334 @@ export class CategoriesApi extends BaseAPI {
      */
     public categoryControllerFindSelectable(options?: RawAxiosRequestConfig) {
         return CategoriesApiFp(this.configuration).categoryControllerFindSelectable(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ChatApi - axios parameter creator
+ */
+export const ChatApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get paginated message history for a booking session
+         * @param {string} bookingId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetMessages: async (bookingId: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('chatControllerGetMessages', 'bookingId', bookingId)
+            const localVarPath = `/api/chat/rooms/{bookingId}/messages`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get or initialize a chat room for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetRoom: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('chatControllerGetRoom', 'bookingId', bookingId)
+            const localVarPath = `/api/chat/rooms/{bookingId}`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Mark all unread messages in the room as read
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerMarkRead: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('chatControllerMarkRead', 'bookingId', bookingId)
+            const localVarPath = `/api/chat/rooms/{bookingId}/read`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Send a message (REST fallback)
+         * @param {string} bookingId 
+         * @param {SendMessageDto} sendMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerSendMessage: async (bookingId: string, sendMessageDto: SendMessageDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('chatControllerSendMessage', 'bookingId', bookingId)
+            // verify required parameter 'sendMessageDto' is not null or undefined
+            assertParamExists('chatControllerSendMessage', 'sendMessageDto', sendMessageDto)
+            const localVarPath = `/api/chat/rooms/{bookingId}/messages`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(sendMessageDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ChatApi - functional programming interface
+ */
+export const ChatApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ChatApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get paginated message history for a booking session
+         * @param {string} bookingId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatControllerGetMessages(bookingId: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedChatMessagesResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatControllerGetMessages(bookingId, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatApi.chatControllerGetMessages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get or initialize a chat room for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatControllerGetRoom(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChatRoomResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatControllerGetRoom(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatApi.chatControllerGetRoom']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Mark all unread messages in the room as read
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatControllerMarkRead(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatControllerMarkRead(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatApi.chatControllerMarkRead']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Send a message (REST fallback)
+         * @param {string} bookingId 
+         * @param {SendMessageDto} sendMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatControllerSendMessage(bookingId: string, sendMessageDto: SendMessageDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChatMessageResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatControllerSendMessage(bookingId, sendMessageDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatApi.chatControllerSendMessage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ChatApi - factory interface
+ */
+export const ChatApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ChatApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get paginated message history for a booking session
+         * @param {string} bookingId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetMessages(bookingId: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedChatMessagesResponseDto> {
+            return localVarFp.chatControllerGetMessages(bookingId, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get or initialize a chat room for a booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetRoom(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<ChatRoomResponseDto> {
+            return localVarFp.chatControllerGetRoom(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Mark all unread messages in the room as read
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerMarkRead(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.chatControllerMarkRead(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Send a message (REST fallback)
+         * @param {string} bookingId 
+         * @param {SendMessageDto} sendMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerSendMessage(bookingId: string, sendMessageDto: SendMessageDto, options?: RawAxiosRequestConfig): AxiosPromise<ChatMessageResponseDto> {
+            return localVarFp.chatControllerSendMessage(bookingId, sendMessageDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ChatApi - object-oriented interface
+ */
+export class ChatApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get paginated message history for a booking session
+     * @param {string} bookingId 
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public chatControllerGetMessages(bookingId: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return ChatApiFp(this.configuration).chatControllerGetMessages(bookingId, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get or initialize a chat room for a booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public chatControllerGetRoom(bookingId: string, options?: RawAxiosRequestConfig) {
+        return ChatApiFp(this.configuration).chatControllerGetRoom(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Mark all unread messages in the room as read
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public chatControllerMarkRead(bookingId: string, options?: RawAxiosRequestConfig) {
+        return ChatApiFp(this.configuration).chatControllerMarkRead(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Send a message (REST fallback)
+     * @param {string} bookingId 
+     * @param {SendMessageDto} sendMessageDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public chatControllerSendMessage(bookingId: string, sendMessageDto: SendMessageDto, options?: RawAxiosRequestConfig) {
+        return ChatApiFp(this.configuration).chatControllerSendMessage(bookingId, sendMessageDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -12,6 +12,7 @@ import {
   User,
   ShieldCheck,
   Check,
+  MessageSquare,
 } from 'lucide-react'
 import {
   useBookingQuery,
@@ -378,6 +379,12 @@ export function InstructorSessionDetails() {
                 Instructor Actions
               </h2>
 
+              <Link to={`/instructor/sessions/${booking.id}/chat`} className="block">
+                <Button variant="outline" className="w-full gap-2 border-stone-200 text-stone-800 hover:bg-stone-50">
+                  <MessageSquare size={16} className="text-kala-amber" /> Chat with Student
+                </Button>
+              </Link>
+
               <Button
                 className="w-full gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={() => setCompleteModalOpen(true)}
@@ -392,6 +399,19 @@ export function InstructorSessionDetails() {
               >
                 Cancel Session
               </Button>
+            </Card>
+          )}
+
+          {booking.status === 'COMPLETED' && (
+            <Card className="p-6 space-y-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-stone-400">
+                Session Finished
+              </h2>
+              <Link to={`/instructor/sessions/${booking.id}/chat`} className="block">
+                <Button variant="outline" className="w-full gap-2 border-stone-200 text-stone-800 hover:bg-stone-50">
+                  <MessageSquare size={16} className="text-kala-amber" /> View Session Chat
+                </Button>
+              </Link>
             </Card>
           )}
         </div>

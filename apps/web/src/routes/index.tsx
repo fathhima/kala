@@ -21,12 +21,14 @@ import { InstructorLayout } from "@/components/layout/InstructorLayout";
 import { StudentDashboard } from "@/pages/student/Dashboard";
 import { MyBookings } from "@/pages/student/MyBookings";
 import { BookingDetails } from "@/pages/student/BookingDetails";
+import { BookingChat } from "@/pages/student/BookingChat";
 import { BecomeInstructor } from "@/pages/student/BecomeInstructor";
 import { Payment } from "@/pages/student/Payment";
 import { InstructorDashboard } from "@/pages/instructor/Dashboard";
 import { ManageSlots } from "@/pages/instructor/ManageSlots";
 import { MySessions } from "@/pages/instructor/MySessions";
 import { InstructorSessionDetails } from "@/pages/instructor/SessionDetails";
+import { InstructorSessionChat } from "@/pages/instructor/SessionChat";
 import { Portfolio } from "@/pages/instructor/Portfolio";
 import { InstructorSkills } from "@/pages/instructor/Skills";
 import { InstructorApplications } from "@/pages/admin/InstructorApplications";
@@ -130,7 +132,7 @@ export const router = createBrowserRouter([
       { index: true, element: <StudentDashboard /> },
       { path: 'bookings', element: <MyBookings /> },
       { path: 'bookings/:id', element: <BookingDetails /> },
-      // { path: 'bookings/:id/chat', element: <BookingChat /> },
+      { path: 'bookings/:id/chat', element: <BookingChat /> },
       // { path: 'payments', element: <PaymentHistory /> },
       { path: 'become-instructor', element: <BecomeInstructor /> },
       { path: 'settings', element: <AccountSettings /> },
@@ -179,7 +181,7 @@ export const router = createBrowserRouter([
       { path: 'slots', element: <ManageSlots /> },
       { path: 'sessions', element: <MySessions /> },
       { path: 'sessions/:id', element: <InstructorSessionDetails /> },
-      // { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
+      { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
       // { path: 'reviews', element: <Reviews /> },
       // { path: 'payments', element: <InstructorPayments /> },
       { path: 'settings', element: <AccountSettings /> },

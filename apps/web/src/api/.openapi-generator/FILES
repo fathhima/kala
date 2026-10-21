@@ -33,6 +33,14 @@ docs/CategoryImageViewResponseDto.md
 docs/CategoryListResponseDto.md
 docs/CategoryResponseDto.md
 docs/ChangePasswordDto.md
+docs/ChatApi.md
+docs/ChatMessageDto.md
+docs/ChatMessageResponseDto.md
+docs/ChatMessagesPaginationMetaDto.md
+docs/ChatParticipantDto.md
+docs/ChatRoomDto.md
+docs/ChatRoomResponseDto.md
+docs/ChatSenderDto.md
 docs/CheckoutResponseDto.md
 docs/ConfirmCategoryImageUploadDto.md
 docs/ConfirmOfferingMediaUploadDto.md
@@ -70,6 +78,8 @@ docs/PaginatedBookingsDataDto.md
 docs/PaginatedBookingsResponseDto.md
 docs/PaginatedCategoryDataDto.md
 docs/PaginatedCategoryResponseDto.md
+docs/PaginatedChatMessagesDataDto.md
+docs/PaginatedChatMessagesResponseDto.md
 docs/PaginatedInstructorApplicationsDataDto.md
 docs/PaginatedInstructorApplicationsResponseDto.md
 docs/PaginatedPaymentsDataDto.md
@@ -107,6 +117,7 @@ docs/ResetPasswordDto.md
 docs/ReviewOfferingDto.md
 docs/Role.md
 docs/SafeUserDto.md
+docs/SendMessageDto.md
 docs/SlotDto.md
 docs/SlotExceptionDto.md
 docs/SlotExceptionResponseDto.md

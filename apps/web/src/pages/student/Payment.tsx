@@ -153,6 +153,11 @@ export function Payment() {
           enabled: false,
         },
         handler: async (response) => {
+          try {
+            await confirmDevPaymentMutation.mutateAsync(booking.id)
+          } catch (err) {
+            console.error('Failed to confirm payment on backend:', err)
+          }
           setIsProcessingPayment(false)
           setPaymentSuccessData({
             paymentId: response.razorpay_payment_id,

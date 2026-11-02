@@ -8,7 +8,10 @@
     "dev": "pnpm -r --parallel dev",
     "lint:api": "pnpm --filter api lint",
     "lint:web": "pnpm --filter web lint",
-    "lint": "pnpm -r lint"
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "author": "Fathima",
   "license": "ISC",
@@ -21,9 +24,11 @@
       "@scarf/scarf",
       "bcrypt",
       "esbuild",
-      "inotify",
       "prisma",
       "unrs-resolver"
     ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.4"
   }
 }

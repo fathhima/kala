@@ -1,13 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   ChatMessageEntity,
   PaginatedChatMessageEntity,
-} from '../../entities/chat-message.entity';
-import {
-  ChatParticipantEntity,
-  ChatRoomEntity,
-} from '../../entities/chat-room.entity';
-import { MessageType } from '../../enums/message-type.enum';
+} from "../../entities/chat-message.entity";
+import { ChatRoomEntity } from "../../entities/chat-room.entity";
+import { MessageType } from "../../enums/message-type.enum";
 
 export class ChatSenderDto {
   @ApiProperty()
@@ -51,7 +48,10 @@ export class ChatMessageDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   tempId?: string;
 
-  static fromEntity(entity: ChatMessageEntity, tempId?: string): ChatMessageDto {
+  static fromEntity(
+    entity: ChatMessageEntity,
+    tempId?: string,
+  ): ChatMessageDto {
     const dto = new ChatMessageDto();
     dto.id = entity.id;
     dto.roomId = entity.roomId;
@@ -79,8 +79,8 @@ export class ChatParticipantDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   imageUrl!: string | null;
 
-  @ApiProperty({ enum: ['STUDENT', 'INSTRUCTOR'] })
-  role!: 'STUDENT' | 'INSTRUCTOR';
+  @ApiProperty({ enum: ["STUDENT", "INSTRUCTOR"] })
+  role!: "STUDENT" | "INSTRUCTOR";
 }
 
 export class ChatRoomDto {
@@ -99,10 +99,16 @@ export class ChatRoomDto {
   @ApiProperty()
   updatedAt!: string;
 
-  @ApiProperty({ description: 'Indicates if current user can post new messages based on booking status and grace window' })
+  @ApiProperty({
+    description:
+      "Indicates if current user can post new messages based on booking status and grace window",
+  })
   canWrite!: boolean;
 
-  @ApiPropertyOptional({ type: String, description: 'Reason why chat is read-only if canWrite is false' })
+  @ApiPropertyOptional({
+    type: String,
+    description: "Reason why chat is read-only if canWrite is false",
+  })
   readOnlyReason?: string;
 
   @ApiProperty()
@@ -128,12 +134,18 @@ export class ChatRoomDto {
 
   static fromEntity(
     entity: ChatRoomEntity,
-    access: { canWrite: boolean; readOnlyReason?: string; unreadCount?: number },
+    access: {
+      canWrite: boolean;
+      readOnlyReason?: string;
+      unreadCount?: number;
+    },
   ): ChatRoomDto {
     const dto = new ChatRoomDto();
     dto.id = entity.id;
     dto.bookingId = entity.bookingId;
-    dto.lastMessageAt = entity.lastMessageAt ? entity.lastMessageAt.toISOString() : null;
+    dto.lastMessageAt = entity.lastMessageAt
+      ? entity.lastMessageAt.toISOString()
+      : null;
     dto.createdAt = entity.createdAt.toISOString();
     dto.updatedAt = entity.updatedAt.toISOString();
     dto.canWrite = access.canWrite;
@@ -143,7 +155,9 @@ export class ChatRoomDto {
     dto.slotEndTime = entity.slotEndTime.toISOString();
     dto.student = { ...entity.student };
     dto.instructor = { ...entity.instructor };
-    dto.lastMessage = entity.lastMessage ? ChatMessageDto.fromEntity(entity.lastMessage) : null;
+    dto.lastMessage = entity.lastMessage
+      ? ChatMessageDto.fromEntity(entity.lastMessage)
+      : null;
     dto.unreadCount = access.unreadCount ?? 0;
     return dto;
   }
@@ -159,7 +173,11 @@ export class ChatRoomResponseDto {
   static fromEntity(
     message: string,
     entity: ChatRoomEntity,
-    access: { canWrite: boolean; readOnlyReason?: string; unreadCount?: number },
+    access: {
+      canWrite: boolean;
+      readOnlyReason?: string;
+      unreadCount?: number;
+    },
   ): ChatRoomResponseDto {
     const dto = new ChatRoomResponseDto();
     dto.message = message;
@@ -175,7 +193,11 @@ export class ChatMessageResponseDto {
   @ApiProperty({ type: ChatMessageDto })
   data!: ChatMessageDto;
 
-  static fromEntity(message: string, entity: ChatMessageEntity, tempId?: string): ChatMessageResponseDto {
+  static fromEntity(
+    message: string,
+    entity: ChatMessageEntity,
+    tempId?: string,
+  ): ChatMessageResponseDto {
     const dto = new ChatMessageResponseDto();
     dto.message = message;
     dto.data = ChatMessageDto.fromEntity(entity, tempId);
@@ -212,7 +234,10 @@ export class PaginatedChatMessagesResponseDto {
   @ApiProperty({ type: PaginatedChatMessagesDataDto })
   data!: PaginatedChatMessagesDataDto;
 
-  static fromEntity(message: string, entity: PaginatedChatMessageEntity): PaginatedChatMessagesResponseDto {
+  static fromEntity(
+    message: string,
+    entity: PaginatedChatMessageEntity,
+  ): PaginatedChatMessagesResponseDto {
     const dto = new PaginatedChatMessagesResponseDto();
     dto.message = message;
     dto.data = {

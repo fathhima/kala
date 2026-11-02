@@ -12,7 +12,7 @@ export function ForgotPassword() {
 
   const [email, setEmail] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false)
+  const [loading, _setLoading] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<ForgotPasswordFields, string>>>({});
   const [errorMessage, setErrorMessage] = useState("");
 

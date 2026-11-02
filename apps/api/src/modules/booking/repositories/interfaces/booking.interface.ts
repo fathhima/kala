@@ -1,17 +1,16 @@
 import {
   BookingEntity,
   PaginatedBookingEntity,
-} from '../../entities/booking.entity';
+} from "../../entities/booking.entity";
 import {
   BookingListQuery,
   CancelBookingInput,
   CompleteBookingInput,
-  ConfirmBookingInput,
   CreateBookingInput,
-} from '../../types/booking.type';
-import { IBaseRepository, TransactionClient } from '@/shared/prisma/base';
+} from "../../types/booking.type";
+import { IBaseRepository, TransactionClient } from "@/shared/prisma/base";
 
-export const BOOKING_REPOSITORY = Symbol('BOOKING_REPOSITORY');
+export const BOOKING_REPOSITORY = Symbol("BOOKING_REPOSITORY");
 
 export interface IBookingRepository extends IBaseRepository<BookingEntity> {
   holdSlot(

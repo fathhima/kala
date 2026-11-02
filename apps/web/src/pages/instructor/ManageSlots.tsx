@@ -6,10 +6,8 @@ import {
   CalendarDays,
   CalendarPlus,
   CheckCircle2,
-  ChevronDown,
   ChevronUp,
   Clock,
-  Info,
   LayoutGrid,
   Pencil,
   Plus,
@@ -91,7 +89,7 @@ function formatTimeStringTo12Hour(timeStr: string): string {
   const [hStr, mStr] = timeStr.split(':')
   const h = Number(hStr)
   const m = Number(mStr) || 0
-  if (isNaN(h)) return timeStr
+  if (Number.isNaN(h)) return timeStr
   const period = h >= 12 ? 'PM' : 'AM'
   const displayH = h % 12 === 0 ? 12 : h % 12
   return `${displayH}:${String(m).padStart(2, '0')} ${period}`
@@ -247,7 +245,7 @@ function TimeInput({
   value,
   onChange,
   id,
-  minTime,
+  minTime: _minTime,
 }: {
   value: string
   onChange: (v: string) => void
@@ -406,7 +404,7 @@ function WeeklyTimetable({ rules }: { rules: SlotRule[] }) {
       if (map[r.weekday]) map[r.weekday].push(r)
     })
     return { activeRules: active, byDay: map }
-  }, [rules])
+  }, [rules, orderedDays.forEach])
 
   const hasAnyRule = activeRules.length > 0
 
@@ -526,7 +524,7 @@ function WeeklyRulesTab({
   const availabilityQuery = useInstructorAvailabilityQuery()
   const createRuleMutation = useCreateSlotRuleMutation()
   const updateRuleMutation = useUpdateSlotRuleMutation()
-  const deleteRuleMutation = useDeleteSlotRuleMutation()
+  const _deleteRuleMutation = useDeleteSlotRuleMutation()
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [offeringId, setOfferingId] = useState(offerings[0]?.id || '')

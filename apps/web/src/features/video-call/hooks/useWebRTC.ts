@@ -121,7 +121,7 @@ export function useWebRTC({
       }));
     }
     return DEFAULT_ICE_SERVERS;
-  }, [JSON.stringify(iceServers)]);
+  }, [iceServers]);
 
   // Acquire or reuse local camera/microphone stream
   const initializeLocalMedia = useCallback(async (): Promise<MediaStream | null> => {
@@ -496,7 +496,7 @@ export function useWebRTC({
       const pc = pcRef.current;
 
       try {
-        if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+        if (pc?.remoteDescription?.type) {
           await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
         } else {
           iceCandidatesQueue.current.push(data.candidate);

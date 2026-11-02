@@ -29,7 +29,7 @@ export function Login() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<Loginfields, string>>>({})
-  const [errorMessage, setErrorMessage] = useState('')
+  const [_errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (field: keyof LoginDto, value: string) => {
     setFormData((prev) => ({

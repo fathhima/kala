@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Mic,
@@ -121,9 +121,9 @@ export function VideoCallPage() {
   const {
     localVideoRef,
     remoteVideoRef,
-    isConnected,
+
     isPeerPresent,
-    connectionState,
+
     micOn,
     camOn,
     isScreenSharing,

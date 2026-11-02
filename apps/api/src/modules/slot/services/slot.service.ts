@@ -187,7 +187,7 @@ export class SlotService implements ISlotService {
         const startTime = new Date(dto.startTime);
         const endTime = new Date(dto.endTime);
 
-        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
             throw new BadRequestException('Please provide valid start and end dates');
         }
 
@@ -573,7 +573,7 @@ export class SlotService implements ISlotService {
 
         // This will extract the offset string like "GMT+5:30" or "GMT-4"
 
-        const parts = formatter.formatToParts(new Date(localDateString + 'Z'));
+        const parts = formatter.formatToParts(new Date(`${localDateString}Z`));
         const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT';
 
         // Convert "GMT+5:30" to "+05:30" format for the ISO string
@@ -582,7 +582,7 @@ export class SlotService implements ISlotService {
         if (!offset) offset = 'Z';
         else if (!offset.includes(':')) offset += ':00'; // Handle exact hour offsets like "+5" -> "+5:00"
 
-        if (offset.length === 5 && offset !== 'Z') offset = offset.slice(0, 1) + '0' + offset.slice(1); // "+5:30" -> "+05:30"
+        if (offset.length === 5 && offset !== 'Z') offset = `${offset.slice(0, 1)}0${offset.slice(1)}`; // "+5:30" -> "+05:30"
 
         return new Date(`${localDateString}${offset}`)
     }

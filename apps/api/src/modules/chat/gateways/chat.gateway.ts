@@ -62,7 +62,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = await this._jwtService.verifyAccessToken(token);
       const user = await this._userIdentityService.findById(payload.sub);
 
-      if (!user || !user.isActive || !user.isVerified) {
+      if (!user?.isActive || !user.isVerified) {
         this._logger.warn(`Rejected WebSocket connection: inactive or unverified user (${client.id})`, ChatGateway.name);
         client.disconnect(true);
         return;

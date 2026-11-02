@@ -30,7 +30,7 @@ export class WsJwtGuard implements CanActivate {
       const payload = await this._jwtService.verifyAccessToken(token);
       const user = await this._userIdentityService.findById(payload.sub);
 
-      if (!user || !user.isActive || !user.isVerified) {
+      if (!user?.isActive || !user.isVerified) {
         throw new WsException('User is not authorized or active');
       }
 

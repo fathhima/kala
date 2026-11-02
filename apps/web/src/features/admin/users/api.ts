@@ -1,4 +1,4 @@
-import { AdminUserManagementApi, AdminUserResponseDto, Configuration, UpdateUserStatusDto, type PaginatedAdminUsersDataDto, type Role, } from '@/api'
+import { AdminUserManagementApi, AdminUserResponseDto, Configuration, UpdateUserStatusDto, type PaginatedAdminUsersDataDto, } from '@/api'
 import { apiClient } from '@/lib/axios'
 import { AdminUsersQuery } from './types/admin-users.query.type'
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminInstructorControllerFindAllStatusEnum, type AdminInstructorControllerFindAllStatusEnum as ApplicationStatus, } from '@/api'
 import { Avatar } from '@/components/ui/Avatar'

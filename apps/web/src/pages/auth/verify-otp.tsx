@@ -18,7 +18,7 @@ const getRemainingSeconds = (key: string) => {
   if (!stored) return 0;
 
   const remaining = Math.ceil((Number(stored) - Date.now()) / 1000);
-  return remaining > 0 ? remaining : 0;
+  return Math.max(remaining , 0);
 };
 
 const getOtpExpiryRemaining = () =>
@@ -63,7 +63,7 @@ export function VerifyOtp() {
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [otpExpiresIn, resendCooldown]);
+  }, []);
 
   const clearPendingSignupSession = () => {
     sessionStorage.removeItem(PENDING_SIGNUP_ID_KEY);

@@ -48,7 +48,7 @@ export function BookingChat() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, isOtherTyping]);
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {

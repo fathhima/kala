@@ -172,7 +172,7 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
       setMessages((prev) => [...prev, optimisticMessage]);
 
       const socket = socketRef.current;
-      if (socket && socket.connected) {
+      if (socket?.connected) {
         socket.emit(
           'send_message',
           {
@@ -210,7 +210,7 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
   const sendTyping = useCallback(
     (isTyping: boolean) => {
       const socket = socketRef.current;
-      if (socket && socket.connected) {
+      if (socket?.connected) {
         socket.emit('typing', { bookingId, isTyping });
       }
     },
@@ -219,7 +219,7 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
 
   const markAsRead = useCallback(() => {
     const socket = socketRef.current;
-    if (socket && socket.connected) {
+    if (socket?.connected) {
       socket.emit('mark_read', { bookingId });
     }
   }, [bookingId]);

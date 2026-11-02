@@ -17,7 +17,7 @@ export class CategoryService implements ICategoryService {
 
     async isSelectableSubcategory(subcategoryId: string): Promise<boolean> {
         const subcategory = await this._categoryRepository.findSubcategoryByGlobalId(subcategoryId);
-        if (!subcategory || !subcategory.isActive) return false;
+        if (!subcategory?.isActive) return false;
         const parentCategory = await this._categoryRepository.findById(subcategory.categoryId);
         return parentCategory?.isActive === true;
     }

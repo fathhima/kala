@@ -4,14 +4,10 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
-  CreditCard,
   CheckCircle2,
   AlertCircle,
   XCircle,
   Mail,
-  User,
-  ShieldCheck,
-  Check,
   MessageSquare,
   Video,
 } from 'lucide-react'
@@ -37,7 +33,7 @@ import {
 
 export function InstructorSessionDetails() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
 
   const { data: booking, isLoading, isError, refetch } = useBookingQuery(id ?? '')
   const { data: payment } = usePaymentByBookingQuery(id ?? '', Boolean(id && booking))

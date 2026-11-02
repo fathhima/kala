@@ -48,7 +48,7 @@ export class JsonWebTokenRepository implements ITokenProvider {
             }
 
             return payload
-        } catch (error) {
+        } catch (_error) {
             throw new UnauthorizedException('Invalid access token')
         }
     }
@@ -62,7 +62,7 @@ export class JsonWebTokenRepository implements ITokenProvider {
             }
 
             return payload
-        } catch (error) {
+        } catch (_error) {
             throw new UnauthorizedException('Invalid refresh token')
         }
     }

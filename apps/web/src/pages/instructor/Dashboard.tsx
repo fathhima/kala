@@ -1,4 +1,4 @@
-import { ArrowLeftRight, CheckCircle, Clock3, Plus, Sparkles, CalendarCheck, Calendar, ChevronRight } from 'lucide-react'
+import { CheckCircle, Clock3, Plus, Sparkles, CalendarCheck, ChevronRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'

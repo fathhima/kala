@@ -89,7 +89,7 @@ const publicProfileInclude = {
   },
 } satisfies Prisma.InstructorProfileInclude;
 
-type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{
+export type PrismaPublicInstructorProfile = Prisma.InstructorProfileGetPayload<{
   include: typeof publicProfileInclude;
 }>;
 

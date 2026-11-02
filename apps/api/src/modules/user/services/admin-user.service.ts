@@ -4,7 +4,6 @@ import { ADMIN_USER_REPOSITORY, type IAdminUserRepository } from "../repositorie
 import { IAdminUserService } from "./interfaces/admin-user.service.interface";
 import { type IUserRepository, USER_REPOSITORY } from "../repositories/interfaces/user.interface";
 import { AdminUserListParams } from "../types/admin-user-list-params.type";
-import { UserEntity } from "../entities/user.entity";
 import { UpdateUserStatusInput } from "../types/update-user-status.type";
 import { AdminUserResponseDto } from "../dto/response/admin-user-detail-response.dto";
 import { AdminUserStatusResponseDto } from "../dto/response/admin-user-status-response.dto";

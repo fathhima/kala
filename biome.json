@@ -1,0 +1,98 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "apps/**/*",
+      "packages/**/*",
+      "*.json",
+      "*.ts",
+      "*.js",
+      "*.mjs",
+      "*.md",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/coverage",
+      "!apps/web/src/api",
+      "!pnpm-lock.yaml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        "recommended": false
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useImportType": "off",
+        "useNodejsImportProtocol": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "warn",
+        "noArrayIndexKey": "off",
+        "noUnknownAtRules": "off",
+        "useIterableCallbackReturn": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noComponentHookFactories": "off",
+        "useExhaustiveDependencies": "warn",
+        "noReactNativeRawText": "off",
+        "useImportExtensions": "off",
+        "useHookAtTopLevel": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/api/**/*"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useHookAtTopLevel": "off"
+          }
+        }
+      }
+    }
+  ],
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}

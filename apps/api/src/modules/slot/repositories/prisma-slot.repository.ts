@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
-import { BasePrismaRepository, TransactionClient } from '@/shared/prisma/base';
+import { BasePrismaRepository, } from '@/shared/prisma/base';
 import { SlotMapper } from '../mappers/slot.mapper';
 import { ISlotRepository } from './interfaces/slot.interface';
 import {

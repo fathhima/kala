@@ -7,8 +7,7 @@ import { LOGGER_SERVICE, type ILoggerService } from '@/shared/logger/repositorie
 export class OutboxService implements IOutboxService {
   constructor(
     private readonly _prisma: PrismaService,
-    @Inject(LOGGER_SERVICE)
-    private readonly _logger: ILoggerService,
+    @Inject(LOGGER_SERVICE)readonly _logger: ILoggerService,
   ) {}
 
   async fetchAndLockPendingEvents(limit = 20): Promise<OutboxEventRecord[]> {

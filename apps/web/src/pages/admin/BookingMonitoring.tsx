@@ -10,12 +10,10 @@ import {
   Clock,
   XCircle,
   AlertCircle,
-  Calendar,
 } from 'lucide-react'
 import { useAdminBookingsQuery } from '@/features/booking/hooks'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pagination } from '@/components/ui/Pagination'
 import {

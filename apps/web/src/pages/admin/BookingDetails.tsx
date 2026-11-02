@@ -4,15 +4,10 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
-  CreditCard,
-  User,
-  ShieldCheck,
-  AlertCircle,
   CheckCircle2,
   XCircle,
   ExternalLink,
   Mail,
-  FileText,
 } from 'lucide-react'
 import { useBookingQuery, useCancelBookingMutation } from '@/features/booking/hooks'
 import { usePaymentByBookingQuery } from '@/features/payment/hooks'
@@ -32,7 +27,7 @@ import {
 
 export function AdminBookingDetails() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
 
   const { data: booking, isLoading, isError, refetch } = useBookingQuery(id ?? '')
   const { data: payment } = usePaymentByBookingQuery(id ?? '', Boolean(id && booking))

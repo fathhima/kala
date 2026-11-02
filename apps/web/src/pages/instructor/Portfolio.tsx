@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ImageIcon, Plus, Trash2, VideoIcon } from 'lucide-react'
+import { Plus, Trash2, } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useOfferingMediaUrlQuery, useOnboardingWorkspaceQuery, useRemoveOfferingMediaMutation, useUploadOfferingMediaMutation, } from '@/features/instructor/hooks'

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -335,7 +335,7 @@ export function ManageSkills() {
     [page, committedSearch, isActive],
   )
 
-  const { data, isLoading, isError, error, isFetching } = useAdminCategoriesQuery(query)
+  const { data, isLoading, isError, error } = useAdminCategoriesQuery(query)
 
   const categories = data?.items ?? []
   const createCategoryModal = useState<CategoryModalState>(null)

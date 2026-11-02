@@ -2,16 +2,9 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
-  CreditCard,
-  CheckCircle2,
-  AlertCircle,
   XCircle,
   RotateCcw,
-  Calendar,
   ExternalLink,
-  ShieldCheck,
-  User,
-  Clock,
 } from 'lucide-react'
 import { useAdminPaymentQuery, useRefundPaymentMutation } from '@/features/payment/hooks'
 import { useBookingQuery } from '@/features/booking/hooks'
@@ -19,7 +12,6 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
-import { Avatar } from '@/components/ui/Avatar'
 import {
   cn,
   formatDate,
@@ -83,7 +75,7 @@ export function AdminPaymentDetails() {
 
   const isSucceeded = payment.status === 'SUCCEEDED'
   const isRefunded = payment.status === 'REFUNDED'
-  const isRefundPending = payment.status === 'REFUND_PENDING'
+  const _isRefundPending = payment.status === 'REFUND_PENDING'
   const isFailed = payment.status === 'FAILED'
 
   const getStatusBadge = (status: string) => {

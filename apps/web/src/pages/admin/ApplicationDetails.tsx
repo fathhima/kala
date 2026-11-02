@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ArrowLeft, CheckCircle, MapPin, XCircle } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import {
-  ReviewOfferingDtoDecisionEnum,
   type InstructorOfferingDto,
 } from '@/api'
 import { Avatar } from '@/components/ui/Avatar'
@@ -226,7 +225,7 @@ export function ApplicationDetails() {
   }
 
   const { data: application, isLoading, isError, error } =
-    useInstructorApplicationQuery(id)
+    useInstructorApplicationQuery(id ?? '')
 
   if (isLoading) {
     return <div className="text-sm text-stone-500">Loading application…</div>

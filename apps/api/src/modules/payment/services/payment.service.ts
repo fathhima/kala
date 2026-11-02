@@ -4,7 +4,7 @@ import { PAYMENT_REPOSITORY, type IPaymentRepository, } from '../repositories/in
 import { PAYMENT_GATEWAY_SERVICE, type IPaymentGatewayService, } from '@/shared/payment-gateway/repositories/interfaces/payment-gateway.interface';
 import { BOOKING_SERVICE, type IBookingService, } from '@/modules/booking/services/interfaces/booking.service.interface';
 import { CheckoutResponseDto, PaymentResponseDto, PaginatedPaymentsResponseDto } from '../dto/response/payment.response.dto';
-import { CreateCheckoutDto, PaymentQueryDto, RefundPaymentDto } from '../dto/request/payment.request.dto';
+import { PaymentQueryDto, } from '../dto/request/payment.request.dto';
 import { PaymentMapper } from '../mappers/payment.mapper';
 import { PaymentListQuery } from '../types/payment.type';
 import { PaymentStatus } from '../enums/payment.enum';
@@ -87,7 +87,7 @@ export class PaymentService implements IPaymentService {
     }
 
     async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
-        let event;
+        let event: ReturnType<IPaymentGatewayService['constructWebhookEvent']>;
 
         try {
             event = this._paymentGateway.constructWebhookEvent(rawBody, signature);
@@ -191,7 +191,7 @@ export class PaymentService implements IPaymentService {
         return PaymentResponseDto.fromEntity('Payment fetched successfully', payment);
     }
 
-    async refundPayment(bookingId: string, actorId: string, reason?: string,): Promise<PaymentResponseDto> {
+    async refundPayment(bookingId: string, _actorId: string, reason?: string,): Promise<PaymentResponseDto> {
         const payment = await this._paymentRepository.findByBookingId(bookingId);
 
         if (!payment) {

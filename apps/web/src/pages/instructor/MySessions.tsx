@@ -7,7 +7,6 @@ import {
   RefreshCw,
   CalendarDays,
   Mail,
-  CheckCircle2,
   AlertCircle,
 } from 'lucide-react'
 import { useInstructorBookingsQuery } from '@/features/booking/hooks'
@@ -177,9 +176,9 @@ export function MySessions() {
             const subcategoryName = (booking.offering as any)?.subcategory?.name || ''
             const offeringTitle =
               booking.offering.title || subcategoryName || 'One-on-One Session'
-            const isConfirmed = booking.status === 'CONFIRMED'
-            const isCompleted = booking.status === 'COMPLETED'
-            const isCancelled = booking.status === 'CANCELLED'
+            const _isConfirmed = booking.status === 'CONFIRMED'
+            const _isCompleted = booking.status === 'COMPLETED'
+            const _isCancelled = booking.status === 'CANCELLED'
 
             return (
               <Card

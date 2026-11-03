@@ -1,0 +1,4 @@
+# doppler.yaml
+setup:
+  - project: kala
+    config: dev

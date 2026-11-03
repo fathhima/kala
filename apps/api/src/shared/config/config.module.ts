@@ -1,26 +1,29 @@
-import Joi from 'joi';
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule as NestConfigModule } from '@nestjs/config';
+import Joi from "joi";
+import { Global, Module } from "@nestjs/common";
+import { ConfigModule as NestConfigModule } from "@nestjs/config";
 
 @Global()
 @Module({
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
       cache: true,
       validationSchema: Joi.object({
         PORT: Joi.number().default(4000),
-        CORS_ORIGINS: Joi.string().default('http://localhost:5173'),
-        REDIS_URI: Joi.string().default('redis://localhost:6379'),
-        NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
-        LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'http', 'verbose', 'debug').default('debug'),
-        SMTP_HOST: Joi.string().allow('').optional(),
+        CORS_ORIGINS: Joi.string().default("http://localhost:5173"),
+        REDIS_URI: Joi.string().default("redis://localhost:6379"),
+        NODE_ENV: Joi.string()
+          .valid("development", "test", "production")
+          .default("development"),
+        LOG_LEVEL: Joi.string()
+          .valid("error", "warn", "info", "http", "verbose", "debug")
+          .default("debug"),
+        SMTP_HOST: Joi.string().allow("").default("smtp.gmail.com"),
         SMTP_PORT: Joi.number().integer().positive().default(587),
-        SMTP_USER: Joi.string().allow('').optional(),
-        SMTP_PASS: Joi.string().allow('').optional(),
-        SMTP_FROM: Joi.string().email().default('no-reply@kala.local'),
-        OTP_TTL_SECONDS: Joi.number().integer().min(60).default(60),
+        SMTP_USER: Joi.string().allow("").optional(),
+        SMTP_PASS: Joi.string().allow("").optional(),
+        SMTP_FROM: Joi.string().email().default("no-reply@kala.local"),
+        OTP_TTL_SECONDS: Joi.number().integer().min(60).default(600),
         OTP_RESEND_COOLDOWN_SECONDS: Joi.number().integer().min(10).default(60),
         ACCESS_TOKEN_SECRET: Joi.string().min(32).required(),
         REFRESH_TOKEN_SECRET: Joi.string().min(32).required(),
@@ -28,18 +31,33 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
         REFRESH_TOKEN_EXPIRES_IN: Joi.string().default("7d"),
         REFRESH_COOKIE_NAME: Joi.string().default("refreshToken"),
         COOKIE_SECURE: Joi.boolean().default(false),
-        COOKIE_SAME_SITE: Joi.string().valid("lax", "strict", "none").default("lax"),
+        COOKIE_SAME_SITE: Joi.string()
+          .valid("lax", "strict", "none")
+          .default("lax"),
         COOKIE_DOMAIN: Joi.string().allow("").optional(),
-        PASSWORD_RESET_TTL_SECONDS: Joi.number().integer().min(300).default(900),
-        PASSWORD_RESET_URL: Joi.string().uri().required(),
+        PASSWORD_RESET_TTL_SECONDS: Joi.number()
+          .integer()
+          .min(300)
+          .default(900),
+        PASSWORD_RESET_URL: Joi.string()
+          .uri()
+          .default("http://localhost:5173/reset-password"),
         GOOGLE_CLIENT_ID: Joi.string().required(),
         AWS_REGION: Joi.string().required(),
         AWS_S3_BUCKET: Joi.string().required(),
-        AWS_S3_UPLOAD_URL_TTL_SECONDS: Joi.number().integer().min(60).max(900).default(300),
-        AWS_S3_DOWNLOAD_URL_TTL_SECONDS: Joi.number().integer().min(60).max(3600).default(900),
+        AWS_S3_UPLOAD_URL_TTL_SECONDS: Joi.number()
+          .integer()
+          .min(60)
+          .max(900)
+          .default(300),
+        AWS_S3_DOWNLOAD_URL_TTL_SECONDS: Joi.number()
+          .integer()
+          .min(60)
+          .max(3600)
+          .default(900),
         AWS_ACCESS_KEY_ID: Joi.string().optional(),
         AWS_SECRET_ACCESS_KEY: Joi.string().optional(),
-        SLOT_DEFAULT_TIMEZONE: Joi.string().default('Asia/Kolkata'),
+        SLOT_DEFAULT_TIMEZONE: Joi.string().default("Asia/Kolkata"),
         SLOT_GENERATION_DAYS: Joi.number().integer().positive().default(90),
         BOOKING_HOLD_TTL_SECONDS: Joi.number().integer().min(60).default(600),
         BOOKING_LOCK_TIMEOUT_MS: Joi.number().integer().min(1000).default(3000),
@@ -50,4 +68,4 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
     }),
   ],
 })
-export class ConfigModule { }
+export class ConfigModule {}

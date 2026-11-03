@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "biome format --write .",
     "start": "nest start",
-    "dev": "nest start --watch --env-file .env",
+    "dev": "nest start --watch",
     "db:generate": "prisma generate",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",

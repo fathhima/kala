@@ -1,0 +1,109 @@
+// ============================================================
+// 1. DOCKER LOG DISCOVERY — collect logs from all containers
+// ============================================================
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Only collect logs from kala-* containers
+discovery.relabel "docker_logs" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(kala-.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(kala-.*)"
+    action        = "keep"
+  }
+}
+
+// ============================================================
+// 2. COLLECT LOGS — read from Docker and push to Loki
+// ============================================================
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_logs.output
+  forward_to = [loki.process.pipeline.receiver]
+}
+
+// ============================================================
+// 3. LOG PROCESSING PIPELINE
+// ============================================================
+loki.process "pipeline" {
+  // Try to parse JSON logs (Winston production format)
+  stage.json {
+    expressions = {
+      level     = "level",
+      message   = "message",
+      service   = "service",
+      timestamp = "timestamp",
+      context   = "context",
+      requestId = "requestId",
+    }
+  }
+
+  // Promote extracted values to Loki labels
+  stage.labels {
+    values = {
+      level   = "level",
+      service = "service",
+      context = "context",
+    }
+  }
+
+  // Set timestamp from the log entry
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339"
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ============================================================
+// 4. PUSH TO LOKI
+// ============================================================
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// ============================================================
+// 5. SCRAPE PROMETHEUS METRICS (Alloy as collector)
+// ============================================================
+prometheus.scrape "kala_api" {
+  targets = [{
+    __address__ = "api:4000",
+  }]
+  metrics_path    = "/metrics"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "postgres_exporter" {
+  targets = [{
+    __address__ = "postgres-exporter:9187",
+  }]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "redis_exporter" {
+  targets = [{
+    __address__ = "redis-exporter:9121",
+  }]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}

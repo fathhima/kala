@@ -16,6 +16,13 @@ export class JwtAuthGuard implements CanActivate {
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+
+    // Allow Prometheus metrics scraping without authentication
+    if (request.path === '/metrics') {
+      return true;
+    }
+
     const isPublic = this._reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -25,7 +32,6 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
     const token = this._extractTokenFromHeader(request);
 
     if (!token) {

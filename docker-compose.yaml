@@ -12,15 +12,9 @@ services:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
-    command:
-      - postgres
-      - -c
-      - log_statement=none
-      - -c
-      - log_min_messages=panic
 
   redis:
     container_name: kala-redis
@@ -29,7 +23,7 @@ services:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 

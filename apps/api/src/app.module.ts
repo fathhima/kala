@@ -4,7 +4,7 @@ import { UserModule } from './modules/user/user.module';
 import { ConfigModule } from './shared/config/config.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { MailerModule } from './shared/mailer/mailer.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
 import { JwtModule } from './shared/jwt/jwt.module';
@@ -24,6 +24,8 @@ import { QueueModule } from './shared/queue/queue.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
 import { VideoCallModule } from './modules/video-call/video-call.module';
+import { MetricsModule } from './shared/metrics/metrics.module';
+import { HttpMetricsInterceptor } from './shared/metrics/interceptors/http-metrics.interceptor';
 
 @Module({
   imports: [
@@ -52,6 +54,7 @@ import { VideoCallModule } from './modules/video-call/video-call.module';
     OutboxModule,
     MailerModule,
     NotificationModule,
+    MetricsModule,
     AuthModule,
     UserModule,
     CategoryModule,
@@ -64,6 +67,10 @@ import { VideoCallModule } from './modules/video-call/video-call.module';
     VideoCallModule,
   ],
   providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpMetricsInterceptor,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

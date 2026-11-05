@@ -10,6 +10,7 @@ import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
 import helmet from 'helmet';
 import { LOGGER_SERVICE } from '../logger/repositories/interfaces/logger.interface';
+import { RequestIdMiddleware } from '../logger/middleware/request-id.middleware';
 
 export async function setupApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule, {
@@ -17,6 +18,9 @@ export async function setupApp(): Promise<INestApplication> {
   });
 
   app.useLogger(app.get(LOGGER_SERVICE))
+
+  // Request ID middleware for request correlation
+  app.use(new RequestIdMiddleware().use);
 
   const configService = app.get(ConfigService);
 
@@ -49,7 +53,9 @@ export async function setupApp(): Promise<INestApplication> {
 
   app.use(morgan('dev'));
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['metrics'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

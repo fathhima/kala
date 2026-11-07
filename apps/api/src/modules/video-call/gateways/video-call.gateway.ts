@@ -53,9 +53,6 @@ export class VideoCallGateway
   @WebSocketServer()
   server!: Server;
 
-  // Track active room participants: bookingId -> Set of socket IDs
-  private readonly _roomParticipants = new Map<string, Set<string>>();
-
   constructor(
     @Inject(VIDEO_CALL_SERVICE)
     private readonly _videoCallService: IVideoCallService,
@@ -115,7 +112,6 @@ export class VideoCallGateway
     const bookingId = client.data?.currentBookingId;
 
     if (bookingId) {
-      this._removeParticipant(bookingId, client.id);
       const roomName = `session:${bookingId}`;
       client.to(roomName).emit('peer_left', {
         userId,
@@ -156,17 +152,16 @@ export class VideoCallGateway
     }
 
     const roomName = `session:${payload.bookingId}`;
+
+    // Query active sockets in the room via adapter (cross-instance safe with Redis adapter)
+    const existingSockets = await this.server.in(roomName).fetchSockets();
+    const otherInRoom = existingSockets.length > 0;
+
     await client.join(roomName);
     client.data.currentBookingId = payload.bookingId;
 
-    // Check if other participant is already in the room
-    const currentSockets = this._roomParticipants.get(payload.bookingId) ?? new Set();
-    const otherInRoom = currentSockets.size > 0;
-
-    this._addParticipant(payload.bookingId, client.id);
-
     this._logger.log(
-      `User ${userId} joined video session room ${roomName} (total in room: ${currentSockets.size + 1})`,
+      `User ${userId} joined video session room ${roomName} (total in room: ${existingSockets.length + 1})`,
       VideoCallGateway.name,
     );
 
@@ -262,7 +257,7 @@ export class VideoCallGateway
 
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('leave_session')
-  async handleLeaveSession(
+   async handleLeaveSession(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: { bookingId: string },
   ) {
@@ -270,7 +265,6 @@ export class VideoCallGateway
 
     const roomName = `session:${payload.bookingId}`;
     await client.leave(roomName);
-    this._removeParticipant(payload.bookingId, client.id);
     delete client.data.currentBookingId;
 
     client.to(roomName).emit('peer_left', {
@@ -290,25 +284,6 @@ export class VideoCallGateway
       bookingId,
       reason: reason || 'Session has ended',
     });
-  }
-
-  private _addParticipant(bookingId: string, socketId: string): void {
-    let sockets = this._roomParticipants.get(bookingId);
-    if (!sockets) {
-      sockets = new Set();
-      this._roomParticipants.set(bookingId, sockets);
-    }
-    sockets.add(socketId);
-  }
-
-  private _removeParticipant(bookingId: string, socketId: string): void {
-    const sockets = this._roomParticipants.get(bookingId);
-    if (sockets) {
-      sockets.delete(socketId);
-      if (sockets.size === 0) {
-        this._roomParticipants.delete(bookingId);
-      }
-    }
   }
 
   private _extractToken(client: AuthenticatedSocket): string | null {

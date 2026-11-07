@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import { AppModule } from '@/app.module';
 import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
+import { RedisIoAdapter } from '@/shared/redis/redis-io.adapter';
 import { RequestIdMiddleware } from '../logger/middleware/request-id.middleware';
 import { LOGGER_SERVICE } from '../logger/repositories/interfaces/logger.interface';
 
@@ -19,10 +20,20 @@ export async function setupApp(): Promise<INestApplication> {
 
   app.useLogger(app.get(LOGGER_SERVICE));
 
+  const configService = app.get(ConfigService);
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+
+  // Trust reverse proxy (ALB / CloudFront / Nginx) for accurate client IP detection & rate limiting
+  const httpAdapter = app.getHttpAdapter();
+  if (typeof httpAdapter.getInstance === 'function') {
+    const expressApp = httpAdapter.getInstance();
+    if (typeof expressApp?.set === 'function') {
+      expressApp.set('trust proxy', 1);
+    }
+  }
+
   // Request ID middleware for request correlation
   app.use(new RequestIdMiddleware().use);
-
-  const configService = app.get(ConfigService);
 
   app.use(
     helmet({
@@ -56,7 +67,7 @@ export async function setupApp(): Promise<INestApplication> {
     credentials: true,
   });
 
-  app.use(morgan('dev'));
+  app.use(morgan(isProduction ? 'combined' : 'dev'));
 
   app.setGlobalPrefix('api', {
     exclude: ['metrics', 'health'],
@@ -72,7 +83,15 @@ export async function setupApp(): Promise<INestApplication> {
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  setupSwagger(app);
+  // Socket.IO Redis Adapter for multi-instance horizontal scaling
+  const redisUri = configService.get<string>('REDIS_URI');
+  if (redisUri) {
+    const redisIoAdapter = new RedisIoAdapter(app, redisUri);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  }
+
+  setupSwagger(app, configService);
 
   return app;
 }

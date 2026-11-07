@@ -1,31 +1,32 @@
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { Module } from '@nestjs/common';
-import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
-import { ConfigModule } from './shared/config/config.module';
-import { RedisModule } from './shared/redis/redis.module';
-import { MailerModule } from './shared/mailer/mailer.module';
+import { ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AdminModule } from './modules/admin/admin.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { BookingModule } from './modules/booking/booking.module';
+import { CategoryModule } from './modules/category/category.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { InstructorModule } from './modules/instructor/instructor.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { SlotModule } from './modules/slot/slot.module';
+import { UserModule } from './modules/user/user.module';
+import { VideoCallModule } from './modules/video-call/video-call.module';
+import { ConfigModule } from './shared/config/config.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
+import { HealthModule } from './shared/health/health.module';
 import { JwtModule } from './shared/jwt/jwt.module';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ConfigService } from '@nestjs/config';
-import { AdminModule } from './modules/admin/admin.module';
-import { CategoryModule } from './modules/category/category.module';
-import { InstructorModule } from './modules/instructor/instructor.module';
-import { SlotModule } from './modules/slot/slot.module';
 import { LoggerModule } from './shared/logger/logger.module';
-import { BookingModule } from './modules/booking/booking.module';
-import { PaymentModule } from './modules/payment/payment.module';
-import { ChatModule } from './modules/chat/chat.module';
-import { QueueModule } from './shared/queue/queue.module';
-import { NotificationModule } from './modules/notification/notification.module';
-import { OutboxModule } from './shared/outbox/outbox.module';
-import { VideoCallModule } from './modules/video-call/video-call.module';
-import { MetricsModule } from './shared/metrics/metrics.module';
+import { MailerModule } from './shared/mailer/mailer.module';
 import { HttpMetricsInterceptor } from './shared/metrics/interceptors/http-metrics.interceptor';
+import { MetricsModule } from './shared/metrics/metrics.module';
+import { OutboxModule } from './shared/outbox/outbox.module';
+import { QueueModule } from './shared/queue/queue.module';
+import { RedisModule } from './shared/redis/redis.module';
 
 @Module({
   imports: [
@@ -40,9 +41,7 @@ import { HttpMetricsInterceptor } from './shared/metrics/interceptors/http-metri
             limit: 60,
           },
         ],
-        storage: new ThrottlerStorageRedisService(
-          config.getOrThrow<string>('REDIS_URI'),
-        ),
+        storage: new ThrottlerStorageRedisService(config.getOrThrow<string>('REDIS_URI')),
       }),
     }),
     EventEmitterModule.forRoot(),
@@ -55,6 +54,7 @@ import { HttpMetricsInterceptor } from './shared/metrics/interceptors/http-metri
     MailerModule,
     NotificationModule,
     MetricsModule,
+    HealthModule,
     AuthModule,
     UserModule,
     CategoryModule,

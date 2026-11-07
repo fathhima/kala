@@ -1,6 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { RedisService } from './redis.service';
-import { KEY_VALUE_STORE, REDIS_SERVICE } from './repositories/interfaces/key-value-store.interface';
+import {
+  KEY_VALUE_STORE,
+  REDIS_SERVICE,
+} from './repositories/interfaces/key-value-store.interface';
 import { IoRedisKeyValueStore } from './repositories/ioredis-key-value.repository';
 
 @Global()

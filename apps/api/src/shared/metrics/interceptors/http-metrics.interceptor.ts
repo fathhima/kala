@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { MetricsService } from '../metrics.service';
@@ -24,15 +19,11 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     );
   }
 
-  private recordMetric(
-    context: ExecutionContext,
-    req: any,
-    start: number,
-  ): void {
+  private recordMetric(context: ExecutionContext, req: any, start: number): void {
     const route = req.route?.path ?? req.path;
 
-    // Don't record the scrape endpoint itself
-    if (route === '/metrics') return;
+    // Don't record scrape or health check endpoints
+    if (route === '/metrics' || route === '/health') return;
 
     const duration = (Date.now() - start) / 1000;
     const res = context.switchToHttp().getResponse();
@@ -43,9 +34,6 @@ export class HttpMetricsInterceptor implements NestInterceptor {
       status: String(res.statusCode ?? 500),
     });
 
-    this.metrics.httpRequestDuration.observe(
-      { method: req.method, route },
-      duration,
-    );
+    this.metrics.httpRequestDuration.observe({ method: req.method, route }, duration);
   }
 }

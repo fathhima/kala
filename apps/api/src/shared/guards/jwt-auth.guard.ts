@@ -1,9 +1,19 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException, } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { Request } from "express";
-import { IS_PUBLIC_KEY } from "@/shared/decorators/public.decorator";
-import { JWT_SERVICE, type IJwtService } from "../jwt/repositories/interfaces/token.interface";
-import { type IUserIdentityService, USER_IDENTITY_SERVICE } from "@/modules/user/services/interfaces/user-identity.service.interface";
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
+import {
+  type IUserIdentityService,
+  USER_IDENTITY_SERVICE,
+} from '@/modules/user/services/interfaces/user-identity.service.interface';
+import { IS_PUBLIC_KEY } from '@/shared/decorators/public.decorator';
+import { type IJwtService, JWT_SERVICE } from '../jwt/repositories/interfaces/token.interface';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -13,13 +23,13 @@ export class JwtAuthGuard implements CanActivate {
     private readonly _jwtService: IJwtService,
     @Inject(USER_IDENTITY_SERVICE)
     private readonly _userIdentityService: IUserIdentityService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
 
-    // Allow Prometheus metrics scraping without authentication
-    if (request.path === '/metrics') {
+    // Allow Prometheus metrics scraping and ALB health checks without authentication
+    if (request.path === '/metrics' || request.path === '/health') {
       return true;
     }
 
@@ -35,7 +45,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this._extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException("Access token is missing");
+      throw new UnauthorizedException('Access token is missing');
     }
 
     try {
@@ -44,33 +54,30 @@ export class JwtAuthGuard implements CanActivate {
       const user = await this._userIdentityService.findById(payload.sub);
 
       if (!user) {
-        throw new UnauthorizedException("User not found");
+        throw new UnauthorizedException('User not found');
       }
 
       if (!user.isActive) {
-        throw new ForbiddenException("Account is blocked");
+        throw new ForbiddenException('Account is blocked');
       }
 
       if (!user.isVerified) {
-        throw new ForbiddenException("Email is not verified");
+        throw new ForbiddenException('Email is not verified');
       }
 
       request.user = {
         sub: user.id,
         roles: user.roles,
-        type: 'access'
-      }
+        type: 'access',
+      };
 
       return true;
     } catch (error) {
-      if (
-        error instanceof UnauthorizedException ||
-        error instanceof ForbiddenException
-      ) {
+      if (error instanceof UnauthorizedException || error instanceof ForbiddenException) {
         throw error;
       }
 
-      throw new UnauthorizedException("Invalid or expired access token");
+      throw new UnauthorizedException('Invalid or expired access token');
     }
   }
 
@@ -81,9 +88,9 @@ export class JwtAuthGuard implements CanActivate {
       return null;
     }
 
-    const [type, token] = authHeader.split(" ");
+    const [type, token] = authHeader.split(' ');
 
-    if (type !== "Bearer" || !token) {
+    if (type !== 'Bearer' || !token) {
       return null;
     }
 

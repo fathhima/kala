@@ -1,34 +1,36 @@
-import { INestApplication, RawBodyRequest, ValidationPipe, } from '@nestjs/common';
-import morgan from 'morgan';
-import { Request } from 'express';
+import { INestApplication, RawBodyRequest, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { AppModule } from '@/app.module';
 import { setupSwagger } from '@/shared/config/swagger.config';
 import { GlobalExceptionFilter } from '@/shared/filters/http-exception.filter';
-import helmet from 'helmet';
-import { LOGGER_SERVICE } from '../logger/repositories/interfaces/logger.interface';
 import { RequestIdMiddleware } from '../logger/middleware/request-id.middleware';
+import { LOGGER_SERVICE } from '../logger/repositories/interfaces/logger.interface';
 
 export async function setupApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
 
-  app.useLogger(app.get(LOGGER_SERVICE))
+  app.useLogger(app.get(LOGGER_SERVICE));
 
   // Request ID middleware for request correlation
   app.use(new RequestIdMiddleware().use);
 
   const configService = app.get(ConfigService);
 
-  app.use(helmet({
-    referrerPolicy: {
-      policy: 'strict-origin-when-cross-origin'
-    }
-  }))
+  app.use(
+    helmet({
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
+    }),
+  );
 
   app.use(cookieParser());
 
@@ -43,7 +45,10 @@ export async function setupApp(): Promise<INestApplication> {
 
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-  const origins = configService.getOrThrow<string>('CORS_ORIGINS').split(',').map((origin) => origin.trim());
+  const origins = configService
+    .getOrThrow<string>('CORS_ORIGINS')
+    .split(',')
+    .map((origin) => origin.trim());
 
   app.enableCors({
     origin: origins,
@@ -54,7 +59,7 @@ export async function setupApp(): Promise<INestApplication> {
   app.use(morgan('dev'));
 
   app.setGlobalPrefix('api', {
-    exclude: ['metrics'],
+    exclude: ['metrics', 'health'],
   });
 
   app.useGlobalPipes(

@@ -18,19 +18,6 @@
   },
   "author": "Fathima",
   "license": "ISC",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@openapitools/openapi-generator-cli",
-      "@prisma/client",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "esbuild",
-      "prisma",
-      "unrs-resolver"
-    ]
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.6.4"
   }

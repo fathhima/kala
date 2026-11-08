@@ -4,7 +4,7 @@ RUN corepack enable
 # --- Dependencies stage ---
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 COPY apps/web/package.json ./apps/web/
 RUN pnpm install --frozen-lockfile --filter web...
 
@@ -13,7 +13,7 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 COPY apps/web ./apps/web
 WORKDIR /app/apps/web
 

@@ -4,7 +4,7 @@ RUN corepack enable
 # --- Dependencies stage ---
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile --filter api...
 

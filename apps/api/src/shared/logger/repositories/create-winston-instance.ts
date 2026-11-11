@@ -19,15 +19,15 @@ const redactFormat = format((info) => {
     if (Array.isArray(value)) {
       return value.map(redact);
     }
-    const result: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    const obj = value as Record<string, unknown>;
+    for (const key of Object.keys(obj)) {
       if (sensitiveKeys.test(key)) {
-        result[key] = "[REDACTED]";
+        obj[key] = "[REDACTED]";
       } else {
-        result[key] = redact(val);
+        obj[key] = redact(obj[key]);
       }
     }
-    return result;
+    return obj;
   };
   return redact(info) as typeof info;
 });

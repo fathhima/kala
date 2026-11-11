@@ -5,6 +5,7 @@ frontend:
       commands:
         - corepack enable
         - corepack prepare pnpm@latest --activate
+        - pnpm config set store-dir /codebuild/output/.pnpm-store
         - pnpm install --frozen-lockfile --filter web...
     build:
       commands:
@@ -15,6 +16,5 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/*
-      - apps/web/node_modules/**/*
+      - /codebuild/output/.pnpm-store/**/*
 

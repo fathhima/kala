@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService) => {
         const redisUri = configService.getOrThrow<string>('REDIS_URI');
         const url = new URL(redisUri);
+        const useTls = url.protocol === 'rediss:';
         return {
           connection: {
             host: url.hostname || 'localhost',
@@ -19,6 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             username: url.username || undefined,
             maxRetriesPerRequest: null,
             enableReadyCheck: false,
+            ...(useTls && { tls: {} }),
           },
         };
       },

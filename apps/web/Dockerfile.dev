@@ -4,7 +4,9 @@ RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml ./
+RUN pnpm config set strict-dep-builds false
+
+COPY package.json pnpm-lock.yaml* .npmrc* ./
 
 RUN pnpm i
 

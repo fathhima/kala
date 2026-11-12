@@ -61,7 +61,7 @@ export function Navbar() {
               to="/contact"
               className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium"
             >
-              Contact
+              Contact Us
             </Link>
           </div>
 

@@ -115,12 +115,6 @@ export function Landing() {
 
         <div className="page-container relative z-10">
           <div className="max-w-2xl">
-            {/* Pill badge */}
-            <div className="inline-flex items-center gap-2 bg-kala-amber/10 text-kala-terracotta text-sm font-medium px-4 py-2 rounded-full mb-6 border border-kala-amber/20">
-              <Sparkles size={14} />
-              Live Creative Learning
-            </div>
-
             <h1 className="text-5xl md:text-6xl font-bold text-kala-brown leading-tight mb-5">
               Learn the Art of{' '}
               <span className="text-kala-terracotta relative inline-block">
@@ -280,10 +274,6 @@ export function Landing() {
         />
 
         <div className="page-container text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-amber-200 text-sm font-medium px-4 py-2 rounded-full mb-6 border border-white/20">
-            <Sparkles size={14} />
-            Start your creative journey today
-          </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Start Creating?
           </h2>

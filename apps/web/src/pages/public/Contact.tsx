@@ -18,7 +18,7 @@ import { Card } from '@/components/ui/Card';
 import { Input, Textarea } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 
-const SUPPORT_EMAIL = 'support@kala.art';
+const SUPPORT_EMAIL = 'admin@kalaaa.in';
 
 const TOPICS = [
   'General Inquiry',
@@ -145,10 +145,6 @@ export function Contact() {
           className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-kala-amber/15 blur-3xl pointer-events-none"
         />
         <div className="page-container relative z-10 text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-kala-amber/10 text-kala-terracotta text-sm font-medium px-4 py-1.5 rounded-full mb-5 border border-kala-amber/20">
-            <Sparkles size={14} />
-            Get in Touch
-          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-kala-brown mb-4">
             We&apos;d Love to Hear From You
           </h1>

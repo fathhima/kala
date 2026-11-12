@@ -18,6 +18,7 @@ COPY apps/api ./apps/api
 WORKDIR /app/apps/api
 RUN npx prisma generate
 RUN pnpm run build
+RUN npx tsc prisma/seed.ts --outDir dist-seed --rootDir prisma --module commonjs --moduleResolution node --esModuleInterop --target ES2023 --skipLibCheck
 RUN pnpm prune --prod
 
 # --- Production runner stage ---
@@ -31,9 +32,10 @@ COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/apps/api/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/dist ./dist
+COPY --from=build /app/apps/api/dist-seed ./dist-seed
 COPY --from=build /app/apps/api/prisma ./prisma
 COPY --from=build /app/apps/api/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist-seed/seed.js && node dist/main.js"]

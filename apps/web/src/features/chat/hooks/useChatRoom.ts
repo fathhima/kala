@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/features/auth/store';
 import { useChatMessagesQuery, useChatRoomQuery } from './useChatQueries';
-import { sendChatMessageRest } from '../api';
+import { markChatAsRead, sendChatMessageRest } from '../api';
 import type { ChatMessageDto } from '@/api';
 
 export interface UseChatRoomReturn {
@@ -20,6 +21,7 @@ export interface UseChatRoomReturn {
 
 export function useChatRoom(bookingId: string): UseChatRoomReturn {
   const { user, accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
 
   // Initial HTTP queries for instant hydration
@@ -108,6 +110,7 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
 
         return [...prev, incoming];
       });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
     });
 
     socket.on('user_typing', (payload: { userId: string; isTyping: boolean }) => {
@@ -143,7 +146,7 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [bookingId, accessToken, user?.id]);
+  }, [bookingId, accessToken, user?.id, queryClient]);
 
   // Send message with optimistic update & fallback
   const sendMessage = useCallback(
@@ -218,11 +221,19 @@ export function useChatRoom(bookingId: string): UseChatRoomReturn {
   );
 
   const markAsRead = useCallback(() => {
+    if (!bookingId) return;
     const socket = socketRef.current;
     if (socket?.connected) {
       socket.emit('mark_read', { bookingId });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
+    } else {
+      markChatAsRead(bookingId)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
+        })
+        .catch(() => {});
     }
-  }, [bookingId]);
+  }, [bookingId, queryClient]);
 
   return {
     messages,

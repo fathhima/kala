@@ -17,10 +17,14 @@ import { UserId } from '@/shared/decorators/user-id.decorator';
 import { CHAT_SERVICE, type IChatService } from './services/interfaces/chat.service.interface';
 import {
   ChatMessageResponseDto,
+  ChatRoomListResponseDto,
   ChatRoomResponseDto,
   PaginatedChatMessagesResponseDto,
 } from './dto/response/chat-response.dto';
-import { ChatMessagesQueryDto } from './dto/request/chat-query.dto';
+import {
+  ChatMessagesQueryDto,
+  ChatRoomsQueryDto,
+} from './dto/request/chat-query.dto';
 import { SendMessageDto } from './dto/request/send-message.dto';
 
 @ApiTags('Chat')
@@ -30,6 +34,16 @@ export class ChatController {
     @Inject(CHAT_SERVICE)
     private readonly _chatService: IChatService,
   ) {}
+
+  @Get('rooms')
+  @ApiOperation({ summary: 'List chat rooms for the current user' })
+  @ApiOkResponse({ type: ChatRoomListResponseDto })
+  async getRooms(
+    @UserId() userId: string,
+    @Query() query: ChatRoomsQueryDto,
+  ): Promise<ChatRoomListResponseDto> {
+    return this._chatService.getUserRooms(userId, query.role);
+  }
 
   @Get('rooms/:bookingId')
   @ApiOperation({ summary: 'Get or initialize a chat room for a booking' })

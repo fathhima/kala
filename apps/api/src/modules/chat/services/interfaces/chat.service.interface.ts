@@ -1,6 +1,7 @@
 import { MessageType } from '../../enums/message-type.enum';
 import {
   ChatMessageResponseDto,
+  ChatRoomListResponseDto,
   ChatRoomResponseDto,
   PaginatedChatMessagesResponseDto,
 } from '../../dto/response/chat-response.dto';
@@ -8,6 +9,10 @@ import {
 export const CHAT_SERVICE = Symbol('CHAT_SERVICE');
 
 export interface IChatService {
+  getUserRooms(
+    userId: string,
+    role?: 'STUDENT' | 'INSTRUCTOR',
+  ): Promise<ChatRoomListResponseDto>;
   getOrCreateRoom(userId: string, bookingId: string): Promise<ChatRoomResponseDto>;
   getRoomMessages(
     userId: string,

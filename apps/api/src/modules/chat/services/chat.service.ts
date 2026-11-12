@@ -11,6 +11,8 @@ import {
 } from '../repositories/interfaces/chat.repository.interface';
 import {
   ChatMessageResponseDto,
+  ChatRoomDto,
+  ChatRoomListResponseDto,
   ChatRoomResponseDto,
   PaginatedChatMessagesResponseDto,
 } from '../dto/response/chat-response.dto';
@@ -25,6 +27,30 @@ export class ChatService implements IChatService {
     @Inject(CHAT_REPOSITORY)
     private readonly _chatRepo: IChatRepository,
   ) {}
+
+  async getUserRooms(
+    userId: string,
+    role?: 'STUDENT' | 'INSTRUCTOR',
+  ): Promise<ChatRoomListResponseDto> {
+    const rooms = await this._chatRepo.findRoomsForUser(userId, role);
+    const unreadCounts = await this._chatRepo.getUnreadCountsByRoomIds(
+      rooms.map((room) => room.id),
+      userId,
+    );
+
+    const items = rooms.map((room) => {
+      const access = this._evaluateCanWrite(room.bookingStatus, room.slotEndTime);
+      return ChatRoomDto.fromEntity(room, {
+        ...access,
+        unreadCount: unreadCounts[room.id] ?? 0,
+      });
+    });
+
+    return ChatRoomListResponseDto.fromItems(
+      'Chat rooms fetched successfully',
+      items,
+    );
+  }
 
   async getOrCreateRoom(userId: string, bookingId: string): Promise<ChatRoomResponseDto> {
     const access = await this._resolveRoomAndPermission(userId, bookingId);

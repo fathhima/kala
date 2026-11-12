@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class ChatMessagesQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })
@@ -17,4 +17,11 @@ export class ChatMessagesQueryDto {
   @Min(1)
   @Max(100)
   limit: number = 50;
+}
+
+export class ChatRoomsQueryDto {
+  @ApiPropertyOptional({ enum: ['STUDENT', 'INSTRUCTOR'] })
+  @IsOptional()
+  @IsIn(['STUDENT', 'INSTRUCTOR'])
+  role?: 'STUDENT' | 'INSTRUCTOR';
 }

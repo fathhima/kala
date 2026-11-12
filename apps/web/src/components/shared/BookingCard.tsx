@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, Clock, CreditCard, ArrowRight } from 'lucide-react'
+import { Calendar, Clock, CreditCard, ArrowRight, MessageSquare } from 'lucide-react'
 import type { BookingDto } from '@/api'
 import { Card } from '../ui/Card'
 import { Avatar } from '../ui/Avatar'
@@ -89,12 +89,22 @@ export function BookingCard({ booking }: { booking: BookingDto }) {
                 <CreditCard size={13} /> Complete Payment
               </Link>
             ) : (
-              <Link
-                to={targetLink}
-                className="inline-flex items-center gap-1 text-xs font-medium text-kala-terracotta hover:underline"
-              >
-                View Details <ArrowRight size={12} />
-              </Link>
+              <>
+                {(booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') && (
+                  <Link
+                    to={`/dashboard/messages?bookingId=${booking.id}`}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-lg transition-colors"
+                  >
+                    <MessageSquare size={12} className="text-kala-amber" /> Chat
+                  </Link>
+                )}
+                <Link
+                  to={targetLink}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-kala-terracotta hover:underline"
+                >
+                  View Details <ArrowRight size={12} />
+                </Link>
+              </>
             )}
           </div>
         </div>

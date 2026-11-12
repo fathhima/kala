@@ -10,6 +10,10 @@ export const CHAT_REPOSITORY = Symbol('CHAT_REPOSITORY');
 export interface IChatRepository {
   findRoomByBookingId(bookingId: string): Promise<ChatRoomEntity | null>;
   findRoomById(roomId: string): Promise<ChatRoomEntity | null>;
+  findRoomsForUser(
+    userId: string,
+    role?: 'STUDENT' | 'INSTRUCTOR',
+  ): Promise<ChatRoomEntity[]>;
   createRoom(bookingId: string): Promise<ChatRoomEntity>;
   saveMessage(data: {
     roomId: string;
@@ -23,5 +27,9 @@ export interface IChatRepository {
   ): Promise<PaginatedChatMessageEntity>;
   markMessagesAsRead(roomId: string, recipientUserId: string): Promise<number>;
   getUnreadCount(roomId: string, recipientUserId: string): Promise<number>;
+  getUnreadCountsByRoomIds(
+    roomIds: string[],
+    recipientUserId: string,
+  ): Promise<Record<string, number>>;
   bookingExists(bookingId: string): Promise<boolean>;
 }

@@ -14,6 +14,7 @@ export class ChatRoomEntity {
   createdAt!: Date;
   updatedAt!: Date;
   bookingStatus!: string;
+  offeringTitle!: string;
   slotStartTime!: Date;
   slotEndTime!: Date;
   student!: ChatParticipantEntity;

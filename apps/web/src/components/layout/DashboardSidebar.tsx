@@ -7,6 +7,7 @@ export interface NavItem {
   label: string
   path: string
   icon: React.ReactNode
+  badge?: number
 }
 
 interface SidebarProps {
@@ -63,7 +64,12 @@ export function DashboardSidebar({ navItems, role }: SidebarProps) {
               <span className={cn('shrink-0', isActive ? 'text-kala-terracotta' : 'text-stone-400')}>
                 {item.icon}
               </span>
-              {item.label}
+              <span className="flex-1 truncate">{item.label}</span>
+              {typeof item.badge === 'number' && item.badge > 0 && (
+                <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-kala-amber text-white text-[11px] font-bold flex items-center justify-center">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </Link>
           )
         })}

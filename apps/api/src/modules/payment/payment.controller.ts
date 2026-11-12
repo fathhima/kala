@@ -8,7 +8,12 @@ import { RawBody } from '@/shared/decorators/raw-body.decorator';
 import { UserRole } from '@/shared/enums/role.enum';
 import { PAYMENT_SERVICE, type IPaymentService, } from './services/interfaces/payment.service.interface';
 import { CreateCheckoutDto, PaymentQueryDto, RefundPaymentDto } from './dto/request/payment.request.dto';
-import { CheckoutResponseDto, PaginatedPaymentsResponseDto, PaymentResponseDto, } from './dto/response/payment.response.dto';
+import {
+    CheckoutResponseDto,
+    InstructorPaymentsResponseDto,
+    PaginatedPaymentsResponseDto,
+    PaymentResponseDto,
+} from './dto/response/payment.response.dto';
 
 @ApiTags('Payments')
 @Controller()
@@ -49,6 +54,17 @@ export class PaymentController {
     async handleWebhook(@RawBody() rawBody: Buffer, @Headers('x-razorpay-signature') signature: string) {
         await this._paymentService.handleWebhook(rawBody, signature);
         return { received: true };
+    }
+
+    @Get('payments/instructor')
+    @Roles(UserRole.INSTRUCTOR)
+    @ApiOperation({ summary: 'List instructor earnings and session payments' })
+    @ApiOkResponse({ type: InstructorPaymentsResponseDto })
+    async listInstructorPayments(
+        @UserId() userId: string,
+        @Query() query: PaymentQueryDto,
+    ): Promise<InstructorPaymentsResponseDto> {
+        return this._paymentService.listInstructorPayments(userId, query);
     }
 
     @Get('payments/:paymentId')

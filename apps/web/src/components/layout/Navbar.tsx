@@ -1,33 +1,33 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { Palette, Menu, X, ChevronDown, LogOut, User, LayoutDashboard } from 'lucide-react'
-import { useState } from 'react'
-import { Avatar } from '../ui/Avatar'
-import { Button } from '../ui/Button'
-import { useAuthStore } from '@/features/auth/store'
-import { useLogoutMutation } from '@/features/auth/hooks'
+import { ChevronDown, LayoutDashboard, LogOut, Menu, Palette, User, X } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useLogoutMutation } from '@/features/auth/hooks';
+import { useAuthStore } from '@/features/auth/store';
+import { Avatar } from '../ui/Avatar';
+import { Button } from '../ui/Button';
 
 export function Navbar() {
-  const { user, isAuthenticated, clearAuth } = useAuthStore()
-  const logoutMutation = useLogoutMutation()
-  const navigate = useNavigate()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const logoutMutation = useLogoutMutation();
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync()
+      await logoutMutation.mutateAsync();
     } finally {
-      clearAuth()
-      navigate('/', { replace: true })
+      clearAuth();
+      navigate('/', { replace: true });
     }
-  }
+  };
 
   const getDashboardLink = () => {
-    if (!user) return '/dashboard'
-    if (user.roles.includes('ADMIN')) return '/admin'
-    if (user.roles.includes('INSTRUCTOR')) return '/instructor'
-    return '/dashboard'
-  }
+    if (!user) return '/dashboard';
+    if (user.roles.includes('ADMIN')) return '/admin';
+    if (user.roles.includes('INSTRUCTOR')) return '/instructor';
+    return '/dashboard';
+  };
 
   return (
     <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-100 shadow-sm">
@@ -39,11 +39,29 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/skills" className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium">
+            <Link
+              to="/skills"
+              className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium"
+            >
               Browse Skills
             </Link>
-            <Link to="/instructors" className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium">
+            <Link
+              to="/instructors"
+              className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium"
+            >
               Instructors
+            </Link>
+            <Link
+              to="/about"
+              className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium"
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className="text-sm text-stone-600 hover:text-kala-terracotta transition-colors font-medium"
+            >
+              Contact
             </Link>
           </div>
 
@@ -55,7 +73,9 @@ export function Navbar() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-50 transition-colors"
                 >
                   <Avatar name={user.name} src={user.imageUrl ?? undefined} size="sm" />
-                  <span className="text-sm font-medium text-stone-700">{user.name.split(' ')[0]}</span>
+                  <span className="text-sm font-medium text-stone-700">
+                    {user.name.split(' ')[0]}
+                  </span>
                   <ChevronDown size={14} className="text-stone-400" />
                 </button>
                 {userMenuOpen && (
@@ -90,7 +110,9 @@ export function Navbar() {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm">Login</Button>
+                  <Button variant="ghost" size="sm">
+                    Login
+                  </Button>
                 </Link>
                 <Link to="/register">
                   <Button size="sm">Get Started</Button>
@@ -109,31 +131,64 @@ export function Navbar() {
 
         {mobileOpen && (
           <div className="md:hidden py-4 border-t border-stone-100 space-y-2">
-            <Link to="/skills" className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/skills"
+              className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg"
+              onClick={() => setMobileOpen(false)}
+            >
               Browse Skills
             </Link>
-            <Link to="/instructors" className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/instructors"
+              className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg"
+              onClick={() => setMobileOpen(false)}
+            >
               Instructors
+            </Link>
+            <Link
+              to="/about"
+              className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg"
+              onClick={() => setMobileOpen(false)}
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg"
+              onClick={() => setMobileOpen(false)}
+            >
+              Contact
             </Link>
             {isAuthenticated ? (
               <>
-                <Link to={getDashboardLink()} className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg" onClick={() => setMobileOpen(false)}>
+                <Link
+                  to={getDashboardLink()}
+                  className="block px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg"
+                  onClick={() => setMobileOpen(false)}
+                >
                   Dashboard
                 </Link>
-                <button onClick={async () => {
-                  setMobileOpen(false)
-                  await handleLogout()
-                }} className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">
+                <button
+                  onClick={async () => {
+                    setMobileOpen(false);
+                    await handleLogout();
+                  }}
+                  className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg"
+                >
                   Logout
                 </button>
               </>
             ) : (
               <div className="flex gap-2 px-3 pt-2">
                 <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">Login</Button>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Login
+                  </Button>
                 </Link>
                 <Link to="/register" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button size="sm" className="w-full">Get Started</Button>
+                  <Button size="sm" className="w-full">
+                    Get Started
+                  </Button>
                 </Link>
               </div>
             )}
@@ -141,5 +196,5 @@ export function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }

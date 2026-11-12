@@ -5,11 +5,13 @@ import {
   recordPaymentFailure,
   getAdminPayments,
   getAdminPaymentById,
+  getInstructorPayments,
   getPayment,
   getPaymentByBooking,
   getStudentPayments,
   refundPayment,
   type AdminPaymentListQuery,
+  type InstructorPaymentsData,
   type PaymentListQuery,
 } from './api'
 
@@ -18,6 +20,7 @@ import {
 export const paymentKeys = {
   all: ['payments'] as const,
   student: ['payments', 'student'] as const,
+  instructor: ['payments', 'instructor'] as const,
   admin: ['payments', 'admin'] as const,
   detail: (paymentId: string) => ['payments', 'detail', paymentId] as const,
   byBooking: (bookingId: string) =>
@@ -106,6 +109,16 @@ export const useRecordPaymentFailureMutation = () => {
     },
   })
 }
+
+// ─── Instructor ─────────────────────────────────────────────────────────────
+
+export const useInstructorPaymentsQuery = (query: PaymentListQuery) =>
+  useQuery<InstructorPaymentsData>({
+    queryKey: [...paymentKeys.instructor, query],
+    queryFn: () => getInstructorPayments(query),
+    placeholderData: (previousData: InstructorPaymentsData | undefined) =>
+      previousData,
+  })
 
 // ─── Admin ──────────────────────────────────────────────────────────────────
 

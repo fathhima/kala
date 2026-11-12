@@ -51,6 +51,16 @@ export const chatRoomInclude = Prisma.validator<Prisma.ChatRoomInclude>()({
           endTime: true,
         },
       },
+      offering: {
+        select: {
+          title: true,
+          subcategory: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   },
   messages: {
@@ -113,6 +123,10 @@ export class ChatMapper {
     entity.createdAt = record.createdAt;
     entity.updatedAt = record.updatedAt;
     entity.bookingStatus = record.booking.status;
+    entity.offeringTitle =
+      record.booking.offering?.title ||
+      record.booking.offering?.subcategory?.name ||
+      'Session';
     entity.slotStartTime = record.booking.slot.startTime;
     entity.slotEndTime = record.booking.slot.endTime;
     entity.student = student;

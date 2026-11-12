@@ -29,7 +29,7 @@ export function Login() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<Loginfields, string>>>({})
-  const [_errorMessage, setErrorMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (field: keyof LoginDto, value: string) => {
     setFormData((prev) => ({
@@ -144,6 +144,12 @@ export function Login() {
                 Forgot password?
               </Link>
             </div>
+
+            {errorMessage && (
+              <p className="text-sm text-red-500" role="alert">
+                {errorMessage}
+              </p>
+            )}
 
             <Button type="submit" loading={loginMutation.isPending} className="w-full">
               Sign In

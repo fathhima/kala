@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Mail,
   AlertCircle,
+  MessageSquare,
 } from 'lucide-react'
 import { useInstructorBookingsQuery } from '@/features/booking/hooks'
 import { Avatar } from '@/components/ui/Avatar'
@@ -260,6 +261,16 @@ export function MySessions() {
                       className="flex items-center gap-2 mt-1"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {(_isConfirmed || _isCompleted) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-xs text-stone-700 bg-stone-100 hover:bg-stone-200/80"
+                          onClick={() => navigate(`/instructor/messages?bookingId=${booking.id}`)}
+                        >
+                          <MessageSquare size={13} className="text-kala-amber" /> Chat
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"

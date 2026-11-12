@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CheckoutEntity, PaymentEntity, PaginatedPaymentEntity, } from '../../entities/payment.entity';
+import {
+    CheckoutEntity,
+    InstructorPaymentItemEntity,
+    InstructorPaymentSummaryEntity,
+    InstructorPaymentsPageEntity,
+    PaymentEntity,
+    PaginatedPaymentEntity,
+} from '../../entities/payment.entity';
 import { PaymentStatus, PaymentGateway } from '../../enums/payment.enum';
 
 export class PaymentDto {
@@ -147,6 +154,124 @@ export class PaginatedPaymentsResponseDto {
         dto.message = message;
         dto.data = {
             items: entity.items.map(PaymentDto.fromEntity),
+            meta: {
+                page: entity.page,
+                limit: entity.limit,
+                total: entity.total,
+                totalPages: Math.ceil(entity.total / entity.limit) || 0,
+            },
+        };
+        return dto;
+    }
+}
+
+export class InstructorPaymentStudentDto {
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    name!: string;
+
+    @ApiPropertyOptional({ type: String, nullable: true })
+    imageUrl!: string | null;
+}
+
+export class InstructorPaymentSummaryDto {
+    @ApiProperty()
+    totalEarned!: number;
+
+    @ApiProperty()
+    paidCount!: number;
+
+    @ApiProperty()
+    thisMonthEarned!: number;
+
+    @ApiProperty()
+    totalRefunded!: number;
+
+    @ApiProperty()
+    refundedCount!: number;
+
+    @ApiProperty()
+    pendingAmount!: number;
+
+    @ApiProperty()
+    pendingCount!: number;
+
+    static fromEntity(entity: InstructorPaymentSummaryEntity): InstructorPaymentSummaryDto {
+        const dto = new InstructorPaymentSummaryDto();
+        dto.totalEarned = entity.totalEarned;
+        dto.paidCount = entity.paidCount;
+        dto.thisMonthEarned = entity.thisMonthEarned;
+        dto.totalRefunded = entity.totalRefunded;
+        dto.refundedCount = entity.refundedCount;
+        dto.pendingAmount = entity.pendingAmount;
+        dto.pendingCount = entity.pendingCount;
+        return dto;
+    }
+}
+
+export class InstructorPaymentItemDto extends PaymentDto {
+    @ApiProperty()
+    bookingStatus!: string;
+
+    @ApiProperty()
+    offeringTitle!: string;
+
+    @ApiProperty()
+    slotStartTime!: string;
+
+    @ApiProperty()
+    slotEndTime!: string;
+
+    @ApiProperty()
+    durationMinutes!: number;
+
+    @ApiProperty({ type: InstructorPaymentStudentDto })
+    student!: InstructorPaymentStudentDto;
+
+    static fromInstructorEntity(entity: InstructorPaymentItemEntity): InstructorPaymentItemDto {
+        const dto = Object.assign(
+            new InstructorPaymentItemDto(),
+            PaymentDto.fromEntity(entity),
+        );
+        dto.bookingStatus = entity.bookingStatus;
+        dto.offeringTitle = entity.offeringTitle;
+        dto.slotStartTime = entity.slotStartTime.toISOString();
+        dto.slotEndTime = entity.slotEndTime.toISOString();
+        dto.durationMinutes = entity.durationMinutes;
+        dto.student = { ...entity.student };
+        return dto;
+    }
+}
+
+export class InstructorPaymentsDataDto {
+    @ApiProperty({ type: InstructorPaymentSummaryDto })
+    summary!: InstructorPaymentSummaryDto;
+
+    @ApiProperty({ type: [InstructorPaymentItemDto] })
+    items!: InstructorPaymentItemDto[];
+
+    @ApiProperty({ type: PaymentPaginationMetaDto })
+    meta!: PaymentPaginationMetaDto;
+}
+
+export class InstructorPaymentsResponseDto {
+    @ApiProperty({ example: 'Instructor payments fetched successfully' })
+    message!: string;
+
+    @ApiProperty({ type: InstructorPaymentsDataDto })
+    data!: InstructorPaymentsDataDto;
+
+    static fromEntity(
+        message: string,
+        entity: InstructorPaymentsPageEntity,
+    ): InstructorPaymentsResponseDto {
+        const dto = new InstructorPaymentsResponseDto();
+        dto.message = message;
+        dto.data = {
+            summary: InstructorPaymentSummaryDto.fromEntity(entity.summary),
+            items: entity.items.map(InstructorPaymentItemDto.fromInstructorEntity),
             meta: {
                 page: entity.page,
                 limit: entity.limit,

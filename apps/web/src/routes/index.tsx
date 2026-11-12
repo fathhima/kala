@@ -1,46 +1,51 @@
-import { VerifyOtp } from "@/pages/auth/verify-otp";
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./protected-route";
-import { StudentLayout } from "@/components/layout/StudentLayout";
-import { PublicLayout } from "@/components/layout/PublicLayout";
-import { Landing } from "@/pages/public/Landing";
-import { Register } from "@/pages/auth/Register";
-import { Login } from "@/pages/auth/Login";
-import { PublicOnlyRoute } from "./public-only-route";
-import { ForgotPassword } from "@/pages/auth/ForgotPassword";
-import { ResetPassword } from "@/pages/auth/ResetPassword";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { AdminLogin } from "@/pages/auth/AdminLogin";
-import { ManageUsers } from "@/pages/admin/ManageUsers";
-import { AdminDashboard } from "@/pages/admin/Dashboard";
-import { UserDetails } from "@/pages/admin/UserDetails";
-import { BrowseSkills } from "@/pages/public/BrowseSkills";
-import { BrowseInstructors } from "@/pages/public/BrowseInstructors";
-import { InstructorProfile } from "@/pages/public/InstructorProfile";
-import { InstructorLayout } from "@/components/layout/InstructorLayout";
-import { StudentDashboard } from "@/pages/student/Dashboard";
-import { MyBookings } from "@/pages/student/MyBookings";
-import { BookingDetails } from "@/pages/student/BookingDetails";
-import { BookingChat } from "@/pages/student/BookingChat";
-import { BecomeInstructor } from "@/pages/student/BecomeInstructor";
-import { Payment } from "@/pages/student/Payment";
-import { InstructorDashboard } from "@/pages/instructor/Dashboard";
-import { ManageSlots } from "@/pages/instructor/ManageSlots";
-import { MySessions } from "@/pages/instructor/MySessions";
-import { InstructorSessionDetails } from "@/pages/instructor/SessionDetails";
-import { InstructorSessionChat } from "@/pages/instructor/SessionChat";
-import { Portfolio } from "@/pages/instructor/Portfolio";
-import { InstructorSkills } from "@/pages/instructor/Skills";
-import { InstructorApplications } from "@/pages/admin/InstructorApplications";
-import { ApplicationDetails } from "@/pages/admin/ApplicationDetails";
-import { ManageSkills } from "@/pages/admin/ManageSkills";
-import { BookingMonitoring } from "@/pages/admin/BookingMonitoring";
-import { AdminBookingDetails } from "@/pages/admin/BookingDetails";
-import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
-import { AdminPaymentDetails } from "@/pages/admin/PaymentDetails";
-import { InstructorOfferings } from "@/pages/instructor/Offerings";
-import { AccountSettings } from "@/pages/account/AccountSettings";
-import { VideoCallPage } from "@/pages/session/VideoCallPage";
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { InstructorLayout } from '@/components/layout/InstructorLayout';
+import { PublicLayout } from '@/components/layout/PublicLayout';
+import { StudentLayout } from '@/components/layout/StudentLayout';
+import { AccountSettings } from '@/pages/account/AccountSettings';
+import { ApplicationDetails } from '@/pages/admin/ApplicationDetails';
+import { AdminBookingDetails } from '@/pages/admin/BookingDetails';
+import { BookingMonitoring } from '@/pages/admin/BookingMonitoring';
+import { AdminDashboard } from '@/pages/admin/Dashboard';
+import { InstructorApplications } from '@/pages/admin/InstructorApplications';
+import { ManageSkills } from '@/pages/admin/ManageSkills';
+import { ManageUsers } from '@/pages/admin/ManageUsers';
+import { AdminPaymentDetails } from '@/pages/admin/PaymentDetails';
+import { PaymentsOverview } from '@/pages/admin/PaymentsOverview';
+import { UserDetails } from '@/pages/admin/UserDetails';
+import { AdminLogin } from '@/pages/auth/AdminLogin';
+import { ForgotPassword } from '@/pages/auth/ForgotPassword';
+import { Login } from '@/pages/auth/Login';
+import { Register } from '@/pages/auth/Register';
+import { ResetPassword } from '@/pages/auth/ResetPassword';
+import { VerifyOtp } from '@/pages/auth/verify-otp';
+import { InstructorDashboard } from '@/pages/instructor/Dashboard';
+import { ManageSlots } from '@/pages/instructor/ManageSlots';
+import { InstructorMessages } from '@/pages/instructor/Messages';
+import { MySessions } from '@/pages/instructor/MySessions';
+import { InstructorOfferings } from '@/pages/instructor/Offerings';
+import { InstructorPayments } from '@/pages/instructor/Payments';
+import { Portfolio } from '@/pages/instructor/Portfolio';
+import { InstructorSessionChat } from '@/pages/instructor/SessionChat';
+import { InstructorSessionDetails } from '@/pages/instructor/SessionDetails';
+import { InstructorSkills } from '@/pages/instructor/Skills';
+import { About } from '@/pages/public/About';
+import { BrowseInstructors } from '@/pages/public/BrowseInstructors';
+import { BrowseSkills } from '@/pages/public/BrowseSkills';
+import { Contact } from '@/pages/public/Contact';
+import { InstructorProfile } from '@/pages/public/InstructorProfile';
+import { Landing } from '@/pages/public/Landing';
+import { VideoCallPage } from '@/pages/session/VideoCallPage';
+import { BecomeInstructor } from '@/pages/student/BecomeInstructor';
+import { BookingChat } from '@/pages/student/BookingChat';
+import { BookingDetails } from '@/pages/student/BookingDetails';
+import { StudentDashboard } from '@/pages/student/Dashboard';
+import { StudentMessages } from '@/pages/student/Messages';
+import { MyBookings } from '@/pages/student/MyBookings';
+import { Payment } from '@/pages/student/Payment';
+import { ProtectedRoute } from './protected-route';
+import { PublicOnlyRoute } from './public-only-route';
 
 const StudentApp = () => (
   <ProtectedRoute>
@@ -66,21 +71,29 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Landing />
+        element: <Landing />,
       },
       {
         path: '/skills',
-        element: <BrowseSkills />
+        element: <BrowseSkills />,
       },
       {
         path: '/instructors',
-        element: <BrowseInstructors />
+        element: <BrowseInstructors />,
       },
       {
         path: '/instructors/:profileId',
-        element: <InstructorProfile />
-      }
-    ]
+        element: <InstructorProfile />,
+      },
+      {
+        path: '/about',
+        element: <About />,
+      },
+      {
+        path: '/contact',
+        element: <Contact />,
+      },
+    ],
   },
   {
     path: '/login',
@@ -88,7 +101,7 @@ export const router = createBrowserRouter([
       <PublicOnlyRoute>
         <Login />
       </PublicOnlyRoute>
-    )
+    ),
   },
   {
     path: '/register',
@@ -96,7 +109,7 @@ export const router = createBrowserRouter([
       <PublicOnlyRoute>
         <Register />
       </PublicOnlyRoute>
-    )
+    ),
   },
   {
     path: '/verify-otp',
@@ -104,10 +117,10 @@ export const router = createBrowserRouter([
       <PublicOnlyRoute>
         <VerifyOtp />
       </PublicOnlyRoute>
-    )
+    ),
   },
   {
-    path: "/forgot-password",
+    path: '/forgot-password',
     element: (
       <PublicOnlyRoute>
         <ForgotPassword />
@@ -115,7 +128,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/reset-password",
+    path: '/reset-password',
     element: <ResetPassword />,
   },
   {
@@ -134,10 +147,11 @@ export const router = createBrowserRouter([
       { path: 'bookings', element: <MyBookings /> },
       { path: 'bookings/:id', element: <BookingDetails /> },
       { path: 'bookings/:id/chat', element: <BookingChat /> },
+      { path: 'messages', element: <StudentMessages /> },
       // { path: 'payments', element: <PaymentHistory /> },
       { path: 'become-instructor', element: <BecomeInstructor /> },
       { path: 'settings', element: <AccountSettings /> },
-    ]
+    ],
   },
   {
     path: '/checkout/:bookingId',
@@ -183,10 +197,11 @@ export const router = createBrowserRouter([
       { path: 'sessions', element: <MySessions /> },
       { path: 'sessions/:id', element: <InstructorSessionDetails /> },
       { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
+      { path: 'messages', element: <InstructorMessages /> },
+      { path: 'payments', element: <InstructorPayments /> },
       // { path: 'reviews', element: <Reviews /> },
-      // { path: 'payments', element: <InstructorPayments /> },
       { path: 'settings', element: <AccountSettings /> },
-    ]
+    ],
   },
   {
     path: '/admin',
@@ -202,10 +217,10 @@ export const router = createBrowserRouter([
       { path: 'bookings/:id', element: <AdminBookingDetails /> },
       { path: 'payments', element: <PaymentsOverview /> },
       { path: 'payments/:id', element: <AdminPaymentDetails /> },
-    ]
+    ],
   },
   {
     path: '*',
-    element: <Navigate to='/register' replace />
-  }
-])
+    element: <Navigate to="/register" replace />,
+  },
+]);

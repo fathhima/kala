@@ -33,3 +33,34 @@ export class PaginatedPaymentEntity {
     page!: number;
     limit!: number;
 }
+
+export class InstructorPaymentSummaryEntity {
+    totalEarned!: number;
+    paidCount!: number;
+    thisMonthEarned!: number;
+    totalRefunded!: number;
+    refundedCount!: number;
+    pendingAmount!: number;
+    pendingCount!: number;
+}
+
+export class InstructorPaymentItemEntity extends PaymentEntity {
+    bookingStatus!: string;
+    offeringTitle!: string;
+    slotStartTime!: Date;
+    slotEndTime!: Date;
+    durationMinutes!: number;
+    student!: {
+        id: string;
+        name: string;
+        imageUrl: string | null;
+    };
+}
+
+export class InstructorPaymentsPageEntity {
+    summary!: InstructorPaymentSummaryEntity;
+    items!: InstructorPaymentItemEntity[];
+    total!: number;
+    page!: number;
+    limit!: number;
+}

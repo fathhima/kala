@@ -1,121 +1,137 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-    cancelInstructorApplication,
-    createOffering, getOfferingMediaUrl, getOnboardingWorkspace, getPublicInstructor, getPublicInstructors, removeOffering, removeOfferingMedia, saveInstructorProfile,
-    submitInstructorApplication, updateOffering, uploadOfferingMedia,
-} from './api'
+  cancelInstructorApplication,
+  createOffering,
+  getInstructorAnalytics,
+  getOfferingMediaUrl,
+  getOnboardingWorkspace,
+  getPublicInstructor,
+  getPublicInstructors,
+  type InstructorAnalyticsData,
+  type InstructorAnalyticsRange,
+  removeOffering,
+  removeOfferingMedia,
+  saveInstructorProfile,
+  submitInstructorApplication,
+  updateOffering,
+  uploadOfferingMedia,
+} from './api';
 
-const workspaceKey = ['instructor-onboarding']
+const workspaceKey = ['instructor-onboarding'];
 
 export const usePublicInstructorsQuery = (params: {
-    page: number
-    limit: number
-    search?: string
-    subcategoryId?: string
+  page: number;
+  limit: number;
+  search?: string;
+  subcategoryId?: string;
 }) =>
-    useQuery({
-        queryKey: ['instructors', 'public', params],
-        queryFn: () => getPublicInstructors(params),
-        placeholderData: (previousData) => previousData,
-    })
+  useQuery({
+    queryKey: ['instructors', 'public', params],
+    queryFn: () => getPublicInstructors(params),
+    placeholderData: (previousData) => previousData,
+  });
 
 export const usePublicInstructorQuery = (profileId: string) =>
-    useQuery({
-        queryKey: ['instructors', 'public', profileId],
-        queryFn: () => getPublicInstructor(profileId),
-        enabled: Boolean(profileId),
-    })
+  useQuery({
+    queryKey: ['instructors', 'public', profileId],
+    queryFn: () => getPublicInstructor(profileId),
+    enabled: Boolean(profileId),
+  });
 
 const useInvalidateWorkspace = () => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return () => queryClient.invalidateQueries({ queryKey: workspaceKey })
-}
+  return () => queryClient.invalidateQueries({ queryKey: workspaceKey });
+};
 
 export const useOnboardingWorkspaceQuery = () =>
-    useQuery({
-        queryKey: workspaceKey,
-        queryFn: getOnboardingWorkspace,
-    })
+  useQuery({
+    queryKey: workspaceKey,
+    queryFn: getOnboardingWorkspace,
+  });
 
 export const useSaveInstructorProfileMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: saveInstructorProfile,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: saveInstructorProfile,
+    onSuccess: invalidate,
+  });
+};
 
 export const useCreateOfferingMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: createOffering,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: createOffering,
+    onSuccess: invalidate,
+  });
+};
 
 export const useUpdateOfferingMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: updateOffering,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: updateOffering,
+    onSuccess: invalidate,
+  });
+};
 
 export const useRemoveOfferingMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: removeOffering,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: removeOffering,
+    onSuccess: invalidate,
+  });
+};
 
 export const useUploadOfferingMediaMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: uploadOfferingMedia,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: uploadOfferingMedia,
+    onSuccess: invalidate,
+  });
+};
 
 export const useRemoveOfferingMediaMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: removeOfferingMedia,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: removeOfferingMedia,
+    onSuccess: invalidate,
+  });
+};
 
-export const useOfferingMediaUrlQuery = (
-    offeringId: string,
-    mediaId: string,
-) =>
-    useQuery({
-        queryKey: ['offering-media-url', offeringId, mediaId],
-        queryFn: () => getOfferingMediaUrl({ offeringId, mediaId }),
-        staleTime: 10 * 60 * 1000,
-    })
+export const useOfferingMediaUrlQuery = (offeringId: string, mediaId: string) =>
+  useQuery({
+    queryKey: ['offering-media-url', offeringId, mediaId],
+    queryFn: () => getOfferingMediaUrl({ offeringId, mediaId }),
+    staleTime: 10 * 60 * 1000,
+  });
 
 export const useSubmitInstructorApplicationMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: submitInstructorApplication,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: submitInstructorApplication,
+    onSuccess: invalidate,
+  });
+};
 
 export const useCancelInstructorApplicationMutation = () => {
-    const invalidate = useInvalidateWorkspace()
+  const invalidate = useInvalidateWorkspace();
 
-    return useMutation({
-        mutationFn: cancelInstructorApplication,
-        onSuccess: invalidate,
-    })
-}
+  return useMutation({
+    mutationFn: cancelInstructorApplication,
+    onSuccess: invalidate,
+  });
+};
+
+export const useInstructorAnalyticsQuery = (range: InstructorAnalyticsRange = '30d') =>
+  useQuery<InstructorAnalyticsData>({
+    queryKey: ['instructor-analytics', range],
+    queryFn: () => getInstructorAnalytics(range),
+    placeholderData: (previousData: InstructorAnalyticsData | undefined) => previousData,
+  });

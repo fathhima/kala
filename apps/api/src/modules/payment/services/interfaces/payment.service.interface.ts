@@ -1,5 +1,10 @@
 import { PaymentQueryDto } from '../../dto/request/payment.request.dto';
-import { PaymentResponseDto, CheckoutResponseDto, PaginatedPaymentsResponseDto } from '../../dto/response/payment.response.dto';
+import {
+  CheckoutResponseDto,
+  InstructorPaymentsResponseDto,
+  PaginatedPaymentsResponseDto,
+  PaymentResponseDto,
+} from '../../dto/response/payment.response.dto';
 import { UserRole } from '@/shared/enums/role.enum';
 
 export const PAYMENT_SERVICE = Symbol('PAYMENT_SERVICE');
@@ -10,6 +15,7 @@ export interface IPaymentService {
     getPayment(paymentId: string, studentId: string): Promise<PaymentResponseDto>;
     getPaymentByBooking(bookingId: string, userId: string, roles?: UserRole[]): Promise<PaymentResponseDto>;
     listStudentPayments(studentId: string, query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto>;
+    listInstructorPayments(instructorUserId: string, query: PaymentQueryDto): Promise<InstructorPaymentsResponseDto>;
     listAdminPayments(query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto>;
     getAdminPayment(paymentId: string): Promise<PaymentResponseDto>;
     refundPayment(bookingId: string, actorId: string, reason?: string): Promise<PaymentResponseDto>;

@@ -1,14 +1,17 @@
+import { useMemo } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Settings, Menu, LogOut, GraduationCap, CalendarCheck } from 'lucide-react'
+import { LayoutDashboard, Settings, Menu, LogOut, GraduationCap, CalendarCheck, MessageSquare } from 'lucide-react'
 import { DashboardSidebar } from './DashboardSidebar'
 import { Avatar } from '../ui/Avatar'
 import { useUIStore } from '../../lib/uiStore'
 import { useAuthStore } from '@/features/auth/store'
 import { useLogoutMutation } from '@/features/auth/hooks'
+import { type ChatRoomListItem, useChatRoomsQuery } from '@/features/chat'
 
-const navItems = [
+const baseNavItems = [
   { label: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
   { label: 'My Bookings', path: '/dashboard/bookings', icon: <CalendarCheck size={18} /> },
+  { label: 'Messages', path: '/dashboard/messages', icon: <MessageSquare size={18} /> },
   { label: 'Become an Instructor', path: '/dashboard/become-instructor', icon: <GraduationCap size={18} /> },
   { label: 'Profile Settings', path: '/dashboard/settings', icon: <Settings size={18} /> },
 ]
@@ -19,6 +22,21 @@ export function StudentLayout() {
   const logoutMutation = useLogoutMutation()
   const { toggleSidebar } = useUIStore()
   const navigate = useNavigate()
+  const { data: chatRoomsData } = useChatRoomsQuery('STUDENT', Boolean(user))
+  const chatRooms: ChatRoomListItem[] = chatRoomsData ?? []
+
+  const unreadCount = useMemo(
+    () => chatRooms.reduce((sum, room) => sum + (room.unreadCount ?? 0), 0),
+    [chatRooms],
+  )
+
+  const navItems = useMemo(
+    () =>
+      baseNavItems.map((item) =>
+        item.path === '/dashboard/messages' ? { ...item, badge: unreadCount } : item,
+      ),
+    [unreadCount],
+  )
 
   const handleLogout = async () => {
     try {
@@ -44,6 +62,19 @@ export function StudentLayout() {
           </button>
 
           <div className="ml-auto flex items-center gap-3">
+            <Link
+              to="/dashboard/messages"
+              className="relative rounded-lg p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+              title="Messages"
+              aria-label="Messages"
+            >
+              <MessageSquare size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-kala-amber text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </Link>
 
             {user?.roles.includes('INSTRUCTOR') && (
               <Link

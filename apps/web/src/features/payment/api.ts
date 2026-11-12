@@ -39,6 +39,35 @@ export type AdminPaymentListQuery = {
   to?: string
 }
 
+export type InstructorPaymentSummary = {
+  totalEarned: number
+  paidCount: number
+  thisMonthEarned: number
+  totalRefunded: number
+  refundedCount: number
+  pendingAmount: number
+  pendingCount: number
+}
+
+export type InstructorPaymentItem = PaymentDto & {
+  bookingStatus: string
+  offeringTitle: string
+  slotStartTime: string
+  slotEndTime: string
+  durationMinutes: number
+  student: {
+    id: string
+    name: string
+    imageUrl: string | null
+  }
+}
+
+export type InstructorPaymentsData = {
+  summary: InstructorPaymentSummary
+  items: InstructorPaymentItem[]
+  meta: PaginatedPaymentsDataDto['meta']
+}
+
 // ─── Student ────────────────────────────────────────────────────────────────
 
 export const createCheckout = async (
@@ -101,6 +130,27 @@ export const getStudentPayments = async (
     query.page,
     query.limit,
   )
+
+  return response.data.data
+}
+
+// ─── Instructor ─────────────────────────────────────────────────────────────
+
+export const getInstructorPayments = async (
+  query: PaymentListQuery,
+): Promise<InstructorPaymentsData> => {
+  const response = await apiClient.get<{
+    message: string
+    data: InstructorPaymentsData
+  }>('/api/payments/instructor', {
+    params: {
+      page: query.page,
+      limit: query.limit,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.from ? { from: query.from } : {}),
+      ...(query.to ? { to: query.to } : {}),
+    },
+  })
 
   return response.data.data
 }

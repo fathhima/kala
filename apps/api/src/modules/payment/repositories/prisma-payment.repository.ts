@@ -5,6 +5,9 @@ import { BasePrismaRepository, TransactionClient } from '@/shared/prisma/base';
 import { IPaymentRepository } from './interfaces/payment.repository.interface';
 import { PaymentMapper } from '../mappers/payment.mapper';
 import {
+  InstructorPaymentItemEntity,
+  InstructorPaymentsPageEntity,
+  InstructorPaymentSummaryEntity,
   PaymentEntity,
   PaginatedPaymentEntity,
 } from '../entities/payment.entity';
@@ -435,6 +438,138 @@ export class PrismaPaymentRepository
     tx?: TransactionClient,
   ): Promise<PaginatedPaymentEntity> {
     return this._paginate({ studentId }, query, tx);
+  }
+
+  async findInstructorPayments(
+    instructorUserId: string,
+    query: PaymentListQuery,
+    tx?: TransactionClient,
+  ): Promise<InstructorPaymentsPageEntity> {
+    const client = this.getClient(tx);
+    const ownerWhere: Prisma.PaymentWhereInput = {
+      booking: {
+        profile: {
+          userId: instructorUserId,
+        },
+      },
+    };
+
+    const listWhere: Prisma.PaymentWhereInput = {
+      ...ownerWhere,
+      status: query.status as string as
+        | Prisma.EnumPaymentStatusFilter
+        | undefined,
+      createdAt:
+        query.from || query.to ? { gte: query.from, lte: query.to } : undefined,
+    };
+
+    const skip = (query.page - 1) * query.limit;
+
+    const [total, rawItems, summaryRows] = await Promise.all([
+      client.payment.count({ where: listWhere }),
+      client.payment.findMany({
+        where: listWhere,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: query.limit,
+        include: {
+          booking: {
+            select: {
+              status: true,
+              durationMinutes: true,
+              slot: { select: { startTime: true, endTime: true } },
+              offering: {
+                select: {
+                  title: true,
+                  subcategory: { select: { name: true } },
+                },
+              },
+              student: { select: { id: true, name: true, imageUrl: true } },
+            },
+          },
+        },
+      }),
+      client.payment.findMany({
+        where: ownerWhere,
+        select: {
+          status: true,
+          amount: true,
+          refundAmount: true,
+          paidAt: true,
+        },
+      }),
+    ]);
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const summary = new InstructorPaymentSummaryEntity();
+    summary.totalEarned = 0;
+    summary.paidCount = 0;
+    summary.thisMonthEarned = 0;
+    summary.totalRefunded = 0;
+    summary.refundedCount = 0;
+    summary.pendingAmount = 0;
+    summary.pendingCount = 0;
+
+    for (const row of summaryRows) {
+      const amount = Number(row.amount);
+      const refundAmount = row.refundAmount ? Number(row.refundAmount) : 0;
+
+      if (row.status === PaymentStatus.SUCCEEDED) {
+        summary.totalEarned += amount;
+        summary.paidCount += 1;
+        if (row.paidAt && row.paidAt >= startOfMonth) {
+          summary.thisMonthEarned += amount;
+        }
+      } else if (row.status === PaymentStatus.PARTIALLY_REFUNDED) {
+        const net = Math.max(0, amount - refundAmount);
+        summary.totalEarned += net;
+        summary.paidCount += 1;
+        if (row.paidAt && row.paidAt >= startOfMonth) {
+          summary.thisMonthEarned += net;
+        }
+        summary.totalRefunded += refundAmount;
+        summary.refundedCount += 1;
+      } else if (row.status === PaymentStatus.REFUNDED) {
+        summary.totalRefunded += refundAmount || amount;
+        summary.refundedCount += 1;
+      } else if (row.status === PaymentStatus.REFUND_PENDING) {
+        summary.refundedCount += 1;
+      } else if (
+        row.status === PaymentStatus.PENDING ||
+        row.status === PaymentStatus.PROCESSING
+      ) {
+        summary.pendingAmount += amount;
+        summary.pendingCount += 1;
+      }
+    }
+
+    const items: InstructorPaymentItemEntity[] = rawItems.map((record) => {
+      const base = PaymentMapper.toEntity(record);
+      const item = Object.assign(new InstructorPaymentItemEntity(), base);
+      item.bookingStatus = record.booking.status;
+      item.offeringTitle =
+        record.booking.offering?.title ||
+        record.booking.offering?.subcategory?.name ||
+        'Session';
+      item.slotStartTime = record.booking.slot.startTime;
+      item.slotEndTime = record.booking.slot.endTime;
+      item.durationMinutes = record.booking.durationMinutes;
+      item.student = {
+        id: record.booking.student.id,
+        name: record.booking.student.name,
+        imageUrl: record.booking.student.imageUrl,
+      };
+      return item;
+    });
+
+    const pageEntity = new InstructorPaymentsPageEntity();
+    pageEntity.summary = summary;
+    pageEntity.items = items;
+    pageEntity.total = total;
+    pageEntity.page = query.page;
+    pageEntity.limit = query.limit;
+    return pageEntity;
   }
 
   async findAdminPayments(

@@ -3,7 +3,12 @@ import { IPaymentService } from './interfaces/payment.service.interface';
 import { PAYMENT_REPOSITORY, type IPaymentRepository, } from '../repositories/interfaces/payment.repository.interface';
 import { PAYMENT_GATEWAY_SERVICE, type IPaymentGatewayService, } from '@/shared/payment-gateway/repositories/interfaces/payment-gateway.interface';
 import { BOOKING_SERVICE, type IBookingService, } from '@/modules/booking/services/interfaces/booking.service.interface';
-import { CheckoutResponseDto, PaymentResponseDto, PaginatedPaymentsResponseDto } from '../dto/response/payment.response.dto';
+import {
+    CheckoutResponseDto,
+    InstructorPaymentsResponseDto,
+    PaginatedPaymentsResponseDto,
+    PaymentResponseDto,
+} from '../dto/response/payment.response.dto';
 import { PaymentQueryDto, } from '../dto/request/payment.request.dto';
 import { PaymentMapper } from '../mappers/payment.mapper';
 import { PaymentListQuery } from '../types/payment.type';
@@ -174,6 +179,17 @@ export class PaymentService implements IPaymentService {
     async listStudentPayments(studentId: string, query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto> {
         const result = await this._paymentRepository.findStudentPayments(studentId, this._toListQuery(query));
         return PaginatedPaymentsResponseDto.fromEntity('Payments fetched successfully', result);
+    }
+
+    async listInstructorPayments(instructorUserId: string, query: PaymentQueryDto): Promise<InstructorPaymentsResponseDto> {
+        const result = await this._paymentRepository.findInstructorPayments(
+            instructorUserId,
+            this._toListQuery(query),
+        );
+        return InstructorPaymentsResponseDto.fromEntity(
+            'Instructor payments fetched successfully',
+            result,
+        );
     }
 
     async listAdminPayments(query: PaymentQueryDto): Promise<PaginatedPaymentsResponseDto> {

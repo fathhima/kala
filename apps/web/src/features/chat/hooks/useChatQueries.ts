@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  type ChatRoleFilter,
+  type ChatRoomListItem,
   getChatRoom,
+  getChatRooms,
   getChatMessages,
   markChatAsRead,
   sendChatMessageRest,
@@ -9,12 +12,22 @@ import type { SendMessageDto } from '@/api';
 
 export const chatKeys = {
   all: ['chat'] as const,
+  rooms: (role?: ChatRoleFilter) => ['chat', 'rooms', role ?? 'ALL'] as const,
   room: (bookingId: string) => ['chat', 'room', bookingId] as const,
   messages: (bookingId: string) => ['chat', 'messages', bookingId] as const,
 };
 
+export const useChatRoomsQuery = (role?: ChatRoleFilter, enabled = true) =>
+  useQuery<ChatRoomListItem[]>({
+    queryKey: chatKeys.rooms(role),
+    queryFn: () => getChatRooms(role),
+    enabled,
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
+  });
+
 export const useChatRoomQuery = (bookingId: string) =>
-  useQuery({
+  useQuery<ChatRoomListItem>({
     queryKey: chatKeys.room(bookingId),
     queryFn: () => getChatRoom(bookingId),
     enabled: Boolean(bookingId),
@@ -37,6 +50,7 @@ export const useSendChatMessageMutation = (bookingId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.messages(bookingId) });
       queryClient.invalidateQueries({ queryKey: chatKeys.room(bookingId) });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
     },
   });
 };
@@ -48,6 +62,7 @@ export const useMarkChatReadMutation = (bookingId: string) => {
     mutationFn: () => markChatAsRead(bookingId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.room(bookingId) });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
     },
   });
 };

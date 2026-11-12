@@ -1294,8 +1294,6 @@ function ExtraTimeTab({
           <DurationPicker value={duration} onChange={(v) => { setDuration(v); setError('') }} />
         </div>
 
-        <ErrorBanner message={error} />
-
         <div className="border-t border-stone-100 pt-4">
           <Button
             onClick={handleCreate}

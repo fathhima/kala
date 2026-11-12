@@ -115,6 +115,9 @@ export class ChatRoomDto {
   bookingStatus!: string;
 
   @ApiProperty()
+  offeringTitle!: string;
+
+  @ApiProperty()
   slotStartTime!: string;
 
   @ApiProperty()
@@ -151,6 +154,7 @@ export class ChatRoomDto {
     dto.canWrite = access.canWrite;
     dto.readOnlyReason = access.readOnlyReason;
     dto.bookingStatus = entity.bookingStatus;
+    dto.offeringTitle = entity.offeringTitle;
     dto.slotStartTime = entity.slotStartTime.toISOString();
     dto.slotEndTime = entity.slotEndTime.toISOString();
     dto.student = { ...entity.student };
@@ -182,6 +186,21 @@ export class ChatRoomResponseDto {
     const dto = new ChatRoomResponseDto();
     dto.message = message;
     dto.data = ChatRoomDto.fromEntity(entity, access);
+    return dto;
+  }
+}
+
+export class ChatRoomListResponseDto {
+  @ApiProperty()
+  message!: string;
+
+  @ApiProperty({ type: [ChatRoomDto] })
+  data!: ChatRoomDto[];
+
+  static fromItems(message: string, items: ChatRoomDto[]): ChatRoomListResponseDto {
+    const dto = new ChatRoomListResponseDto();
+    dto.message = message;
+    dto.data = items;
     return dto;
   }
 }

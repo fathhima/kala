@@ -1,4 +1,5 @@
 import {
+  InstructorPaymentsPageEntity,
   PaymentEntity,
   PaginatedPaymentEntity,
 } from '../../entities/payment.entity';
@@ -75,6 +76,12 @@ export interface IPaymentRepository extends IBaseRepository<PaymentEntity> {
     query: PaymentListQuery,
     tx?: TransactionClient,
   ): Promise<PaginatedPaymentEntity>;
+
+  findInstructorPayments(
+    instructorUserId: string,
+    query: PaymentListQuery,
+    tx?: TransactionClient,
+  ): Promise<InstructorPaymentsPageEntity>;
 
   findAdminPayments(
     query: PaymentListQuery,

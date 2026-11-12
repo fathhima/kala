@@ -1,7 +1,9 @@
 import {
   Configuration,
   type CreateOfferingDto,
+  type InstructorAnalyticsDataDto,
   InstructorApi,
+  type InstructorControllerGetAnalyticsRangeEnum,
   type InstructorOfferingDto,
   type InstructorProfileDto,
   type PublicInstructorDto,
@@ -226,70 +228,12 @@ export const cancelInstructorApplication = async (applicationId: string): Promis
   await instructorApi.instructorControllerCancelApplication(applicationId);
 };
 
-export type InstructorAnalyticsRange = '7d' | '30d' | '90d';
-
-export interface InstructorAnalyticsData {
-  range: InstructorAnalyticsRange;
-  earnings: {
-    totalEarned: number;
-    thisMonthEarned: number;
-    inRangeEarned: number;
-    totalRefunded: number;
-    pendingEarnings: number;
-    avgSessionValue: number;
-  };
-  sessions: {
-    total: number;
-    upcomingConfirmed: number;
-    completed: number;
-    cancelled: number;
-    completionRate: number;
-    uniqueStudents: number;
-  };
-  capacity: {
-    openUpcomingSlots: number;
-    activeWeeklyRules: number;
-  };
-  offerings: {
-    total: number;
-    approved: number;
-    pending: number;
-    needsAttention: number;
-  };
-  dailySeries: Array<{
-    date: string;
-    label: string;
-    earnings: number;
-    bookings: number;
-  }>;
-  offeringPerformance: Array<{
-    id: string;
-    title: string;
-    subcategoryName: string;
-    bookingsCount: number;
-    revenue: number;
-  }>;
-  upcomingSessions: Array<{
-    id: string;
-    studentName: string;
-    studentImageUrl: string | null;
-    offeringTitle: string;
-    startTime: string;
-    endTime: string;
-    durationMinutes: number;
-    amount: number;
-    status: string;
-  }>;
-}
+export type InstructorAnalyticsRange = InstructorControllerGetAnalyticsRangeEnum;
+export type InstructorAnalyticsData = InstructorAnalyticsDataDto;
 
 export const getInstructorAnalytics = async (
   range: InstructorAnalyticsRange = '30d',
 ): Promise<InstructorAnalyticsData> => {
-  const response = await apiClient.get<{
-    message: string;
-    data: InstructorAnalyticsData;
-  }>('/api/instructors/analytics', {
-    params: { range },
-  });
+  const response = await instructorApi.instructorControllerGetAnalytics(range);
   return response.data.data;
 };

@@ -1,124 +1,91 @@
 import {
-  PaymentsApi,
   Configuration,
-  type PaymentControllerListStudentPaymentsStatusEnum,
-  type PaymentControllerListAdminPaymentsStatusEnum,
+  type InstructorPaymentItemDto,
+  type InstructorPaymentSummaryDto,
+  type InstructorPaymentsDataDto,
   type PaginatedPaymentsDataDto,
+  type PaymentControllerListAdminPaymentsStatusEnum,
+  type PaymentControllerListStudentPaymentsStatusEnum,
   type PaymentDto,
-} from '@/api'
-import { apiClient } from '@/lib/axios'
+  PaymentsApi,
+} from '@/api';
+import { apiClient } from '@/lib/axios';
 
 const configuration = new Configuration({
   basePath: import.meta.env.VITE_API_URL,
-})
+});
 
-const paymentsApi = new PaymentsApi(configuration, undefined, apiClient)
+const paymentsApi = new PaymentsApi(configuration, undefined, apiClient);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type CheckoutData = {
-  paymentId: string
-  checkoutUrl: string
-  sessionId: string
-  gatewayKeyId: string
-}
+  paymentId: string;
+  checkoutUrl: string;
+  sessionId: string;
+  gatewayKeyId: string;
+};
 
 export type PaymentListQuery = {
-  page: number
-  limit: number
-  status?: PaymentControllerListStudentPaymentsStatusEnum
-  from?: string
-  to?: string
-}
+  page: number;
+  limit: number;
+  status?: PaymentControllerListStudentPaymentsStatusEnum;
+  from?: string;
+  to?: string;
+};
 
 export type AdminPaymentListQuery = {
-  page: number
-  limit: number
-  status?: PaymentControllerListAdminPaymentsStatusEnum
-  from?: string
-  to?: string
-}
+  page: number;
+  limit: number;
+  status?: PaymentControllerListAdminPaymentsStatusEnum;
+  from?: string;
+  to?: string;
+};
 
-export type InstructorPaymentSummary = {
-  totalEarned: number
-  paidCount: number
-  thisMonthEarned: number
-  totalRefunded: number
-  refundedCount: number
-  pendingAmount: number
-  pendingCount: number
-}
-
-export type InstructorPaymentItem = PaymentDto & {
-  bookingStatus: string
-  offeringTitle: string
-  slotStartTime: string
-  slotEndTime: string
-  durationMinutes: number
-  student: {
-    id: string
-    name: string
-    imageUrl: string | null
-  }
-}
-
-export type InstructorPaymentsData = {
-  summary: InstructorPaymentSummary
-  items: InstructorPaymentItem[]
-  meta: PaginatedPaymentsDataDto['meta']
-}
+export type InstructorPaymentSummary = InstructorPaymentSummaryDto;
+export type InstructorPaymentItem = InstructorPaymentItemDto;
+export type InstructorPaymentsData = InstructorPaymentsDataDto;
 
 // ─── Student ────────────────────────────────────────────────────────────────
 
-export const createCheckout = async (
-  bookingId: string,
-): Promise<CheckoutData> => {
+export const createCheckout = async (bookingId: string): Promise<CheckoutData> => {
   const response = await paymentsApi.paymentControllerCreateCheckout({
     bookingId,
-  })
+  });
 
   // The generated type has `data: object` so we cast to the known shape
-  return response.data.data as CheckoutData
-}
+  return response.data.data as CheckoutData;
+};
 
-export const confirmDevPayment = async (
-  bookingId: string,
-): Promise<PaymentDto> => {
-  const response = await apiClient.post<{ success: boolean; data: PaymentDto }>(
-    '/api/payments/dev-confirm',
-    { bookingId },
-  )
-  return response.data.data
-}
+export const confirmDevPayment = async (bookingId: string): Promise<PaymentDto> => {
+  const response = await paymentsApi.paymentControllerConfirmDevPayment({
+    bookingId,
+  });
+  return response.data.data;
+};
 
 export const recordPaymentFailure = async (params: {
-  bookingId: string
-  reason?: string
+  bookingId: string;
+  reason?: string;
 }): Promise<PaymentDto> => {
   const response = await apiClient.post<{ success: boolean; data: PaymentDto }>(
     '/api/payments/fail',
     params,
-  )
-  return response.data.data
-}
+  );
+  return response.data.data;
+};
 
-export const getPayment = async (
-  paymentId: string,
-): Promise<PaymentDto> => {
-  const response = await paymentsApi.paymentControllerGetPayment(paymentId)
+export const getPayment = async (paymentId: string): Promise<PaymentDto> => {
+  const response = await paymentsApi.paymentControllerGetPayment(paymentId);
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
-export const getPaymentByBooking = async (
-  bookingId: string,
-): Promise<PaymentDto> => {
-  const response = await paymentsApi.paymentControllerGetPaymentByBooking(
-    bookingId,
-  )
+export const getPaymentByBooking = async (bookingId: string): Promise<PaymentDto> => {
+  const response = await paymentsApi.paymentControllerGetPaymentByBooking(bookingId);
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
 export const getStudentPayments = async (
   query: PaymentListQuery,
@@ -129,31 +96,26 @@ export const getStudentPayments = async (
     query.to,
     query.page,
     query.limit,
-  )
+  );
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
 // ─── Instructor ─────────────────────────────────────────────────────────────
 
 export const getInstructorPayments = async (
   query: PaymentListQuery,
 ): Promise<InstructorPaymentsData> => {
-  const response = await apiClient.get<{
-    message: string
-    data: InstructorPaymentsData
-  }>('/api/payments/instructor', {
-    params: {
-      page: query.page,
-      limit: query.limit,
-      ...(query.status ? { status: query.status } : {}),
-      ...(query.from ? { from: query.from } : {}),
-      ...(query.to ? { to: query.to } : {}),
-    },
-  })
+  const response = await paymentsApi.paymentControllerListInstructorPayments(
+    query.status,
+    query.from,
+    query.to,
+    query.page,
+    query.limit,
+  );
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
 // ─── Admin ──────────────────────────────────────────────────────────────────
 
@@ -166,28 +128,23 @@ export const getAdminPayments = async (
     query.to,
     query.page,
     query.limit,
-  )
+  );
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
 export const refundPayment = async (params: {
-  bookingId: string
-  reason?: string
+  bookingId: string;
+  reason?: string;
 }): Promise<PaymentDto> => {
-  const response = await paymentsApi.paymentControllerRefundPayment(
-    params.bookingId,
-    { reason: params.reason },
-  )
+  const response = await paymentsApi.paymentControllerRefundPayment(params.bookingId, {
+    reason: params.reason,
+  });
 
-  return response.data.data
-}
+  return response.data.data;
+};
 
-export const getAdminPaymentById = async (
-  paymentId: string,
-): Promise<PaymentDto> => {
-  const response = await apiClient.get<{ success: boolean; data: PaymentDto }>(
-    `/api/admin/payments/${paymentId}`,
-  )
-  return response.data.data
-}
+export const getAdminPaymentById = async (paymentId: string): Promise<PaymentDto> => {
+  const response = await paymentsApi.paymentControllerGetAdminPayment(paymentId);
+  return response.data.data;
+};

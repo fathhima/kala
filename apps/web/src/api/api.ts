@@ -23,6 +23,98 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface AdminAnalyticsDataDto {
+    'range': string;
+    'users': AdminUserMetricsDto;
+    'applications': AdminApplicationMetricsDto;
+    'bookings': AdminBookingMetricsDto;
+    'revenue': AdminRevenueMetricsDto;
+    'catalog': AdminCatalogMetricsDto;
+    'dailySeries': Array<AdminDailyPointDto>;
+    'bookingStatusBreakdown': Array<AdminStatusBreakdownDto>;
+    'paymentStatusBreakdown': Array<AdminStatusBreakdownDto>;
+    'topCategories': Array<AdminCategoryPerformanceDto>;
+    'topInstructors': Array<AdminTopInstructorDto>;
+    'pendingApplications': Array<AdminPendingApplicationItemDto>;
+    'recentBookings': Array<AdminRecentBookingItemDto>;
+}
+export interface AdminAnalyticsResponseDto {
+    'message': string;
+    'data': AdminAnalyticsDataDto;
+}
+export interface AdminApplicationMetricsDto {
+    'total': number;
+    'pending': number;
+    'approved': number;
+    'rejected': number;
+    'changesRequested': number;
+}
+export interface AdminBookingMetricsDto {
+    'total': number;
+    'confirmed': number;
+    'completed': number;
+    'paymentPending': number;
+    'cancelled': number;
+    'expired': number;
+    'refunded': number;
+    'newInRange': number;
+}
+export interface AdminCatalogMetricsDto {
+    'activeCategories': number;
+    'activeSubcategories': number;
+    'approvedOfferings': number;
+}
+export interface AdminCategoryPerformanceDto {
+    'id': string;
+    'name': string;
+    'bookingsCount': number;
+    'revenue': number;
+}
+export interface AdminDailyPointDto {
+    'date': string;
+    'label': string;
+    'revenue': number;
+    'bookings': number;
+    'newUsers': number;
+}
+export interface AdminPendingApplicationItemDto {
+    'id': string;
+    'instructorName': string;
+    'instructorEmail': string;
+    'status': string;
+    'offeringsCount': number;
+    'submittedAt': string;
+}
+export interface AdminRecentBookingItemDto {
+    'id': string;
+    'studentName': string;
+    'instructorName': string;
+    'offeringTitle': string;
+    'amount': number;
+    'status': string;
+    'createdAt': string;
+}
+export interface AdminRevenueMetricsDto {
+    'grossVolume': number;
+    'netRevenue': number;
+    'refundedAmount': number;
+    'inRangeVolume': number;
+    'succeededPayments': number;
+    'failedPayments': number;
+    'avgBookingValue': number;
+}
+export interface AdminStatusBreakdownDto {
+    'status': string;
+    'count': number;
+    'amount'?: number;
+}
+export interface AdminTopInstructorDto {
+    'profileId': string;
+    'name': string;
+    'imageUrl'?: string | null;
+    'bookingsCount': number;
+    'revenue': number;
+}
 export interface AdminUserDetailDto {
     'id': string;
     'name': string;
@@ -43,6 +135,14 @@ export interface AdminUserListItemDto {
     'isVerified': boolean;
     'isActive': boolean;
     'createdAt': string;
+}
+export interface AdminUserMetricsDto {
+    'total': number;
+    'students': number;
+    'instructors': number;
+    'active': number;
+    'blocked': number;
+    'newInRange': number;
 }
 export interface AdminUserResponseDto {
     'success': boolean;
@@ -265,12 +365,17 @@ export interface ChatRoomDto {
      */
     'readOnlyReason'?: string;
     'bookingStatus': string;
+    'offeringTitle': string;
     'slotStartTime': string;
     'slotEndTime': string;
     'student': ChatParticipantDto;
     'instructor': ChatParticipantDto;
     'lastMessage'?: ChatMessageDto | null;
     'unreadCount': number;
+}
+export interface ChatRoomListResponseDto {
+    'message': string;
+    'data': Array<ChatRoomDto>;
 }
 export interface ChatRoomResponseDto {
     'message': string;
@@ -414,6 +519,20 @@ export interface IceServerConfigDto {
      */
     'credential'?: string;
 }
+export interface InstructorAnalyticsDataDto {
+    'range': string;
+    'earnings': InstructorEarningsMetricsDto;
+    'sessions': InstructorSessionMetricsDto;
+    'capacity': InstructorCapacityMetricsDto;
+    'offerings': InstructorOfferingStatsDto;
+    'dailySeries': Array<InstructorDailyPointDto>;
+    'offeringPerformance': Array<InstructorOfferingPerformanceDto>;
+    'upcomingSessions': Array<InstructorUpcomingSessionDto>;
+}
+export interface InstructorAnalyticsResponseDto {
+    'message': string;
+    'data': InstructorAnalyticsDataDto;
+}
 export interface InstructorApplicantUserDto {
     'id': string;
     'name': string;
@@ -446,6 +565,24 @@ export interface InstructorApplicationResponseDto {
     'success': boolean;
     'message': string;
     'data': InstructorApplicationDto;
+}
+export interface InstructorCapacityMetricsDto {
+    'openUpcomingSlots': number;
+    'activeWeeklyRules': number;
+}
+export interface InstructorDailyPointDto {
+    'date': string;
+    'label': string;
+    'earnings': number;
+    'bookings': number;
+}
+export interface InstructorEarningsMetricsDto {
+    'totalEarned': number;
+    'thisMonthEarned': number;
+    'inRangeEarned': number;
+    'totalRefunded': number;
+    'pendingEarnings': number;
+    'avgSessionValue': number;
 }
 export interface InstructorOfferingCategoryDto {
     'id': string;
@@ -483,16 +620,94 @@ export const InstructorOfferingDtoStatusEnum = {
 
 export type InstructorOfferingDtoStatusEnum = typeof InstructorOfferingDtoStatusEnum[keyof typeof InstructorOfferingDtoStatusEnum];
 
+export interface InstructorOfferingPerformanceDto {
+    'id': string;
+    'title': string;
+    'subcategoryName': string;
+    'bookingsCount': number;
+    'revenue': number;
+}
 export interface InstructorOfferingResponseDto {
     'success': boolean;
     'message': string;
     'data': InstructorOfferingDto;
+}
+export interface InstructorOfferingStatsDto {
+    'total': number;
+    'approved': number;
+    'pending': number;
+    'needsAttention': number;
 }
 export interface InstructorOfferingSubcategoryDto {
     'id': string;
     'name': string;
     'slug': string;
     'category': InstructorOfferingCategoryDto;
+}
+export interface InstructorPaymentItemDto {
+    'id': string;
+    'bookingId': string;
+    'studentId': string;
+    'amount': number;
+    'currency': string;
+    'status': InstructorPaymentItemDtoStatusEnum;
+    'gateway': InstructorPaymentItemDtoGatewayEnum;
+    'gatewayId'?: string | null;
+    'gatewaySessionId'?: string | null;
+    'refundId'?: string | null;
+    'refundAmount'?: number | null;
+    'failureReason'?: string | null;
+    'paidAt'?: string | null;
+    'refundedAt'?: string | null;
+    'createdAt': string;
+    'updatedAt': string;
+    'bookingStatus': string;
+    'offeringTitle': string;
+    'slotStartTime': string;
+    'slotEndTime': string;
+    'durationMinutes': number;
+    'student': InstructorPaymentStudentDto;
+}
+
+export const InstructorPaymentItemDtoStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+
+export type InstructorPaymentItemDtoStatusEnum = typeof InstructorPaymentItemDtoStatusEnum[keyof typeof InstructorPaymentItemDtoStatusEnum];
+export const InstructorPaymentItemDtoGatewayEnum = {
+    Razorpay: 'RAZORPAY'
+} as const;
+
+export type InstructorPaymentItemDtoGatewayEnum = typeof InstructorPaymentItemDtoGatewayEnum[keyof typeof InstructorPaymentItemDtoGatewayEnum];
+
+export interface InstructorPaymentStudentDto {
+    'id': string;
+    'name': string;
+    'imageUrl'?: string | null;
+}
+export interface InstructorPaymentSummaryDto {
+    'totalEarned': number;
+    'paidCount': number;
+    'thisMonthEarned': number;
+    'totalRefunded': number;
+    'refundedCount': number;
+    'pendingAmount': number;
+    'pendingCount': number;
+}
+export interface InstructorPaymentsDataDto {
+    'summary': InstructorPaymentSummaryDto;
+    'items': Array<InstructorPaymentItemDto>;
+    'meta': PaymentPaginationMetaDto;
+}
+export interface InstructorPaymentsResponseDto {
+    'message': string;
+    'data': InstructorPaymentsDataDto;
 }
 export interface InstructorProfileDto {
     'id': string;
@@ -511,6 +726,14 @@ export interface InstructorProfileResponseDto {
     'message': string;
     'data'?: InstructorProfileDto | null;
 }
+export interface InstructorSessionMetricsDto {
+    'total': number;
+    'upcomingConfirmed': number;
+    'completed': number;
+    'cancelled': number;
+    'completionRate': number;
+    'uniqueStudents': number;
+}
 export interface InstructorSlotAvailabilityDto {
     'rules': Array<SlotRuleDto>;
     'exceptions': Array<SlotExceptionDto>;
@@ -520,6 +743,17 @@ export interface InstructorSlotAvailabilityResponseDto {
     'success': boolean;
     'message': string;
     'data': InstructorSlotAvailabilityDto;
+}
+export interface InstructorUpcomingSessionDto {
+    'id': string;
+    'studentName': string;
+    'studentImageUrl'?: string | null;
+    'offeringTitle': string;
+    'startTime': string;
+    'endTime': string;
+    'durationMinutes': number;
+    'amount': number;
+    'status': string;
 }
 export interface LoginDto {
     /**
@@ -1174,6 +1408,114 @@ export const VideoSessionAccessDtoCurrentUserRoleEnum = {
 } as const;
 
 export type VideoSessionAccessDtoCurrentUserRoleEnum = typeof VideoSessionAccessDtoCurrentUserRoleEnum[keyof typeof VideoSessionAccessDtoCurrentUserRoleEnum];
+
+
+/**
+ * AdminAnalyticsApi - axios parameter creator
+ */
+export const AdminAnalyticsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get platform-wide admin analytics and dashboard metrics
+         * @param {AdminAnalyticsControllerGetAnalyticsRangeEnum} [range] Time window for trend charts and range-scoped metrics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminAnalyticsControllerGetAnalytics: async (range?: AdminAnalyticsControllerGetAnalyticsRangeEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/admin/analytics`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (range !== undefined) {
+                localVarQueryParameter['range'] = range;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminAnalyticsApi - functional programming interface
+ */
+export const AdminAnalyticsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminAnalyticsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get platform-wide admin analytics and dashboard metrics
+         * @param {AdminAnalyticsControllerGetAnalyticsRangeEnum} [range] Time window for trend charts and range-scoped metrics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async adminAnalyticsControllerGetAnalytics(range?: AdminAnalyticsControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AdminAnalyticsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.adminAnalyticsControllerGetAnalytics(range, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminAnalyticsApi.adminAnalyticsControllerGetAnalytics']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminAnalyticsApi - factory interface
+ */
+export const AdminAnalyticsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminAnalyticsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get platform-wide admin analytics and dashboard metrics
+         * @param {AdminAnalyticsControllerGetAnalyticsRangeEnum} [range] Time window for trend charts and range-scoped metrics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        adminAnalyticsControllerGetAnalytics(range?: AdminAnalyticsControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig): AxiosPromise<AdminAnalyticsResponseDto> {
+            return localVarFp.adminAnalyticsControllerGetAnalytics(range, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminAnalyticsApi - object-oriented interface
+ */
+export class AdminAnalyticsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get platform-wide admin analytics and dashboard metrics
+     * @param {AdminAnalyticsControllerGetAnalyticsRangeEnum} [range] Time window for trend charts and range-scoped metrics
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public adminAnalyticsControllerGetAnalytics(range?: AdminAnalyticsControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig) {
+        return AdminAnalyticsApiFp(this.configuration).adminAnalyticsControllerGetAnalytics(range, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const AdminAnalyticsControllerGetAnalyticsRangeEnum = {
+    _7d: '7d',
+    _30d: '30d',
+    _90d: '90d'
+} as const;
+export type AdminAnalyticsControllerGetAnalyticsRangeEnum = typeof AdminAnalyticsControllerGetAnalyticsRangeEnum[keyof typeof AdminAnalyticsControllerGetAnalyticsRangeEnum];
 
 
 /**
@@ -4594,6 +4936,41 @@ export const ChatApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
+         * @summary List chat rooms for the current user
+         * @param {ChatControllerGetRoomsRoleEnum} [role] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetRooms: async (role?: ChatControllerGetRoomsRoleEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/chat/rooms`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (role !== undefined) {
+                localVarQueryParameter['role'] = role;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Mark all unread messages in the room as read
          * @param {string} bookingId 
          * @param {*} [options] Override http request option.
@@ -4703,6 +5080,19 @@ export const ChatApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary List chat rooms for the current user
+         * @param {ChatControllerGetRoomsRoleEnum} [role] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async chatControllerGetRooms(role?: ChatControllerGetRoomsRoleEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChatRoomListResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.chatControllerGetRooms(role, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ChatApi.chatControllerGetRooms']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Mark all unread messages in the room as read
          * @param {string} bookingId 
          * @param {*} [options] Override http request option.
@@ -4761,6 +5151,16 @@ export const ChatApiFactory = function (configuration?: Configuration, basePath?
         },
         /**
          * 
+         * @summary List chat rooms for the current user
+         * @param {ChatControllerGetRoomsRoleEnum} [role] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        chatControllerGetRooms(role?: ChatControllerGetRoomsRoleEnum, options?: RawAxiosRequestConfig): AxiosPromise<ChatRoomListResponseDto> {
+            return localVarFp.chatControllerGetRooms(role, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Mark all unread messages in the room as read
          * @param {string} bookingId 
          * @param {*} [options] Override http request option.
@@ -4813,6 +5213,17 @@ export class ChatApi extends BaseAPI {
 
     /**
      * 
+     * @summary List chat rooms for the current user
+     * @param {ChatControllerGetRoomsRoleEnum} [role] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public chatControllerGetRooms(role?: ChatControllerGetRoomsRoleEnum, options?: RawAxiosRequestConfig) {
+        return ChatApiFp(this.configuration).chatControllerGetRooms(role, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Mark all unread messages in the room as read
      * @param {string} bookingId 
      * @param {*} [options] Override http request option.
@@ -4832,6 +5243,104 @@ export class ChatApi extends BaseAPI {
      */
     public chatControllerSendMessage(bookingId: string, sendMessageDto: SendMessageDto, options?: RawAxiosRequestConfig) {
         return ChatApiFp(this.configuration).chatControllerSendMessage(bookingId, sendMessageDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+export const ChatControllerGetRoomsRoleEnum = {
+    Student: 'STUDENT',
+    Instructor: 'INSTRUCTOR'
+} as const;
+export type ChatControllerGetRoomsRoleEnum = typeof ChatControllerGetRoomsRoleEnum[keyof typeof ChatControllerGetRoomsRoleEnum];
+
+
+/**
+ * HealthApi - axios parameter creator
+ */
+export const HealthApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Health check endpoint for ALB and monitoring
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        healthControllerCheck: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/health`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * HealthApi - functional programming interface
+ */
+export const HealthApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = HealthApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Health check endpoint for ALB and monitoring
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async healthControllerCheck(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.healthControllerCheck(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HealthApi.healthControllerCheck']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * HealthApi - factory interface
+ */
+export const HealthApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = HealthApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Health check endpoint for ALB and monitoring
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        healthControllerCheck(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.healthControllerCheck(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * HealthApi - object-oriented interface
+ */
+export class HealthApi extends BaseAPI {
+    /**
+     * 
+     * @summary Health check endpoint for ALB and monitoring
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public healthControllerCheck(options?: RawAxiosRequestConfig) {
+        return HealthApiFp(this.configuration).healthControllerCheck(options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4983,6 +5492,41 @@ export const InstructorApiAxiosParamCreator = function (configuration?: Configur
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(requestOfferingMediaUploadDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get instructor analytics and dashboard metrics
+         * @param {InstructorControllerGetAnalyticsRangeEnum} [range] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetAnalytics: async (range?: InstructorControllerGetAnalyticsRangeEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/instructors/analytics`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (range !== undefined) {
+                localVarQueryParameter['range'] = range;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5382,6 +5926,19 @@ export const InstructorApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Get instructor analytics and dashboard metrics
+         * @param {InstructorControllerGetAnalyticsRangeEnum} [range] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async instructorControllerGetAnalytics(range?: InstructorControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorAnalyticsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.instructorControllerGetAnalytics(range, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InstructorApi.instructorControllerGetAnalytics']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Get one approved instructor profile
          * @param {string} profileId 
          * @param {*} [options] Override http request option.
@@ -5554,6 +6111,16 @@ export const InstructorApiFactory = function (configuration?: Configuration, bas
         },
         /**
          * 
+         * @summary Get instructor analytics and dashboard metrics
+         * @param {InstructorControllerGetAnalyticsRangeEnum} [range] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        instructorControllerGetAnalytics(range?: InstructorControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig): AxiosPromise<InstructorAnalyticsResponseDto> {
+            return localVarFp.instructorControllerGetAnalytics(range, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Get one approved instructor profile
          * @param {string} profileId 
          * @param {*} [options] Override http request option.
@@ -5701,6 +6268,17 @@ export class InstructorApi extends BaseAPI {
 
     /**
      * 
+     * @summary Get instructor analytics and dashboard metrics
+     * @param {InstructorControllerGetAnalyticsRangeEnum} [range] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public instructorControllerGetAnalytics(range?: InstructorControllerGetAnalyticsRangeEnum, options?: RawAxiosRequestConfig) {
+        return InstructorApiFp(this.configuration).instructorControllerGetAnalytics(range, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Get one approved instructor profile
      * @param {string} profileId 
      * @param {*} [options] Override http request option.
@@ -5803,6 +6381,12 @@ export class InstructorApi extends BaseAPI {
     }
 }
 
+export const InstructorControllerGetAnalyticsRangeEnum = {
+    _7d: '7d',
+    _30d: '30d',
+    _90d: '90d'
+} as const;
+export type InstructorControllerGetAnalyticsRangeEnum = typeof InstructorControllerGetAnalyticsRangeEnum[keyof typeof InstructorControllerGetAnalyticsRangeEnum];
 
 
 /**
@@ -6030,6 +6614,61 @@ export const PaymentsApiAxiosParamCreator = function (configuration?: Configurat
          */
         paymentControllerListAdminPayments: async (status?: PaymentControllerListAdminPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/admin/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = to;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List instructor earnings and session payments
+         * @param {PaymentControllerListInstructorPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListInstructorPayments: async (status?: PaymentControllerListInstructorPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/payments/instructor`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -6302,6 +6941,23 @@ export const PaymentsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary List instructor earnings and session payments
+         * @param {PaymentControllerListInstructorPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerListInstructorPayments(status?: PaymentControllerListInstructorPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorPaymentsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerListInstructorPayments(status, from, to, page, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentsApi.paymentControllerListInstructorPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary List student payments
          * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
          * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
@@ -6428,6 +7084,20 @@ export const PaymentsApiFactory = function (configuration?: Configuration, baseP
         },
         /**
          * 
+         * @summary List instructor earnings and session payments
+         * @param {PaymentControllerListInstructorPaymentsStatusEnum} [status] 
+         * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+         * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerListInstructorPayments(status?: PaymentControllerListInstructorPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<InstructorPaymentsResponseDto> {
+            return localVarFp.paymentControllerListInstructorPayments(status, from, to, page, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary List student payments
          * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
          * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
@@ -6550,6 +7220,21 @@ export class PaymentsApi extends BaseAPI {
 
     /**
      * 
+     * @summary List instructor earnings and session payments
+     * @param {PaymentControllerListInstructorPaymentsStatusEnum} [status] 
+     * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
+     * @param {string} [to] Filter by createdAt &lt;&#x3D; to (ISO)
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public paymentControllerListInstructorPayments(status?: PaymentControllerListInstructorPaymentsStatusEnum, from?: string, to?: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return PaymentsApiFp(this.configuration).paymentControllerListInstructorPayments(status, from, to, page, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary List student payments
      * @param {PaymentControllerListStudentPaymentsStatusEnum} [status] 
      * @param {string} [from] Filter by createdAt &gt;&#x3D; from (ISO)
@@ -6596,6 +7281,16 @@ export const PaymentControllerListAdminPaymentsStatusEnum = {
     PartiallyRefunded: 'PARTIALLY_REFUNDED'
 } as const;
 export type PaymentControllerListAdminPaymentsStatusEnum = typeof PaymentControllerListAdminPaymentsStatusEnum[keyof typeof PaymentControllerListAdminPaymentsStatusEnum];
+export const PaymentControllerListInstructorPaymentsStatusEnum = {
+    Pending: 'PENDING',
+    Processing: 'PROCESSING',
+    Succeeded: 'SUCCEEDED',
+    Failed: 'FAILED',
+    RefundPending: 'REFUND_PENDING',
+    Refunded: 'REFUNDED',
+    PartiallyRefunded: 'PARTIALLY_REFUNDED'
+} as const;
+export type PaymentControllerListInstructorPaymentsStatusEnum = typeof PaymentControllerListInstructorPaymentsStatusEnum[keyof typeof PaymentControllerListInstructorPaymentsStatusEnum];
 export const PaymentControllerListStudentPaymentsStatusEnum = {
     Pending: 'PENDING',
     Processing: 'PROCESSING',
@@ -6606,6 +7301,95 @@ export const PaymentControllerListStudentPaymentsStatusEnum = {
     PartiallyRefunded: 'PARTIALLY_REFUNDED'
 } as const;
 export type PaymentControllerListStudentPaymentsStatusEnum = typeof PaymentControllerListStudentPaymentsStatusEnum[keyof typeof PaymentControllerListStudentPaymentsStatusEnum];
+
+
+/**
+ * PrometheusApi - axios parameter creator
+ */
+export const PrometheusApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        prometheusControllerIndex: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/metrics`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * PrometheusApi - functional programming interface
+ */
+export const PrometheusApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = PrometheusApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async prometheusControllerIndex(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.prometheusControllerIndex(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PrometheusApi.prometheusControllerIndex']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * PrometheusApi - factory interface
+ */
+export const PrometheusApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = PrometheusApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        prometheusControllerIndex(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.prometheusControllerIndex(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * PrometheusApi - object-oriented interface
+ */
+export class PrometheusApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public prometheusControllerIndex(options?: RawAxiosRequestConfig) {
+        return PrometheusApiFp(this.configuration).prometheusControllerIndex(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
 
 
 /**

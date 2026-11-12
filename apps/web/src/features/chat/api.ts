@@ -1,16 +1,16 @@
 import {
   ChatApi,
-  Configuration,
+  type ChatControllerGetRoomsRoleEnum,
   type ChatMessageDto,
   type ChatRoomDto,
+  Configuration,
   type PaginatedChatMessagesDataDto,
   type SendMessageDto,
 } from '@/api';
 import { apiClient } from '@/lib/axios';
-import type { ApiEnvelope } from '@/types/api-envelope';
 
-export type ChatRoleFilter = 'STUDENT' | 'INSTRUCTOR';
-export type ChatRoomListItem = ChatRoomDto & { offeringTitle?: string };
+export type ChatRoleFilter = ChatControllerGetRoomsRoleEnum;
+export type ChatRoomListItem = ChatRoomDto;
 
 const configuration = new Configuration({
   basePath: import.meta.env.VITE_API_URL,
@@ -18,13 +18,8 @@ const configuration = new Configuration({
 
 const chatApi = new ChatApi(configuration, undefined, apiClient);
 
-export const getChatRooms = async (
-  role?: ChatRoleFilter,
-): Promise<ChatRoomListItem[]> => {
-  const response = await apiClient.get<ApiEnvelope<ChatRoomListItem[]>>(
-    '/api/chat/rooms',
-    { params: role ? { role } : undefined },
-  );
+export const getChatRooms = async (role?: ChatRoleFilter): Promise<ChatRoomListItem[]> => {
+  const response = await chatApi.chatControllerGetRooms(role);
   return response.data.data;
 };
 
@@ -50,9 +45,7 @@ export const sendChatMessageRest = async (
   return response.data.data;
 };
 
-export const markChatAsRead = async (
-  bookingId: string,
-): Promise<{ count: number }> => {
+export const markChatAsRead = async (bookingId: string): Promise<{ count: number }> => {
   const response = await chatApi.chatControllerMarkRead(bookingId);
   return response.data as unknown as { count: number };
 };

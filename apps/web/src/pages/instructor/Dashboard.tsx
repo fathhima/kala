@@ -632,41 +632,30 @@ export function InstructorDashboard() {
             </div>
           ) : (
             <div className="space-y-3 flex-1">
-              {offerings.slice(0, 4).map(
-                (offering: {
-                  id: string;
-                  title: string | null;
-                  status: string;
-                  hourlyRate: string | number;
-                  subcategory: {
-                    name: string;
-                    category: { name: string };
-                  };
-                }) => (
-                  <div
-                    key={offering.id}
-                    className="p-3.5 rounded-xl border border-stone-200/70 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm text-stone-800 truncate">
-                          {offering.title || offering.subcategory.name}
-                        </p>
-                        <Badge variant={statusVariant(offering.status)}>{offering.status}</Badge>
-                      </div>
-                      <p className="text-xs text-stone-500 mt-0.5 truncate">
-                        {offering.subcategory.category.name} · {offering.subcategory.name}
+              {offerings.slice(0, 4).map((offering) => (
+                <div
+                  key={offering.id}
+                  className="p-3.5 rounded-xl border border-stone-200/70 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm text-stone-800 truncate">
+                        {offering.title || offering.subcategory.name}
                       </p>
+                      <Badge variant={statusVariant(offering.status)}>{offering.status}</Badge>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-kala-terracotta">
-                        {formatPrice(Number(offering.hourlyRate))}
-                      </p>
-                      <p className="text-[11px] text-stone-400">per hour</p>
-                    </div>
+                    <p className="text-xs text-stone-500 mt-0.5 truncate">
+                      {offering.subcategory.category.name} · {offering.subcategory.name}
+                    </p>
                   </div>
-                ),
-              )}
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold text-kala-terracotta">
+                      {formatPrice(Number(offering.hourlyRate))}
+                    </p>
+                    <p className="text-[11px] text-stone-400">per hour</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

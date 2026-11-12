@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **canWrite** | **boolean** | Indicates if current user can post new messages based on booking status and grace window | [default to undefined]
 **readOnlyReason** | **string** | Reason why chat is read-only if canWrite is false | [optional] [default to undefined]
 **bookingStatus** | **string** |  | [default to undefined]
+**offeringTitle** | **string** |  | [default to undefined]
 **slotStartTime** | **string** |  | [default to undefined]
 **slotEndTime** | **string** |  | [default to undefined]
 **student** | [**ChatParticipantDto**](ChatParticipantDto.md) |  | [default to undefined]
@@ -34,6 +35,7 @@ const instance: ChatRoomDto = {
     canWrite,
     readOnlyReason,
     bookingStatus,
+    offeringTitle,
     slotStartTime,
     slotEndTime,
     student,

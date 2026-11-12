@@ -8,6 +8,7 @@ All URIs are relative to *http://localhost:4000*
 |[**instructorControllerCancelApplication**](#instructorcontrollercancelapplication) | **POST** /api/instructors/applications/{applicationId}/cancel | Cancel the current pending instructor application|
 |[**instructorControllerConfirmMediaUpload**](#instructorcontrollerconfirmmediaupload) | **POST** /api/instructors/offerings/{offeringId}/media/confirm | Confirm offering media upload|
 |[**instructorControllerCreateMediaUploadUrl**](#instructorcontrollercreatemediauploadurl) | **POST** /api/instructors/offerings/{offeringId}/media/upload-url | Create offering media upload URL|
+|[**instructorControllerGetAnalytics**](#instructorcontrollergetanalytics) | **GET** /api/instructors/analytics | Get instructor analytics and dashboard metrics|
 |[**instructorControllerGetInstructor**](#instructorcontrollergetinstructor) | **GET** /api/instructors/{profileId} | Get one approved instructor profile|
 |[**instructorControllerGetInstructors**](#instructorcontrollergetinstructors) | **GET** /api/instructors | List approved instructors and offerings|
 |[**instructorControllerGetMediaViewUrl**](#instructorcontrollergetmediaviewurl) | **GET** /api/instructors/offerings/{offeringId}/media/{mediaId}/view-url | Get offering media view URL|
@@ -217,6 +218,56 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **instructorControllerGetAnalytics**
+> InstructorAnalyticsResponseDto instructorControllerGetAnalytics()
+
+
+### Example
+
+```typescript
+import {
+    InstructorApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new InstructorApi(configuration);
+
+let range: '7d' | '30d' | '90d'; // (optional) (default to '30d')
+
+const { status, data } = await apiInstance.instructorControllerGetAnalytics(
+    range
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **range** | [**&#39;7d&#39; | &#39;30d&#39; | &#39;90d&#39;**]**Array<&#39;7d&#39; &#124; &#39;30d&#39; &#124; &#39;90d&#39;>** |  | (optional) defaults to '30d'|
+
+
+### Return type
+
+**InstructorAnalyticsResponseDto**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 

@@ -1,29 +1,32 @@
-import { useState, useMemo } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
-  CalendarDays,
-  Clock,
-  MapPin,
-  Video,
-  Star,
-  CheckCircle,
-  Image as ImageIcon,
-  ChevronRight,
   BookOpen,
-  LogIn,
   Briefcase,
+  CalendarDays,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Image as ImageIcon,
+  LogIn,
+  MapPin,
   Sparkles,
-} from 'lucide-react'
-import { Avatar } from '@/components/ui/Avatar'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { cn, formatTime } from '@/lib/utils'
-import { usePublicInstructorQuery } from '@/features/instructor/hooks'
-import { usePublicAvailabilityQuery } from '@/features/slots/hooks'
-import { useHoldSlotMutation } from '@/features/booking/hooks'
-import { useAuthStore } from '@/features/auth/store'
+  Star,
+  Video,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import type { ReviewDto } from '@/api';
+import { ReviewCard } from '@/components/shared/ReviewCard';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { useAuthStore } from '@/features/auth/store';
+import { useHoldSlotMutation } from '@/features/booking/hooks';
+import { usePublicInstructorQuery } from '@/features/instructor/hooks';
+import { useInstructorReviewsQuery } from '@/features/review';
+import { usePublicAvailabilityQuery } from '@/features/slots/hooks';
+import { cn, formatTime } from '@/lib/utils';
 
 function todayInIndia() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -31,29 +34,32 @@ function todayInIndia() {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(new Date())
+  }).format(new Date());
 }
 
 export function InstructorProfile() {
-  const { profileId } = useParams()
-  const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { profileId } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
 
-  const query = usePublicInstructorQuery(profileId ?? '')
-  const holdSlotMutation = useHoldSlotMutation()
+  const query = usePublicInstructorQuery(profileId ?? '');
+  const reviewsQuery = useInstructorReviewsQuery(profileId ?? '', { limit: 10 });
+  const holdSlotMutation = useHoldSlotMutation();
 
-  const [selectedOfferingId, setSelectedOfferingId] = useState<string | null>(null)
-  const [bookingOpen, setBookingOpen] = useState(false)
-  const [date, setDate] = useState('')
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
-  const [mediaTab, setMediaTab] = useState<'images' | 'videos'>('images')
-  const [bookingError, setBookingError] = useState<string | null>(null)
+  const [selectedOfferingId, setSelectedOfferingId] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [date, setDate] = useState('');
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [mediaTab, setMediaTab] = useState<'images' | 'videos'>('images');
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const activeOfferingId = selectedOfferingId || query.data?.offerings[0]?.id || ''
+  const activeOfferingId = selectedOfferingId || query.data?.offerings[0]?.id || '';
+  const reviewItems = reviewsQuery.data?.items ?? [];
+  const reviewSummary = reviewsQuery.data?.summary;
 
   // Convert selected date to full day in Indian Standard Time (UTC+05:30)
-  const from = date ? new Date(`${date}T00:00:00+05:30`).toISOString() : ''
-  const to = date ? new Date(`${date}T23:59:59.999+05:30`).toISOString() : ''
+  const from = date ? new Date(`${date}T00:00:00+05:30`).toISOString() : '';
+  const to = date ? new Date(`${date}T23:59:59.999+05:30`).toISOString() : '';
 
   const availability = usePublicAvailabilityQuery({
     profileId: profileId ?? '',
@@ -61,11 +67,11 @@ export function InstructorProfile() {
     from,
     to,
     enabled: Boolean(profileId && activeOfferingId && date && bookingOpen),
-  })
+  });
 
   // Query next 30 days of upcoming slots to discover available dates for this offering
-  const next30DaysFrom = useMemo(() => new Date().toISOString(), [])
-  const next30DaysTo = useMemo(() => new Date(Date.now() + 30 * 86400000).toISOString(), [])
+  const next30DaysFrom = useMemo(() => new Date().toISOString(), []);
+  const next30DaysTo = useMemo(() => new Date(Date.now() + 30 * 86400000).toISOString(), []);
 
   const upcomingAvailability = usePublicAvailabilityQuery({
     profileId: profileId ?? '',
@@ -73,24 +79,24 @@ export function InstructorProfile() {
     from: next30DaysFrom,
     to: next30DaysTo,
     enabled: Boolean(profileId && activeOfferingId && bookingOpen),
-  })
+  });
 
   const availableDates = useMemo(() => {
-    if (!upcomingAvailability.data) return []
-    const dates = new Set<string>()
+    if (!upcomingAvailability.data) return [];
+    const dates = new Set<string>();
     for (const slot of upcomingAvailability.data) {
       const d = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Asia/Kolkata',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-      }).format(new Date(slot.startTime))
-      dates.add(d)
+      }).format(new Date(slot.startTime));
+      dates.add(d);
     }
-    return Array.from(dates).sort()
-  }, [upcomingAvailability.data])
+    return Array.from(dates).sort();
+  }, [upcomingAvailability.data]);
 
-  if (!profileId) return <Navigate to="/instructors" replace />
+  if (!profileId) return <Navigate to="/instructors" replace />;
 
   if (query.isLoading) {
     return (
@@ -99,7 +105,7 @@ export function InstructorProfile() {
         <div className="h-4 w-48 rounded bg-stone-100 animate-pulse" />
         <div className="h-3 w-64 rounded bg-stone-100 animate-pulse" />
       </div>
-    )
+    );
   }
 
   if (query.isError || !query.data) {
@@ -107,63 +113,68 @@ export function InstructorProfile() {
       <div className="page-container py-24 text-center">
         <div className="text-5xl mb-4">🎨</div>
         <h1 className="text-xl font-semibold text-stone-800 mb-2">Instructor not found</h1>
-        <p className="text-sm text-stone-500 mb-6">This profile may have been removed or the link is invalid.</p>
+        <p className="text-sm text-stone-500 mb-6">
+          This profile may have been removed or the link is invalid.
+        </p>
         <Link to="/instructors">
           <Button variant="outline" size="sm">
             <ArrowLeft size={15} /> Back to instructors
           </Button>
         </Link>
       </div>
-    )
+    );
   }
 
-  const instructor = query.data
-  const selectedOffering = instructor.offerings.find((o) => o.id === activeOfferingId) ?? instructor.offerings[0] ?? null
+  const instructor = query.data;
+  const selectedOffering =
+    instructor.offerings.find((o: any) => o.id === activeOfferingId) ??
+    instructor.offerings[0] ??
+    null;
 
   function selectOffering(id: string) {
-    setSelectedOfferingId(id)
-    setBookingOpen(false)
-    setDate('')
-    setSelectedSlotId(null)
-    setMediaTab('images')
+    setSelectedOfferingId(id);
+    setBookingOpen(false);
+    setDate('');
+    setSelectedSlotId(null);
+    setMediaTab('images');
   }
 
   function handleBookClick() {
     if (!isAuthenticated) {
-      navigate('/login')
-      return
+      navigate('/login');
+      return;
     }
-    setBookingOpen(true)
-    setDate('')
-    setSelectedSlotId(null)
-    setBookingError(null)
+    setBookingOpen(true);
+    setDate('');
+    setSelectedSlotId(null);
+    setBookingError(null);
   }
 
   async function handleConfirmBooking() {
     if (!isAuthenticated) {
-      navigate('/login', { state: { redirectTo: `/instructors/${profileId}` } })
-      return
+      navigate('/login', { state: { redirectTo: `/instructors/${profileId}` } });
+      return;
     }
-    if (!selectedSlotId) return
+    if (!selectedSlotId) return;
 
-    setBookingError(null)
+    setBookingError(null);
     try {
       const booking = await holdSlotMutation.mutateAsync({
         slotId: selectedSlotId,
         idempotencyKey: crypto.randomUUID(),
-      })
-      navigate(`/checkout/${booking.id}`, { state: { bookingId: booking.id } })
+      });
+      navigate(`/checkout/${booking.id}`, { state: { bookingId: booking.id } });
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        'Failed to hold slot. It might already be reserved or unavailable.'
-      setBookingError(message)
+        'Failed to hold slot. It might already be reserved or unavailable.';
+      setBookingError(message);
     }
   }
 
-  const images = selectedOffering?.media.filter((m) => m.type === 'IMAGE') ?? []
-  const videos = selectedOffering?.media.filter((m) => m.type === 'VIDEO') ?? []
+  const images = selectedOffering?.media.filter((m: any) => m.type === 'IMAGE') ?? [];
+  const videos = selectedOffering?.media.filter((m: any) => m.type === 'VIDEO') ?? [];
 
   return (
     <div className="bg-kala-cream min-h-screen">
@@ -178,12 +189,10 @@ export function InstructorProfile() {
       </div>
 
       <div className="page-container py-6 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-
         {/* ══════════════════════════════════════════
             LEFT COLUMN: Instructor hero + offerings
         ══════════════════════════════════════════ */}
         <div className="space-y-6">
-
           {/* ── Hero card ── */}
           <Card className="overflow-hidden">
             {/* Decorative gradient strip */}
@@ -214,7 +223,17 @@ export function InstructorProfile() {
                 )}
                 {instructor.offerings.length > 0 && (
                   <span className="flex items-center gap-1">
-                    <BookOpen size={13} /> {instructor.offerings.length} offering{instructor.offerings.length !== 1 ? 's' : ''}
+                    <BookOpen size={13} /> {instructor.offerings.length} offering
+                    {instructor.offerings.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {reviewSummary && reviewSummary.totalReviews > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-stone-700">
+                    <Star size={13} className="text-kala-amber fill-kala-amber" />
+                    {reviewSummary.averageRating.toFixed(1)}
+                    <span className="text-xs font-normal text-stone-400">
+                      ({reviewSummary.totalReviews})
+                    </span>
                   </span>
                 )}
               </div>
@@ -239,8 +258,9 @@ export function InstructorProfile() {
                   <Briefcase size={16} className="text-kala-amber" /> Offerings
                 </h2>
                 <div className="flex flex-wrap gap-2">
-                  {instructor.offerings.map((offering) => {
-                    const active = (selectedOfferingId ?? instructor.offerings[0]?.id) === offering.id
+                  {instructor.offerings.map((offering: any) => {
+                    const active =
+                      (selectedOfferingId ?? instructor.offerings[0]?.id) === offering.id;
                     return (
                       <button
                         key={offering.id}
@@ -254,9 +274,12 @@ export function InstructorProfile() {
                         )}
                       >
                         {offering.title || offering.subcategory.name}
-                        <ChevronRight size={13} className={cn('shrink-0', active ? 'text-amber-300' : 'text-stone-400')} />
+                        <ChevronRight
+                          size={13}
+                          className={cn('shrink-0', active ? 'text-amber-300' : 'text-stone-400')}
+                        />
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -271,9 +294,7 @@ export function InstructorProfile() {
                         <Badge variant="warning">
                           {selectedOffering.subcategory.category.name}
                         </Badge>
-                        <Badge variant="default">
-                          {selectedOffering.subcategory.name}
-                        </Badge>
+                        <Badge variant="default">{selectedOffering.subcategory.name}</Badge>
                       </div>
                       <h3 className="text-xl font-bold text-stone-800 mb-1">
                         {selectedOffering.title || selectedOffering.subcategory.name}
@@ -336,7 +357,7 @@ export function InstructorProfile() {
 
                       {mediaTab === 'images' && images.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {images.map((media) => (
+                          {images.map((media: any) => (
                             <img
                               key={media.id}
                               src={media.viewUrl}
@@ -349,7 +370,7 @@ export function InstructorProfile() {
 
                       {mediaTab === 'videos' && videos.length > 0 && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          {videos.map((media) => (
+                          {videos.map((media: any) => (
                             <div key={media.id}>
                               <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-stone-500">
                                 <Video size={12} /> Demo video
@@ -369,6 +390,88 @@ export function InstructorProfile() {
               )}
             </>
           )}
+
+          {/* ── Student Reviews Section ── */}
+          <div className="space-y-4 pt-2">
+            <h2 className="text-base font-semibold text-stone-700 flex items-center gap-2">
+              <Star size={16} className="text-kala-amber fill-kala-amber" /> Student Reviews
+              {reviewSummary && reviewSummary.totalReviews > 0 && (
+                <span className="text-xs font-normal text-stone-400">
+                  ({reviewSummary.totalReviews})
+                </span>
+              )}
+            </h2>
+
+            {reviewsQuery.isLoading ? (
+              <Card className="p-6 text-center text-sm text-stone-400">Loading reviews…</Card>
+            ) : reviewItems.length > 0 ? (
+              <div className="space-y-4">
+                {/* Rating snapshot */}
+                <Card className="p-5">
+                  <div className="flex items-center gap-6">
+                    <div className="text-center shrink-0">
+                      <div className="text-4xl font-extrabold text-kala-brown">
+                        {reviewSummary?.averageRating.toFixed(1) ?? '—'}
+                      </div>
+                      <div className="flex gap-0.5 justify-center mt-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={14}
+                            className={
+                              i < Math.round(reviewSummary?.averageRating ?? 0)
+                                ? 'text-kala-amber fill-kala-amber'
+                                : 'text-stone-200 fill-stone-200'
+                            }
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-stone-400 mt-1">
+                        {reviewSummary?.totalReviews} rating
+                        {reviewSummary?.totalReviews !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+
+                    <div className="flex-1 space-y-1.5 border-l border-stone-100 pl-6">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = (reviewSummary?.distribution as any)?.[star] ?? 0;
+                        const total = reviewSummary?.totalReviews ?? 0;
+                        const pct = total > 0 ? (count / total) * 100 : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-2 text-xs">
+                            <span className="w-2.5 font-medium text-stone-500">{star}</span>
+                            <Star size={10} className="text-kala-amber fill-kala-amber shrink-0" />
+                            <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-kala-amber rounded-full"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="w-5 text-right text-stone-400">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Review cards */}
+                <div className="space-y-3">
+                  {reviewItems.map((review: ReviewDto) => (
+                    <ReviewCard key={review.id} review={review} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Card className="p-8 text-center text-sm text-stone-400">
+                <Star size={32} className="text-stone-200 mx-auto mb-2" />
+                <p className="font-medium text-stone-600">No reviews yet</p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  Be the first to review this instructor after a session!
+                </p>
+              </Card>
+            )}
+          </div>
         </div>
 
         {/* ══════════════════════════════════════════
@@ -379,7 +482,9 @@ export function InstructorProfile() {
             <Card className="overflow-hidden">
               {/* Booking header */}
               <div className="bg-gradient-to-br from-kala-brown to-amber-800 px-6 py-5 text-white">
-                <p className="text-xs text-amber-200 font-medium uppercase tracking-wider mb-1">Book a session</p>
+                <p className="text-xs text-amber-200 font-medium uppercase tracking-wider mb-1">
+                  Book a session
+                </p>
                 <h3 className="text-lg font-bold leading-snug">
                   {selectedOffering.title || selectedOffering.subcategory.name}
                 </h3>
@@ -409,25 +514,20 @@ export function InstructorProfile() {
                     </ul>
 
                     {isAuthenticated ? (
-                      <Button
-                        className="w-full"
-                        size="lg"
-                        onClick={handleBookClick}
-                      >
+                      <Button className="w-full" size="lg" onClick={handleBookClick}>
                         <CalendarDays size={17} /> Check Availability
                       </Button>
                     ) : (
                       <div className="space-y-2">
-                        <Button
-                          className="w-full"
-                          size="lg"
-                          onClick={handleBookClick}
-                        >
+                        <Button className="w-full" size="lg" onClick={handleBookClick}>
                           <LogIn size={17} /> Log in to Book
                         </Button>
                         <p className="text-center text-xs text-stone-400">
                           Don't have an account?{' '}
-                          <Link to="/register" className="text-kala-terracotta hover:underline font-medium">
+                          <Link
+                            to="/register"
+                            className="text-kala-terracotta hover:underline font-medium"
+                          >
                             Sign up free
                           </Link>
                         </p>
@@ -446,8 +546,8 @@ export function InstructorProfile() {
                         min={todayInIndia()}
                         value={date}
                         onChange={(e) => {
-                          setDate(e.target.value)
-                          setSelectedSlotId(null)
+                          setDate(e.target.value);
+                          setSelectedSlotId(null);
                         }}
                         className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-kala-amber/40 focus:border-kala-amber"
                       />
@@ -460,19 +560,22 @@ export function InstructorProfile() {
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {availableDates.slice(0, 4).map((d) => {
-                              const isSelected = date === d
-                              const label = new Date(`${d}T12:00:00+05:30`).toLocaleDateString('en-IN', {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short',
-                              })
+                              const isSelected = date === d;
+                              const label = new Date(`${d}T12:00:00+05:30`).toLocaleDateString(
+                                'en-IN',
+                                {
+                                  weekday: 'short',
+                                  day: 'numeric',
+                                  month: 'short',
+                                },
+                              );
                               return (
                                 <button
                                   key={d}
                                   type="button"
                                   onClick={() => {
-                                    setDate(d)
-                                    setSelectedSlotId(null)
+                                    setDate(d);
+                                    setSelectedSlotId(null);
                                   }}
                                   className={cn(
                                     'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all',
@@ -483,7 +586,7 @@ export function InstructorProfile() {
                                 >
                                   {label}
                                 </button>
-                              )
+                              );
                             })}
                           </div>
                         </div>
@@ -493,7 +596,9 @@ export function InstructorProfile() {
                     {!date && (
                       <div className="flex items-center justify-center gap-2 py-6 text-sm text-stone-400">
                         <CalendarDays size={18} className="text-stone-300" />
-                        {availableDates.length > 0 ? 'Pick a date or select above to see slots' : 'Pick a date to see slots'}
+                        {availableDates.length > 0
+                          ? 'Pick a date or select above to see slots'
+                          : 'Pick a date to see slots'}
                       </div>
                     )}
 
@@ -513,18 +618,22 @@ export function InstructorProfile() {
 
                     {date && !availability.isLoading && availability.data?.length === 0 && (
                       <div className="text-center py-5 px-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-2 text-xs text-stone-500">
-                        <p className="font-semibold text-stone-700">No available slots on this date.</p>
+                        <p className="font-semibold text-stone-700">
+                          No available slots on this date.
+                        </p>
                         {availableDates.length > 0 && (
                           <div>
-                            <p className="mb-2 text-stone-400">Try one of the upcoming available days:</p>
+                            <p className="mb-2 text-stone-400">
+                              Try one of the upcoming available days:
+                            </p>
                             <div className="flex flex-wrap justify-center gap-1.5">
                               {availableDates.slice(0, 3).map((d) => (
                                 <button
                                   key={d}
                                   type="button"
                                   onClick={() => {
-                                    setDate(d)
-                                    setSelectedSlotId(null)
+                                    setDate(d);
+                                    setSelectedSlotId(null);
                                   }}
                                   className="px-2.5 py-1 rounded-lg bg-white border border-stone-300 text-kala-brown font-semibold hover:border-kala-amber shadow-xs text-xs"
                                 >
@@ -547,7 +656,7 @@ export function InstructorProfile() {
                           Available slots
                         </p>
                         <div className="grid gap-2">
-                          {availability.data.map((slot) => (
+                          {availability.data.map((slot: any) => (
                             <button
                               key={slot.id}
                               type="button"
@@ -565,9 +674,7 @@ export function InstructorProfile() {
                                   {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
                                 </span>
                               </span>
-                              <span className="text-xs font-medium text-stone-400">
-                                Available
-                              </span>
+                              <span className="text-xs font-medium text-stone-400">Available</span>
                             </button>
                           ))}
                         </div>
@@ -599,9 +706,9 @@ export function InstructorProfile() {
                     <button
                       type="button"
                       onClick={() => {
-                        setBookingOpen(false)
-                        setDate('')
-                        setSelectedSlotId(null)
+                        setBookingOpen(false);
+                        setDate('');
+                        setSelectedSlotId(null);
                       }}
                       className="w-full text-xs text-stone-400 hover:text-stone-600 py-1 transition-colors"
                     >
@@ -620,14 +727,25 @@ export function InstructorProfile() {
           {/* Quick-info strip */}
           {instructor.offerings.length > 0 && (
             <div className="bg-white rounded-2xl border border-stone-100 px-5 py-4 space-y-2 text-sm text-stone-500">
-              <p className="font-semibold text-stone-700 text-xs uppercase tracking-wider">About sessions</p>
-              <p className="flex items-start gap-2"><Video size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Sessions are held live via video call.</p>
-              <p className="flex items-start gap-2"><CalendarDays size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Book any open slot that fits your schedule.</p>
-              <p className="flex items-start gap-2"><Clock size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Slots are in IST (India Standard Time).</p>
+              <p className="font-semibold text-stone-700 text-xs uppercase tracking-wider">
+                About sessions
+              </p>
+              <p className="flex items-start gap-2">
+                <Video size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Sessions are held
+                live via video call.
+              </p>
+              <p className="flex items-start gap-2">
+                <CalendarDays size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Book any open
+                slot that fits your schedule.
+              </p>
+              <p className="flex items-start gap-2">
+                <Clock size={14} className="mt-0.5 shrink-0 text-kala-amber" /> Slots are in IST
+                (India Standard Time).
+              </p>
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

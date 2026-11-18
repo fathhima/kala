@@ -63,6 +63,7 @@ docs/CreateBookingDto.md
 docs/CreateCategoryDto.md
 docs/CreateCheckoutDto.md
 docs/CreateOfferingDto.md
+docs/CreateReviewDto.md
 docs/CreateSlotExceptionDto.md
 docs/CreateSlotRuleDto.md
 docs/CreateSubcategoryDto.md
@@ -93,6 +94,8 @@ docs/InstructorPaymentsDataDto.md
 docs/InstructorPaymentsResponseDto.md
 docs/InstructorProfileDto.md
 docs/InstructorProfileResponseDto.md
+docs/InstructorReviewSummaryDto.md
+docs/InstructorReviewSummaryResponseDto.md
 docs/InstructorSessionMetricsDto.md
 docs/InstructorSlotAvailabilityDto.md
 docs/InstructorSlotAvailabilityResponseDto.md
@@ -115,6 +118,8 @@ docs/PaginatedInstructorApplicationsDataDto.md
 docs/PaginatedInstructorApplicationsResponseDto.md
 docs/PaginatedPaymentsDataDto.md
 docs/PaginatedPaymentsResponseDto.md
+docs/PaginatedReviewsDataDto.md
+docs/PaginatedReviewsResponseDto.md
 docs/PaginationMetaDto.md
 docs/PaymentDto.md
 docs/PaymentPaginationMetaDto.md
@@ -146,7 +151,13 @@ docs/ResendOtpDataDto.md
 docs/ResendOtpDto.md
 docs/ResendOtpResponseDto.md
 docs/ResetPasswordDto.md
+docs/ReviewDistributionDto.md
+docs/ReviewDto.md
 docs/ReviewOfferingDto.md
+docs/ReviewPaginationMetaDto.md
+docs/ReviewResponseDto.md
+docs/ReviewStudentDto.md
+docs/ReviewsApi.md
 docs/Role.md
 docs/SafeUserDto.md
 docs/SendMessageDto.md

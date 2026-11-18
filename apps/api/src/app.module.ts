@@ -15,6 +15,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { SlotModule } from './modules/slot/slot.module';
 import { UserModule } from './modules/user/user.module';
 import { VideoCallModule } from './modules/video-call/video-call.module';
+import { ReviewModule } from './modules/review/review.module';
 import { ConfigModule } from './shared/config/config.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
@@ -65,6 +66,7 @@ import { RedisModule } from './shared/redis/redis.module';
     PaymentModule,
     ChatModule,
     VideoCallModule,
+    ReviewModule,
   ],
   providers: [
     {

@@ -21,6 +21,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { useVideoSessionQuery } from '@/features/video-call';
 import { useWebRTC } from '@/features/video-call';
 import { useCompleteBookingMutation } from '@/features/booking/hooks';
+import { useCreateReviewMutation } from '@/features/review';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -102,6 +103,7 @@ export function VideoCallPage() {
   } = useVideoSessionQuery(bookingId);
 
   const completeBookingMutation = useCompleteBookingMutation();
+  const createReviewMutation = useCreateReviewMutation();
 
   // Modals & Panels
   const [showParticipants, setShowParticipants] = useState(false);
@@ -113,6 +115,7 @@ export function VideoCallPage() {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   // Instructor Complete Modal state
   const [isCompleting, setIsCompleting] = useState(false);
@@ -174,13 +177,25 @@ export function VideoCallPage() {
   const handleStudentSubmitReview = async () => {
     if (rating === 0) return;
     setReviewSubmitting(true);
-    // Short delay for natural feel before redirecting
-    await new Promise((r) => setTimeout(r, 600));
-    setReviewSubmitting(false);
-    setReviewSubmitted(true);
-    setTimeout(() => {
-      navigate('/dashboard/bookings');
-    }, 1500);
+    setReviewError(null);
+    try {
+      await createReviewMutation.mutateAsync({
+        bookingId,
+        rating,
+        comment: reviewComment.trim() || undefined,
+      });
+      setReviewSubmitted(true);
+      setTimeout(() => {
+        navigate('/dashboard/bookings');
+      }, 1500);
+    } catch (err: any) {
+      console.error('Failed to submit review:', err);
+      const msg =
+        err?.response?.data?.message || err?.message || 'Failed to submit review. Please try again.';
+      setReviewError(typeof msg === 'string' ? msg : 'Failed to submit review');
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   // 1. Loading State
@@ -407,6 +422,10 @@ export function VideoCallPage() {
                       className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-kala-amber focus:bg-white transition-colors resize-none"
                     />
                   </div>
+
+                  {reviewError && (
+                    <p className="text-xs text-red-500 text-center">{reviewError}</p>
+                  )}
 
                   <div className="flex flex-col gap-2 pt-1">
                     <button

@@ -26,6 +26,7 @@ import { InstructorMessages } from '@/pages/instructor/Messages';
 import { MySessions } from '@/pages/instructor/MySessions';
 import { InstructorOfferings } from '@/pages/instructor/Offerings';
 import { InstructorPayments } from '@/pages/instructor/Payments';
+import { Reviews } from '@/pages/instructor/Reviews';
 import { Portfolio } from '@/pages/instructor/Portfolio';
 import { InstructorSessionChat } from '@/pages/instructor/SessionChat';
 import { InstructorSessionDetails } from '@/pages/instructor/SessionDetails';
@@ -199,7 +200,7 @@ export const router = createBrowserRouter([
       { path: 'sessions/:id/chat', element: <InstructorSessionChat /> },
       { path: 'messages', element: <InstructorMessages /> },
       { path: 'payments', element: <InstructorPayments /> },
-      // { path: 'reviews', element: <Reviews /> },
+      { path: 'reviews', element: <Reviews /> },
       { path: 'settings', element: <AccountSettings /> },
     ],
   },

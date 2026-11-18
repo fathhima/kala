@@ -444,6 +444,20 @@ export interface CreateOfferingDto {
     'currency'?: string;
     'experienceYears'?: number;
 }
+export interface CreateReviewDto {
+    /**
+     * Booking ID being reviewed
+     */
+    'bookingId': string;
+    /**
+     * Rating from 1 to 5
+     */
+    'rating': number;
+    /**
+     * Optional feedback note
+     */
+    'comment'?: string;
+}
 export interface CreateSlotExceptionDto {
     'type': CreateSlotExceptionDtoTypeEnum;
     'offeringId'?: string;
@@ -726,6 +740,15 @@ export interface InstructorProfileResponseDto {
     'message': string;
     'data'?: InstructorProfileDto | null;
 }
+export interface InstructorReviewSummaryDto {
+    'averageRating': number;
+    'totalReviews': number;
+    'distribution': ReviewDistributionDto;
+}
+export interface InstructorReviewSummaryResponseDto {
+    'message': string;
+    'data': InstructorReviewSummaryDto;
+}
 export interface InstructorSessionMetricsDto {
     'total': number;
     'upcomingConfirmed': number;
@@ -867,6 +890,15 @@ export interface PaginatedPaymentsDataDto {
 export interface PaginatedPaymentsResponseDto {
     'message': string;
     'data': PaginatedPaymentsDataDto;
+}
+export interface PaginatedReviewsDataDto {
+    'items': Array<ReviewDto>;
+    'meta': ReviewPaginationMetaDto;
+    'summary'?: InstructorReviewSummaryDto;
+}
+export interface PaginatedReviewsResponseDto {
+    'message': string;
+    'data': PaginatedReviewsDataDto;
 }
 export interface PaginationMetaDto {
     'page': number;
@@ -1109,6 +1141,24 @@ export interface ResetPasswordDto {
      */
     'newPassword': string;
 }
+export interface ReviewDistributionDto {
+    '1': number;
+    '2': number;
+    '3': number;
+    '4': number;
+    '5': number;
+}
+export interface ReviewDto {
+    'id': string;
+    'bookingId': string;
+    'studentId': string;
+    'profileId': string;
+    'rating': number;
+    'comment'?: object | null;
+    'createdAt': string;
+    'updatedAt': string;
+    'student': ReviewStudentDto;
+}
 export interface ReviewOfferingDto {
     'decision': ReviewOfferingDtoDecisionEnum;
     'reviewNote'?: string;
@@ -1122,6 +1172,21 @@ export const ReviewOfferingDtoDecisionEnum = {
 
 export type ReviewOfferingDtoDecisionEnum = typeof ReviewOfferingDtoDecisionEnum[keyof typeof ReviewOfferingDtoDecisionEnum];
 
+export interface ReviewPaginationMetaDto {
+    'page': number;
+    'limit': number;
+    'total': number;
+    'totalPages': number;
+}
+export interface ReviewResponseDto {
+    'message': string;
+    'data': ReviewDto;
+}
+export interface ReviewStudentDto {
+    'id': string;
+    'name': string;
+    'imageUrl'?: object | null;
+}
 
 export const Role = {
     Student: 'STUDENT',
@@ -7387,6 +7452,421 @@ export class PrometheusApi extends BaseAPI {
      */
     public prometheusControllerIndex(options?: RawAxiosRequestConfig) {
         return PrometheusApiFp(this.configuration).prometheusControllerIndex(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ReviewsApi - axios parameter creator
+ */
+export const ReviewsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Submit a review for a completed booking
+         * @param {CreateReviewDto} createReviewDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerCreate: async (createReviewDto: CreateReviewDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createReviewDto' is not null or undefined
+            assertParamExists('reviewControllerCreate', 'createReviewDto', createReviewDto)
+            const localVarPath = `/api/reviews`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createReviewDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get review for a specific booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetByBookingId: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('reviewControllerGetByBookingId', 'bookingId', bookingId)
+            const localVarPath = `/api/reviews/booking/{bookingId}`
+                .replace(`{${"bookingId"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get reviews for an instructor profile
+         * @param {string} profileId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetInstructorReviews: async (profileId: string, page?: number, limit?: number, rating?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileId' is not null or undefined
+            assertParamExists('reviewControllerGetInstructorReviews', 'profileId', profileId)
+            const localVarPath = `/api/reviews/instructor/{profileId}`
+                .replace(`{${"profileId"}}`, encodeURIComponent(String(profileId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (rating !== undefined) {
+                localVarQueryParameter['rating'] = rating;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get review summary (average & distribution) for an instructor
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetInstructorSummary: async (profileId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileId' is not null or undefined
+            assertParamExists('reviewControllerGetInstructorSummary', 'profileId', profileId)
+            const localVarPath = `/api/reviews/instructor/{profileId}/summary`
+                .replace(`{${"profileId"}}`, encodeURIComponent(String(profileId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get reviews for the logged-in instructor
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetMyReviews: async (page?: number, limit?: number, rating?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/reviews/my-reviews`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (rating !== undefined) {
+                localVarQueryParameter['rating'] = rating;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ReviewsApi - functional programming interface
+ */
+export const ReviewsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ReviewsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Submit a review for a completed booking
+         * @param {CreateReviewDto} createReviewDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reviewControllerCreate(createReviewDto: CreateReviewDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReviewResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reviewControllerCreate(createReviewDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ReviewsApi.reviewControllerCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get review for a specific booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reviewControllerGetByBookingId(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReviewResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reviewControllerGetByBookingId(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ReviewsApi.reviewControllerGetByBookingId']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get reviews for an instructor profile
+         * @param {string} profileId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reviewControllerGetInstructorReviews(profileId: string, page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedReviewsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reviewControllerGetInstructorReviews(profileId, page, limit, rating, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ReviewsApi.reviewControllerGetInstructorReviews']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get review summary (average & distribution) for an instructor
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reviewControllerGetInstructorSummary(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InstructorReviewSummaryResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reviewControllerGetInstructorSummary(profileId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ReviewsApi.reviewControllerGetInstructorSummary']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get reviews for the logged-in instructor
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reviewControllerGetMyReviews(page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedReviewsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reviewControllerGetMyReviews(page, limit, rating, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ReviewsApi.reviewControllerGetMyReviews']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ReviewsApi - factory interface
+ */
+export const ReviewsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ReviewsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Submit a review for a completed booking
+         * @param {CreateReviewDto} createReviewDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerCreate(createReviewDto: CreateReviewDto, options?: RawAxiosRequestConfig): AxiosPromise<ReviewResponseDto> {
+            return localVarFp.reviewControllerCreate(createReviewDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get review for a specific booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetByBookingId(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<ReviewResponseDto> {
+            return localVarFp.reviewControllerGetByBookingId(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get reviews for an instructor profile
+         * @param {string} profileId 
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetInstructorReviews(profileId: string, page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedReviewsResponseDto> {
+            return localVarFp.reviewControllerGetInstructorReviews(profileId, page, limit, rating, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get review summary (average & distribution) for an instructor
+         * @param {string} profileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetInstructorSummary(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<InstructorReviewSummaryResponseDto> {
+            return localVarFp.reviewControllerGetInstructorSummary(profileId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get reviews for the logged-in instructor
+         * @param {number} [page] 
+         * @param {number} [limit] 
+         * @param {number} [rating] Filter by specific star rating (1-5)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reviewControllerGetMyReviews(page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedReviewsResponseDto> {
+            return localVarFp.reviewControllerGetMyReviews(page, limit, rating, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ReviewsApi - object-oriented interface
+ */
+export class ReviewsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Submit a review for a completed booking
+     * @param {CreateReviewDto} createReviewDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public reviewControllerCreate(createReviewDto: CreateReviewDto, options?: RawAxiosRequestConfig) {
+        return ReviewsApiFp(this.configuration).reviewControllerCreate(createReviewDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get review for a specific booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public reviewControllerGetByBookingId(bookingId: string, options?: RawAxiosRequestConfig) {
+        return ReviewsApiFp(this.configuration).reviewControllerGetByBookingId(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get reviews for an instructor profile
+     * @param {string} profileId 
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {number} [rating] Filter by specific star rating (1-5)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public reviewControllerGetInstructorReviews(profileId: string, page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig) {
+        return ReviewsApiFp(this.configuration).reviewControllerGetInstructorReviews(profileId, page, limit, rating, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get review summary (average & distribution) for an instructor
+     * @param {string} profileId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public reviewControllerGetInstructorSummary(profileId: string, options?: RawAxiosRequestConfig) {
+        return ReviewsApiFp(this.configuration).reviewControllerGetInstructorSummary(profileId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get reviews for the logged-in instructor
+     * @param {number} [page] 
+     * @param {number} [limit] 
+     * @param {number} [rating] Filter by specific star rating (1-5)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public reviewControllerGetMyReviews(page?: number, limit?: number, rating?: number, options?: RawAxiosRequestConfig) {
+        return ReviewsApiFp(this.configuration).reviewControllerGetMyReviews(page, limit, rating, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

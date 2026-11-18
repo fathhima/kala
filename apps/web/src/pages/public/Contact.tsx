@@ -9,7 +9,6 @@ import {
   MapPin,
   MessageSquare,
   Send,
-  Sparkles,
 } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';

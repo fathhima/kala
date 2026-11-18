@@ -125,6 +125,7 @@ model User {
   bookings          Booking[]
   payments          Payment[]
   chatMessages      ChatMessage[]
+  reviews           Review[]
 
   @@map("users")
 }
@@ -184,6 +185,7 @@ model InstructorProfile {
   availabilityExceptions AvailabilityException[]
   availabilitySlots      AvailabilitySlot[]
   bookings               Booking[]
+  reviews                Review[]
 
   @@index([status])
   @@map("instructor_profiles")
@@ -363,6 +365,7 @@ model Booking {
   profile  InstructorProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
   payments Payment[]
   chatRoom ChatRoom?
+  review   Review?
 
   @@index([studentId, status, createdAt])
   @@index([profileId, status, createdAt])
@@ -444,5 +447,24 @@ model ChatMessage {
   @@index([roomId, createdAt])
   @@index([senderId, createdAt])
   @@map("chat_messages")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  studentId String
+  profileId String
+  rating    Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  student User              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  profile InstructorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, rating])
+  @@index([studentId, createdAt])
+  @@map("reviews")
 }
 

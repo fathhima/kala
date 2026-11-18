@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, Palette, ShieldCheck, Sparkles, Video } from 'lucide-react';
+import { ArrowRight, Clock, Palette, ShieldCheck, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SkillCard } from '../../components/shared/SkillCard';
 import { Button } from '../../components/ui/Button';

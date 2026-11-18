@@ -5,7 +5,6 @@ import {
   Heart,
   Palette,
   ShieldCheck,
-  Sparkles,
   Users,
   Video,
 } from 'lucide-react';

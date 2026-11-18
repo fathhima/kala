@@ -57,12 +57,12 @@ export function VerifyOtp() {
   }, [pendingSignupId, isCompletingAuth, navigate]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    const timer = window.setInterval(() => {
       setOtpExpiresIn(getOtpExpiryRemaining());
       setResendCooldown(getResendCooldownRemaining());
     }, 1000);
 
-    return () => window.clearTimeout(timer);
+    return () => window.clearInterval(timer);
   }, []);
 
   const clearPendingSignupSession = () => {

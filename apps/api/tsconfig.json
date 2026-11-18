@@ -23,11 +23,11 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["./src/*"]
-    }
-
+    },
+    "rootDir": "src"
   },
-  "include": ["src/**/*", "prisma.config.ts"],
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "prisma"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "prisma", "prisma.config.ts"],
   "watchOptions": {
     "watchFile": "fixedPollingInterval",
     "watchDirectory": "fixedPollingInterval",

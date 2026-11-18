@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { setupApp } from '@/shared/config/app.config';
+import { setupApp } from './shared/config/app.config';
 import { LOGGER_SERVICE } from './shared/logger/repositories/interfaces/logger.interface';
 
 async function bootstrap() {

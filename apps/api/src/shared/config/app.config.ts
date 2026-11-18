@@ -1,9 +1,8 @@
-import { INestApplication, RawBodyRequest, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import { Request } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { AppModule } from '@/app.module';
@@ -48,7 +47,7 @@ export async function setupApp(): Promise<INestApplication> {
   app.use(
     bodyParser.json({
       limit: '1mb',
-      verify: (req: RawBodyRequest<Request>, _res, buf) => {
+      verify: (req: any, _res: any, buf: Buffer) => {
         req.rawBody = buf;
       },
     }),

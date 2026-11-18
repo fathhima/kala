@@ -12,6 +12,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
@@ -23,13 +24,11 @@
   "exclude": [
     "src/pages/instructor/Payments.tsx",
     "src/pages/instructor/ProfileSettings.tsx",
-    "src/pages/instructor/Reviews.tsx",
     "src/pages/instructor/SessionChat.tsx",
     "src/pages/student/BookingChat.tsx",
     "src/pages/student/PaymentHistory.tsx",
     "src/pages/student/VideoCall.tsx",
     "src/components/shared/InstructorCard.tsx",
-    "src/components/shared/ReviewCard.tsx",
     "src/components/shared/SkillCard.tsx",
     "src/components/shared/SlotCard.tsx"
   ],

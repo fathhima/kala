@@ -77,7 +77,7 @@ export function Reviews() {
 
           <div className="flex-1 space-y-2">
             {[5, 4, 3, 2, 1].map((star) => {
-              const count = distribution[star as keyof typeof distribution] ?? 0;
+              const count = (distribution as any)?.[star] ?? 0;
               const pct = total > 0 ? (count / total) * 100 : 0;
               const isSelected = selectedRating === star;
 
